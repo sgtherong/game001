@@ -197,24 +197,31 @@
   .drawer.open .panel { transform: none; }
   .drawer .panel h2 { font-size: 16px; margin: 4px 4px 12px; display:flex; align-items:center; }
   .drawer .panel h2 .spacer { flex:1; }
-  .stage-list { overflow-y: auto; padding: 4px; }
-  .chapter-head { font-size: 12px; font-weight: 800; color: var(--accent); margin: 14px 2px 8px; }
-  .chapter-head:first-child { margin-top: 2px; }
-  .stage-grid { }
-  .stage-list { display: flex; flex-direction: column; }
+  .stage-list { overflow-y: auto; padding: 4px; display: flex; flex-direction: column; }
+  /* collapsible chapter sections */
+  .chapter { border: 1px solid var(--line); border-radius: 12px; margin: 5px 2px; overflow: hidden; background: var(--card); }
+  .chapter-head {
+    list-style: none; cursor: pointer; display: flex; align-items: center; gap: 8px;
+    padding: 12px 12px; font-size: 13px; font-weight: 800; color: var(--ink);
+    background: color-mix(in srgb, var(--accent) 7%, var(--card));
+  }
+  .chapter-head::-webkit-details-marker { display: none; }
+  .chapter-head .cv {
+    width: 8px; height: 8px; border-right: 2px solid var(--accent); border-bottom: 2px solid var(--accent);
+    transform: rotate(-45deg); transition: transform .2s; flex: none; margin: 0 2px;
+  }
+  .chapter[open] > .chapter-head .cv { transform: rotate(45deg); }
+  .chapter-head .nm { flex: 1; }
+  .chapter-head .cnt { font-size: 11px; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; }
   .stage-chip {
     display: inline-grid; place-items: center;
     width: 42px; height: 42px; margin: 3px; border-radius: 12px;
     border: 1px solid var(--line); background: var(--cell); color: var(--ink);
-    font-weight: 700; font-size: 14px; cursor: pointer;
+    font-weight: 700; font-size: 14px; cursor: pointer; font-variant-numeric: tabular-nums;
   }
-  .stage-list { }
-  /* lay chips in a wrap row under each chapter head via flow */
-  .stage-list .stage-chip { }
   .stage-chip.done { background: linear-gradient(180deg,#7cc0a8,#5aa88c); color: #fff; border-color: transparent; }
   .stage-chip.current { outline: 3px solid var(--accent); outline-offset: 1px; }
-  /* group chips into flex rows */
-  .chips { display: flex; flex-wrap: wrap; }
+  .chips { display: flex; flex-wrap: wrap; padding: 6px 6px 10px; }
 
   .foot { text-align:center; font-size: 11px; color: var(--muted); margin-top: 14px; line-height:1.5; }
 
