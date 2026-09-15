@@ -18,7 +18,8 @@
 
 ## 기능
 
-- 100 스테이지, 5개 챕터(규칙 익히기 → 편안한 반복 → 순서 계획 → 넓은 보드 적응 → 짧은 도전)
+- **1000 스테이지, 8개 챕터** (규칙 익히기 → 편안한 반복 → 순서 계획 → 넓은 보드 적응 → 4×4 계획 → 네 조각 입문 → 네 조각 계획 → 긴 여정)
+- 보드 3×3·4×4, 조각 2~4개, 최소 이동 1~9수 (완전 탐색으로 검증, 대칭 중복 제거)
 - 이동 미리보기(막힘 시 "정지" 표시), 무료 되돌리기·재시작
 - 현재 상태에서 결정적으로 계산하는 다음 한 수 힌트(BFS)
 - 온보딩 튜토리얼, 여행 앨범 스티커 수집
@@ -32,23 +33,30 @@ borrowed-motion-balance/
 ├─ web/                     # 웹 게임 (플레이 가능)
 │  ├─ index.html            # 게임 화면·스타일
 │  ├─ game.js               # 게임 로직 (rules.cjs의 규칙을 1:1 구현)
-│  ├─ stages-data.js        # 임베드된 100 스테이지
+│  ├─ stages-data.js        # 임베드된 1000 스테이지
 │  ├─ manifest.webmanifest  # PWA 매니페스트
 │  ├─ sw.js                 # 서비스워커 (오프라인)
 │  └─ icon-*.png            # 앱 아이콘
 ├─ rules.cjs                # 순수 규칙 함수 (선택한 두 조각 이동)
-├─ generate-stages.cjs      # 스테이지 후보 생성·검증 (Node.js)
-├─ stages-100.json          # 스테이지 데이터 + 검증 지표
-└─ validation-report.json   # 검증 결과 보고
+├─ generate-stages-1000.cjs # 1000 스테이지 생성·검증 (현재 게임에 사용)
+├─ stages-1000.json         # 1000 스테이지 데이터
+├─ validation-report-1000.json
+├─ generate-stages.cjs      # 초기 100 스테이지 생성기 (참고용)
+├─ stages-100.json          # 초기 100 스테이지 (참고용)
+└─ validation-report.json
 ```
 
 ## 스테이지 생성/검증
 
 ```bash
-node borrowed-motion-balance/generate-stages.cjs
+node borrowed-motion-balance/generate-stages-1000.cjs
 ```
 
-고정 시드(20260911)로 후보 풀과 100개 스테이지를 재생성하며, 완전 탐색으로 클리어 가능성과 최단 이동 수를 검증합니다.
+고정 시드(20260915)로 후보 풀(약 5,600개 유니크)과 1000개 스테이지를 재생성합니다. 각 스테이지는 완전 탐색으로 클리어 가능성과 최단 이동 수를 검증하고(대칭·조각 번호 중복 제거), 인게임 힌트가 빠르도록 도달 가능 상태 수를 7,000 이하로 제한합니다. 생성 후 `web/stages-data.js`는 `stages-1000.json`에서 다시 만듭니다:
+
+```bash
+node -e "const fs=require('fs');const d=JSON.parse(fs.readFileSync('borrowed-motion-balance/stages-1000.json','utf8'));const stages=d.stages.map(s=>({id:s.stage_id,seq:s.sequence,chapter:s.chapter,role:s.intended_role,n:s.board_size,pieces:s.piece_count,start:s.start,targets:s.targets,min:s.min,ways:s.ways}));fs.writeFileSync('borrowed-motion-balance/web/stages-data.js','window.BM_DATA='+JSON.stringify({rules:d.rules_version,dir:{0:'right',1:'down',2:'left',3:'up'},stages})+';\n')"
+```
 
 ## 규칙 버전
 

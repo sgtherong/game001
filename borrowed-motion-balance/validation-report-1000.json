@@ -1,0 +1,40 @@
+{
+  "created": "2026-09-15",
+  "rules_version": "borrowed-motion-easy-v1",
+  "seed": 20260915,
+  "delivered": 1000,
+  "unique_pool": 5924,
+  "boards": {
+    "3x3-2p": 2,
+    "3x3-3p": 398,
+    "4x4-3p": 300,
+    "4x4-4p": 300
+  },
+  "chapters": {
+    "규칙 익히기": 100,
+    "편안한 반복": 150,
+    "순서 계획": 150,
+    "넓은 보드 적응": 150,
+    "4×4 계획": 150,
+    "네 조각 입문": 100,
+    "네 조각 계획": 100,
+    "긴 여정": 100
+  },
+  "minimum_moves_histogram": {
+    "1": 21,
+    "2": 89,
+    "3": 160,
+    "4": 210,
+    "5": 190,
+    "6": 180,
+    "7": 70,
+    "8": 60,
+    "9": 20
+  },
+  "minimum_moves_range": [
+    1,
+    9
+  ],
+  "state_cap": 7000,
+  "note": "Exact solver: solvable, unique up to symmetry, exact minimum moves. Intended difficulty and sequence require human testing. Any legal route reaching all targets wins."
+}
