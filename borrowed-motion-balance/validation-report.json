@@ -1,0 +1,38 @@
+{
+  "created": "2026-09-11",
+  "rules_version": "borrowed-motion-easy-v1",
+  "seed": 20260911,
+  "candidate_pool": 2074,
+  "delivered": 100,
+  "solvable": 100,
+  "unique_up_to_rotation_reflection_and_piece_relabeling": 100,
+  "preserved_examples": [
+    {
+      "minimum_moves": 1,
+      "shortest_solutions": 1
+    },
+    {
+      "minimum_moves": 2,
+      "shortest_solutions": 3
+    },
+    {
+      "minimum_moves": 3,
+      "shortest_solutions": 3
+    }
+  ],
+  "minimum_moves_range": [
+    1,
+    6
+  ],
+  "multiple_shortest_solutions": 97,
+  "graph_runs": 123,
+  "max_reachable_states": 6068,
+  "retention_evidence": "NO_PLAYER_COHORT_DATA",
+  "note": "Exact solver metrics. Intended difficulty and sequence require human testing. Any legal route reaching all targets wins.",
+  "rule_parity": {
+    "status": "PASS",
+    "comparisons": 37152,
+    "scope": "All nonoverlapping 3x3 states with 2 or 3 pieces and distinct directions, every unordered pair",
+    "baseline_sha256": "b5262a632451fb30cefe9d5b512474d9c943e742574e849a32709ded1b2179ef"
+  }
+}

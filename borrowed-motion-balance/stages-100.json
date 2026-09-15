@@ -1,0 +1,7440 @@
+{
+  "created": "2026-09-11",
+  "rules_version": "borrowed-motion-easy-v1",
+  "seed": 20260911,
+  "candidate_pool": 2074,
+  "delivered": 100,
+  "solvable": 100,
+  "unique_up_to_rotation_reflection_and_piece_relabeling": 100,
+  "preserved_examples": [
+    {
+      "minimum_moves": 1,
+      "shortest_solutions": 1
+    },
+    {
+      "minimum_moves": 2,
+      "shortest_solutions": 3
+    },
+    {
+      "minimum_moves": 3,
+      "shortest_solutions": 3
+    }
+  ],
+  "minimum_moves_range": [
+    1,
+    6
+  ],
+  "multiple_shortest_solutions": 97,
+  "graph_runs": 123,
+  "max_reachable_states": 6068,
+  "retention_evidence": "NO_PLAYER_COHORT_DATA",
+  "note": "Exact solver metrics. Intended difficulty and sequence require human testing. Any legal route reaching all targets wins.",
+  "direction_encoding": {
+    "0": "right",
+    "1": "down",
+    "2": "left",
+    "3": "up"
+  },
+  "coordinates": "zero-based x,y; origin top-left",
+  "pair_indices": "one-based in sample_solution",
+  "stages": [
+    {
+      "board_size": 3,
+      "piece_count": 2,
+      "start": [
+        [
+          0,
+          1,
+          1
+        ],
+        [
+          2,
+          1,
+          3
+        ]
+      ],
+      "targets": [
+        [
+          0,
+          0
+        ],
+        [
+          2,
+          2
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 1,
+        "shortest_solution_count": 1,
+        "optimal_opening_choices": 1,
+        "safe_opening_choices": 1,
+        "available_opening_choices": 1,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 1,
+        "blocked_steps_on_sample": 0,
+        "nonprogress_steps_on_sample": 0,
+        "reachable_state_count": 2
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,1,1,0,0;2,1,3,2,2",
+      "stage_id": "BM-001",
+      "sequence": 1,
+      "chapter": "규칙 익히기",
+      "intended_role": "tutorial",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 2,
+      "start": [
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1
+        ]
+      ],
+      "targets": [
+        [
+          1,
+          1
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 1,
+        "shortest_solution_count": 1,
+        "optimal_opening_choices": 1,
+        "safe_opening_choices": 1,
+        "available_opening_choices": 1,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 1,
+        "forced_steps_on_sample": 1,
+        "blocked_steps_on_sample": 1,
+        "nonprogress_steps_on_sample": 0,
+        "reachable_state_count": 6
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,0,0,0,0;0,1,1,1,1",
+      "stage_id": "BM-002",
+      "sequence": 2,
+      "chapter": "규칙 익히기",
+      "intended_role": "tutorial",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          1
+        ],
+        [
+          1,
+          2,
+          2
+        ]
+      ],
+      "targets": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          2
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 2,
+        "shortest_solution_count": 3,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 1,
+        "blocked_steps_on_sample": 1,
+        "nonprogress_steps_on_sample": 0,
+        "reachable_state_count": 589
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,0,0,0,1;0,2,3,1,2;2,1,1,2,0",
+      "stage_id": "BM-003",
+      "sequence": 3,
+      "chapter": "규칙 익히기",
+      "intended_role": "stretch",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          1,
+          2,
+          2
+        ],
+        [
+          2,
+          2,
+          3
+        ],
+        [
+          1,
+          0,
+          0
+        ]
+      ],
+      "targets": [
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 2,
+        "shortest_solution_count": 3,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 1,
+        "forced_steps_on_sample": 1,
+        "blocked_steps_on_sample": 2,
+        "nonprogress_steps_on_sample": 0,
+        "reachable_state_count": 590
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,0,0,0,0;0,1,1,1,1;2,1,3,2,2",
+      "stage_id": "BM-004",
+      "sequence": 4,
+      "chapter": "규칙 익히기",
+      "intended_role": "practice",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          3
+        ],
+        [
+          0,
+          0,
+          1
+        ]
+      ],
+      "targets": [
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 1,
+        "shortest_solution_count": 1,
+        "optimal_opening_choices": 1,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 1,
+        "initially_arrived_pieces": 2,
+        "forced_steps_on_sample": 1,
+        "blocked_steps_on_sample": 1,
+        "nonprogress_steps_on_sample": 0,
+        "reachable_state_count": 424
+      },
+      "sample_solution": [
+        [
+          2,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,0,0,0,0;0,1,1,0,1;1,2,2,2,2",
+      "stage_id": "BM-005",
+      "sequence": 5,
+      "chapter": "규칙 익히기",
+      "intended_role": "recovery",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          1,
+          2,
+          0
+        ],
+        [
+          2,
+          2,
+          3
+        ],
+        [
+          0,
+          0,
+          1
+        ]
+      ],
+      "targets": [
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          1,
+          0
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 2,
+        "shortest_solution_count": 3,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 1,
+        "forced_steps_on_sample": 1,
+        "blocked_steps_on_sample": 2,
+        "nonprogress_steps_on_sample": 0,
+        "reachable_state_count": 430
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,0,0,0,0;0,1,3,1,1;2,2,2,2,1",
+      "stage_id": "BM-006",
+      "sequence": 6,
+      "chapter": "규칙 익히기",
+      "intended_role": "stretch",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          0,
+          2,
+          1
+        ],
+        [
+          2,
+          1,
+          2
+        ],
+        [
+          2,
+          0,
+          0
+        ]
+      ],
+      "targets": [
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          1,
+          0
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 2,
+        "shortest_solution_count": 3,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 1,
+        "blocked_steps_on_sample": 1,
+        "nonprogress_steps_on_sample": 0,
+        "reachable_state_count": 424
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,0,2,0,1;1,2,3,0,2;2,2,1,2,1",
+      "stage_id": "BM-007",
+      "sequence": 7,
+      "chapter": "규칙 익히기",
+      "intended_role": "practice",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          2,
+          1,
+          2
+        ],
+        [
+          2,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "targets": [
+        [
+          2,
+          2
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 3,
+        "shortest_solution_count": 5,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 2,
+        "blocked_steps_on_sample": 2,
+        "nonprogress_steps_on_sample": 0,
+        "reachable_state_count": 1086
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,0,0,0,1;0,2,3,1,1;1,0,1,2,0",
+      "stage_id": "BM-008",
+      "sequence": 8,
+      "chapter": "규칙 익히기",
+      "intended_role": "stretch",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          1
+        ],
+        [
+          1,
+          2,
+          3
+        ]
+      ],
+      "targets": [
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          2,
+          2
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 2,
+        "shortest_solution_count": 3,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 1,
+        "blocked_steps_on_sample": 1,
+        "nonprogress_steps_on_sample": 0,
+        "reachable_state_count": 242
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,1,0,0,0;1,0,2,2,0;2,1,3,1,1",
+      "stage_id": "BM-009",
+      "sequence": 9,
+      "chapter": "규칙 익히기",
+      "intended_role": "recovery",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          1
+        ],
+        [
+          1,
+          2,
+          2
+        ]
+      ],
+      "targets": [
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          2
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 3,
+        "shortest_solution_count": 3,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 2,
+        "blocked_steps_on_sample": 2,
+        "nonprogress_steps_on_sample": 0,
+        "reachable_state_count": 589
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          1,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,0,0,0,1;0,2,3,1,1;2,1,1,2,0",
+      "stage_id": "BM-010",
+      "sequence": 10,
+      "chapter": "규칙 익히기",
+      "intended_role": "stretch",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          1,
+          2,
+          3
+        ],
+        [
+          0,
+          2,
+          0
+        ],
+        [
+          1,
+          0,
+          1
+        ]
+      ],
+      "targets": [
+        [
+          2,
+          2
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          2,
+          1
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 3,
+        "shortest_solution_count": 5,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 2,
+        "blocked_steps_on_sample": 2,
+        "nonprogress_steps_on_sample": 0,
+        "reachable_state_count": 697
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,0,0,0,1;1,0,1,2,0;1,2,3,2,1",
+      "stage_id": "BM-011",
+      "sequence": 11,
+      "chapter": "편안한 반복",
+      "intended_role": "practice",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          2,
+          2,
+          2
+        ],
+        [
+          1,
+          2,
+          0
+        ],
+        [
+          2,
+          0,
+          1
+        ]
+      ],
+      "targets": [
+        [
+          2,
+          2
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 3,
+        "shortest_solution_count": 4,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 1,
+        "forced_steps_on_sample": 2,
+        "blocked_steps_on_sample": 3,
+        "nonprogress_steps_on_sample": 0,
+        "reachable_state_count": 73
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,0,0,0,0;0,2,3,1,1;1,0,2,2,0",
+      "stage_id": "BM-012",
+      "sequence": 12,
+      "chapter": "편안한 반복",
+      "intended_role": "practice",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          0,
+          2,
+          1
+        ],
+        [
+          0,
+          1,
+          3
+        ],
+        [
+          1,
+          0,
+          2
+        ]
+      ],
+      "targets": [
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 4,
+        "shortest_solution_count": 8,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 1,
+        "blocked_steps_on_sample": 4,
+        "nonprogress_steps_on_sample": 1,
+        "reachable_state_count": 60
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,0,2,1,0;1,0,0,2,0;2,1,3,1,1",
+      "stage_id": "BM-013",
+      "sequence": 13,
+      "chapter": "편안한 반복",
+      "intended_role": "stretch",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          1,
+          1,
+          0
+        ],
+        [
+          2,
+          0,
+          1
+        ],
+        [
+          2,
+          1,
+          2
+        ]
+      ],
+      "targets": [
+        [
+          0,
+          2
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 3,
+        "shortest_solution_count": 3,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 1,
+        "forced_steps_on_sample": 2,
+        "blocked_steps_on_sample": 2,
+        "nonprogress_steps_on_sample": 0,
+        "reachable_state_count": 698
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,0,0,0,0;1,0,1,2,1;1,1,3,2,2",
+      "stage_id": "BM-014",
+      "sequence": 14,
+      "chapter": "편안한 반복",
+      "intended_role": "recovery",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          2,
+          1,
+          1
+        ],
+        [
+          1,
+          2,
+          3
+        ],
+        [
+          1,
+          1,
+          2
+        ]
+      ],
+      "targets": [
+        [
+          2,
+          0
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 2,
+        "shortest_solution_count": 3,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 1,
+        "forced_steps_on_sample": 1,
+        "blocked_steps_on_sample": 2,
+        "nonprogress_steps_on_sample": 0,
+        "reachable_state_count": 707
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,1,0,0,0;1,1,3,1,1;1,2,2,2,2",
+      "stage_id": "BM-015",
+      "sequence": 15,
+      "chapter": "편안한 반복",
+      "intended_role": "recovery",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          2,
+          3
+        ],
+        [
+          1,
+          0,
+          1
+        ]
+      ],
+      "targets": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          1
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 3,
+        "shortest_solution_count": 3,
+        "optimal_opening_choices": 2,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 1,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 1,
+        "blocked_steps_on_sample": 2,
+        "nonprogress_steps_on_sample": 0,
+        "reachable_state_count": 875
+      },
+      "sample_solution": [
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,0,0,0,1;1,0,1,2,0;2,1,2,1,2",
+      "stage_id": "BM-016",
+      "sequence": 16,
+      "chapter": "편안한 반복",
+      "intended_role": "stretch",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          2,
+          0,
+          3
+        ],
+        [
+          0,
+          2,
+          2
+        ],
+        [
+          0,
+          1,
+          0
+        ]
+      ],
+      "targets": [
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 4,
+        "shortest_solution_count": 6,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 3,
+        "blocked_steps_on_sample": 3,
+        "nonprogress_steps_on_sample": 0,
+        "reachable_state_count": 424
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,0,2,0,1;1,2,3,0,2;2,2,1,1,0",
+      "stage_id": "BM-017",
+      "sequence": 17,
+      "chapter": "편안한 반복",
+      "intended_role": "stretch",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1
+        ]
+      ],
+      "targets": [
+        [
+          1,
+          2
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          2,
+          2
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 3,
+        "shortest_solution_count": 3,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 2,
+        "blocked_steps_on_sample": 1,
+        "nonprogress_steps_on_sample": 0,
+        "reachable_state_count": 704
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,1,1,0,0;1,0,3,2,1;1,1,0,2,2",
+      "stage_id": "BM-018",
+      "sequence": 18,
+      "chapter": "편안한 반복",
+      "intended_role": "recovery",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          2,
+          2,
+          2
+        ],
+        [
+          1,
+          1,
+          3
+        ]
+      ],
+      "targets": [
+        [
+          2,
+          0
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 3,
+        "shortest_solution_count": 5,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 1,
+        "forced_steps_on_sample": 1,
+        "blocked_steps_on_sample": 3,
+        "nonprogress_steps_on_sample": 1,
+        "reachable_state_count": 708
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,0,0,1,0;0,1,2,0,2;1,1,1,1,1",
+      "stage_id": "BM-019",
+      "sequence": 19,
+      "chapter": "편안한 반복",
+      "intended_role": "practice",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          2,
+          2,
+          3
+        ],
+        [
+          0,
+          2,
+          1
+        ]
+      ],
+      "targets": [
+        [
+          2,
+          0
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 2,
+        "shortest_solution_count": 2,
+        "optimal_opening_choices": 2,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 1,
+        "initially_arrived_pieces": 1,
+        "forced_steps_on_sample": 1,
+        "blocked_steps_on_sample": 2,
+        "nonprogress_steps_on_sample": 0,
+        "reachable_state_count": 68
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,0,0,0,0;0,2,2,0,1;1,0,3,2,0",
+      "stage_id": "BM-020",
+      "sequence": 20,
+      "chapter": "편안한 반복",
+      "intended_role": "recovery",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          0,
+          0,
+          3
+        ],
+        [
+          2,
+          2,
+          2
+        ],
+        [
+          2,
+          1,
+          0
+        ]
+      ],
+      "targets": [
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          0
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 3,
+        "shortest_solution_count": 4,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 1,
+        "blocked_steps_on_sample": 2,
+        "nonprogress_steps_on_sample": 1,
+        "reachable_state_count": 425
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,0,0,1,0;0,1,2,0,2;2,2,1,1,2",
+      "stage_id": "BM-021",
+      "sequence": 21,
+      "chapter": "편안한 반복",
+      "intended_role": "stretch",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          1,
+          2,
+          2
+        ],
+        [
+          1,
+          0,
+          3
+        ],
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "targets": [
+        [
+          0,
+          1
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 3,
+        "shortest_solution_count": 3,
+        "optimal_opening_choices": 2,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 2,
+        "initially_arrived_pieces": 1,
+        "forced_steps_on_sample": 1,
+        "blocked_steps_on_sample": 3,
+        "nonprogress_steps_on_sample": 0,
+        "reachable_state_count": 68
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,0,0,0,0;1,0,3,2,0;1,2,2,0,1",
+      "stage_id": "BM-022",
+      "sequence": 22,
+      "chapter": "편안한 반복",
+      "intended_role": "practice",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          1,
+          0,
+          3
+        ],
+        [
+          0,
+          2,
+          1
+        ],
+        [
+          0,
+          1,
+          0
+        ]
+      ],
+      "targets": [
+        [
+          2,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          0
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 4,
+        "shortest_solution_count": 5,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 3,
+        "blocked_steps_on_sample": 3,
+        "nonprogress_steps_on_sample": 0,
+        "reachable_state_count": 753
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          1,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,0,2,0,1;1,0,1,2,1;2,1,0,1,2",
+      "stage_id": "BM-023",
+      "sequence": 23,
+      "chapter": "편안한 반복",
+      "intended_role": "stretch",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          1,
+          2,
+          0
+        ],
+        [
+          2,
+          2,
+          3
+        ],
+        [
+          0,
+          0,
+          2
+        ]
+      ],
+      "targets": [
+        [
+          0,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          1,
+          0
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 3,
+        "shortest_solution_count": 2,
+        "optimal_opening_choices": 2,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 1,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 2,
+        "blocked_steps_on_sample": 2,
+        "nonprogress_steps_on_sample": 0,
+        "reachable_state_count": 587
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,0,0,1,0;0,1,3,1,2;2,2,1,2,1",
+      "stage_id": "BM-024",
+      "sequence": 24,
+      "chapter": "편안한 반복",
+      "intended_role": "recovery",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          2,
+          0,
+          2
+        ],
+        [
+          0,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          3
+        ]
+      ],
+      "targets": [
+        [
+          2,
+          1
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 2,
+        "shortest_solution_count": 2,
+        "optimal_opening_choices": 2,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 1,
+        "initially_arrived_pieces": 1,
+        "forced_steps_on_sample": 1,
+        "blocked_steps_on_sample": 2,
+        "nonprogress_steps_on_sample": 0,
+        "reachable_state_count": 422
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,0,0,0,1;1,1,3,1,1;2,1,1,2,0",
+      "stage_id": "BM-025",
+      "sequence": 25,
+      "chapter": "편안한 반복",
+      "intended_role": "recovery",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          1,
+          0,
+          3
+        ],
+        [
+          2,
+          0,
+          2
+        ],
+        [
+          1,
+          2,
+          1
+        ]
+      ],
+      "targets": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          0,
+          2
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 3,
+        "shortest_solution_count": 2,
+        "optimal_opening_choices": 2,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 1,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 2,
+        "blocked_steps_on_sample": 2,
+        "nonprogress_steps_on_sample": 0,
+        "reachable_state_count": 697
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,0,0,1,1;1,0,3,2,0;1,2,1,2,2",
+      "stage_id": "BM-026",
+      "sequence": 26,
+      "chapter": "편안한 반복",
+      "intended_role": "stretch",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          0,
+          1,
+          1
+        ],
+        [
+          2,
+          2,
+          2
+        ],
+        [
+          1,
+          1,
+          0
+        ]
+      ],
+      "targets": [
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          0,
+          2
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 4,
+        "shortest_solution_count": 8,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 1,
+        "forced_steps_on_sample": 2,
+        "blocked_steps_on_sample": 4,
+        "nonprogress_steps_on_sample": 1,
+        "reachable_state_count": 248
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,0,0,0,0;1,1,2,2,0;2,1,3,1,1",
+      "stage_id": "BM-027",
+      "sequence": 27,
+      "chapter": "편안한 반복",
+      "intended_role": "stretch",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          2,
+          1,
+          1
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          1,
+          2,
+          3
+        ]
+      ],
+      "targets": [
+        [
+          2,
+          0
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          2
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 3,
+        "shortest_solution_count": 2,
+        "optimal_opening_choices": 2,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 1,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 2,
+        "blocked_steps_on_sample": 2,
+        "nonprogress_steps_on_sample": 0,
+        "reachable_state_count": 422
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,1,0,0,0;1,0,2,2,0;1,2,3,0,1",
+      "stage_id": "BM-028",
+      "sequence": 28,
+      "chapter": "편안한 반복",
+      "intended_role": "recovery",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          1,
+          1,
+          3
+        ],
+        [
+          2,
+          1,
+          1
+        ],
+        [
+          0,
+          1,
+          0
+        ]
+      ],
+      "targets": [
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          1,
+          0
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 3,
+        "shortest_solution_count": 2,
+        "optimal_opening_choices": 2,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 1,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 2,
+        "blocked_steps_on_sample": 2,
+        "nonprogress_steps_on_sample": 0,
+        "reachable_state_count": 422
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,1,0,1,0;1,1,3,1,2;2,1,1,2,0",
+      "stage_id": "BM-029",
+      "sequence": 29,
+      "chapter": "편안한 반복",
+      "intended_role": "practice",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          3
+        ],
+        [
+          0,
+          1,
+          2
+        ]
+      ],
+      "targets": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 2,
+        "shortest_solution_count": 3,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 1,
+        "forced_steps_on_sample": 1,
+        "blocked_steps_on_sample": 1,
+        "nonprogress_steps_on_sample": 1,
+        "reachable_state_count": 60
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,0,0,0,0;0,1,2,1,1;2,0,3,1,0",
+      "stage_id": "BM-030",
+      "sequence": 30,
+      "chapter": "편안한 반복",
+      "intended_role": "recovery",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          2,
+          0,
+          1
+        ]
+      ],
+      "targets": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          0
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 4,
+        "shortest_solution_count": 6,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 1,
+        "forced_steps_on_sample": 2,
+        "blocked_steps_on_sample": 3,
+        "nonprogress_steps_on_sample": 1,
+        "reachable_state_count": 986
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,0,0,0,0;0,2,3,1,2;1,2,1,2,1",
+      "stage_id": "BM-031",
+      "sequence": 31,
+      "chapter": "순서 계획",
+      "intended_role": "stretch",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          1,
+          1,
+          3
+        ],
+        [
+          1,
+          0,
+          1
+        ],
+        [
+          2,
+          1,
+          2
+        ]
+      ],
+      "targets": [
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 4,
+        "shortest_solution_count": 6,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 2,
+        "blocked_steps_on_sample": 2,
+        "nonprogress_steps_on_sample": 1,
+        "reachable_state_count": 699
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,1,0,0,0;1,1,2,2,0;1,2,3,1,1",
+      "stage_id": "BM-032",
+      "sequence": 32,
+      "chapter": "순서 계획",
+      "intended_role": "practice",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          0,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          2
+        ],
+        [
+          2,
+          2,
+          3
+        ]
+      ],
+      "targets": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 5,
+        "shortest_solution_count": 7,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 2,
+        "blocked_steps_on_sample": 5,
+        "nonprogress_steps_on_sample": 0,
+        "reachable_state_count": 425
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,0,0,1,1;1,1,1,0,2;1,2,2,2,2",
+      "stage_id": "BM-033",
+      "sequence": 33,
+      "chapter": "순서 계획",
+      "intended_role": "stretch",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          2,
+          2,
+          3
+        ],
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          1,
+          2,
+          1
+        ]
+      ],
+      "targets": [
+        [
+          1,
+          1
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          2
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 4,
+        "shortest_solution_count": 3,
+        "optimal_opening_choices": 2,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 2,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 2,
+        "blocked_steps_on_sample": 4,
+        "nonprogress_steps_on_sample": 0,
+        "reachable_state_count": 424
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,0,0,1,1;0,1,2,0,2;1,2,1,2,2",
+      "stage_id": "BM-034",
+      "sequence": 34,
+      "chapter": "순서 계획",
+      "intended_role": "recovery",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          1,
+          2,
+          3
+        ],
+        [
+          2,
+          2,
+          1
+        ],
+        [
+          2,
+          0,
+          0
+        ]
+      ],
+      "targets": [
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          1
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 3,
+        "shortest_solution_count": 5,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 1,
+        "forced_steps_on_sample": 2,
+        "blocked_steps_on_sample": 2,
+        "nonprogress_steps_on_sample": 1,
+        "reachable_state_count": 63
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,0,2,0,0;0,1,0,1,1;2,0,3,1,0",
+      "stage_id": "BM-035",
+      "sequence": 35,
+      "chapter": "순서 계획",
+      "intended_role": "recovery",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1
+        ]
+      ],
+      "targets": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          2
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 4,
+        "shortest_solution_count": 2,
+        "optimal_opening_choices": 2,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 1,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 3,
+        "blocked_steps_on_sample": 2,
+        "nonprogress_steps_on_sample": 0,
+        "reachable_state_count": 707
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,0,2,1,1;1,1,1,0,2;2,1,0,1,2",
+      "stage_id": "BM-036",
+      "sequence": 36,
+      "chapter": "순서 계획",
+      "intended_role": "stretch",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          1,
+          2,
+          2
+        ],
+        [
+          2,
+          1,
+          1
+        ],
+        [
+          1,
+          0,
+          3
+        ]
+      ],
+      "targets": [
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 5,
+        "shortest_solution_count": 8,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 2,
+        "blocked_steps_on_sample": 5,
+        "nonprogress_steps_on_sample": 1,
+        "reachable_state_count": 591
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,1,1,0,2;1,0,2,1,2;2,1,0,2,2",
+      "stage_id": "BM-037",
+      "sequence": 37,
+      "chapter": "순서 계획",
+      "intended_role": "stretch",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          2,
+          2,
+          0
+        ],
+        [
+          1,
+          0,
+          1
+        ],
+        [
+          2,
+          1,
+          2
+        ]
+      ],
+      "targets": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          2
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 4,
+        "shortest_solution_count": 6,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 3,
+        "blocked_steps_on_sample": 3,
+        "nonprogress_steps_on_sample": 1,
+        "reachable_state_count": 422
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,0,2,1,0;0,1,0,0,0;1,2,3,1,1",
+      "stage_id": "BM-038",
+      "sequence": 38,
+      "chapter": "순서 계획",
+      "intended_role": "recovery",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          2,
+          2,
+          2
+        ],
+        [
+          1,
+          2,
+          1
+        ],
+        [
+          0,
+          0,
+          3
+        ]
+      ],
+      "targets": [
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 4,
+        "shortest_solution_count": 5,
+        "optimal_opening_choices": 2,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 2,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 3,
+        "blocked_steps_on_sample": 3,
+        "nonprogress_steps_on_sample": 0,
+        "reachable_state_count": 422
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,0,0,1,2;1,0,3,2,0;2,2,1,2,1",
+      "stage_id": "BM-039",
+      "sequence": 39,
+      "chapter": "순서 계획",
+      "intended_role": "practice",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          2,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          3
+        ]
+      ],
+      "targets": [
+        [
+          2,
+          1
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          2
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 3,
+        "shortest_solution_count": 4,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 1,
+        "forced_steps_on_sample": 2,
+        "blocked_steps_on_sample": 2,
+        "nonprogress_steps_on_sample": 1,
+        "reachable_state_count": 243
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          1,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,0,0,1,0;0,1,3,0,1;1,1,2,2,0",
+      "stage_id": "BM-040",
+      "sequence": 40,
+      "chapter": "순서 계획",
+      "intended_role": "recovery",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          1,
+          1,
+          0
+        ],
+        [
+          2,
+          1,
+          2
+        ],
+        [
+          0,
+          1,
+          1
+        ]
+      ],
+      "targets": [
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          0,
+          2
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 4,
+        "shortest_solution_count": 5,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 3,
+        "blocked_steps_on_sample": 4,
+        "nonprogress_steps_on_sample": 1,
+        "reachable_state_count": 367
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          1,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,1,0,0,0;1,1,2,1,0;2,1,3,2,0",
+      "stage_id": "BM-041",
+      "sequence": 41,
+      "chapter": "순서 계획",
+      "intended_role": "stretch",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          2,
+          2,
+          2
+        ],
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1
+        ]
+      ],
+      "targets": [
+        [
+          2,
+          2
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          2
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 4,
+        "shortest_solution_count": 4,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 1,
+        "forced_steps_on_sample": 3,
+        "blocked_steps_on_sample": 3,
+        "nonprogress_steps_on_sample": 1,
+        "reachable_state_count": 422
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,0,0,0,0;1,1,3,2,0;1,2,2,2,1",
+      "stage_id": "BM-042",
+      "sequence": 42,
+      "chapter": "순서 계획",
+      "intended_role": "practice",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          2,
+          2,
+          2
+        ],
+        [
+          2,
+          1,
+          3
+        ],
+        [
+          1,
+          0,
+          0
+        ]
+      ],
+      "targets": [
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 5,
+        "shortest_solution_count": 12,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 3,
+        "blocked_steps_on_sample": 4,
+        "nonprogress_steps_on_sample": 1,
+        "reachable_state_count": 424
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,0,0,1,1;0,1,1,0,2;1,2,2,2,2",
+      "stage_id": "BM-043",
+      "sequence": 43,
+      "chapter": "순서 계획",
+      "intended_role": "stretch",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          0,
+          2,
+          3
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          2
+        ]
+      ],
+      "targets": [
+        [
+          1,
+          1
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 4,
+        "shortest_solution_count": 4,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 3,
+        "blocked_steps_on_sample": 3,
+        "nonprogress_steps_on_sample": 1,
+        "reachable_state_count": 422
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,0,0,1,1;1,0,1,2,0;2,0,3,2,1",
+      "stage_id": "BM-044",
+      "sequence": 44,
+      "chapter": "순서 계획",
+      "intended_role": "recovery",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          1,
+          2,
+          0
+        ],
+        [
+          0,
+          2,
+          1
+        ],
+        [
+          0,
+          1,
+          2
+        ]
+      ],
+      "targets": [
+        [
+          2,
+          2
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 3,
+        "shortest_solution_count": 4,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 1,
+        "forced_steps_on_sample": 2,
+        "blocked_steps_on_sample": 3,
+        "nonprogress_steps_on_sample": 1,
+        "reachable_state_count": 60
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          1,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,0,2,0,0;0,1,1,0,2;1,0,3,1,1",
+      "stage_id": "BM-045",
+      "sequence": 45,
+      "chapter": "순서 계획",
+      "intended_role": "recovery",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          2,
+          2,
+          3
+        ],
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          0,
+          0
+        ]
+      ],
+      "targets": [
+        [
+          2,
+          2
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 4,
+        "shortest_solution_count": 10,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 1,
+        "forced_steps_on_sample": 2,
+        "blocked_steps_on_sample": 3,
+        "nonprogress_steps_on_sample": 2,
+        "reachable_state_count": 427
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,0,0,0,0;2,1,3,2,0;2,2,2,2,1",
+      "stage_id": "BM-046",
+      "sequence": 46,
+      "chapter": "순서 계획",
+      "intended_role": "stretch",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          0,
+          2,
+          1
+        ],
+        [
+          2,
+          0,
+          3
+        ]
+      ],
+      "targets": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 5,
+        "shortest_solution_count": 8,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 3,
+        "blocked_steps_on_sample": 4,
+        "nonprogress_steps_on_sample": 1,
+        "reachable_state_count": 68
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,0,2,1,0;1,0,3,2,0;2,2,0,0,1",
+      "stage_id": "BM-047",
+      "sequence": 47,
+      "chapter": "순서 계획",
+      "intended_role": "stretch",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          2,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          3
+        ],
+        [
+          1,
+          1,
+          0
+        ]
+      ],
+      "targets": [
+        [
+          2,
+          1
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 4,
+        "shortest_solution_count": 3,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 1,
+        "forced_steps_on_sample": 3,
+        "blocked_steps_on_sample": 3,
+        "nonprogress_steps_on_sample": 1,
+        "reachable_state_count": 422
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,0,0,1,0;0,2,2,2,2;1,1,3,1,1",
+      "stage_id": "BM-048",
+      "sequence": 48,
+      "chapter": "순서 계획",
+      "intended_role": "recovery",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          0,
+          1,
+          1
+        ],
+        [
+          2,
+          1,
+          2
+        ],
+        [
+          2,
+          2,
+          3
+        ]
+      ],
+      "targets": [
+        [
+          0,
+          0
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 4,
+        "shortest_solution_count": 3,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 1,
+        "forced_steps_on_sample": 3,
+        "blocked_steps_on_sample": 3,
+        "nonprogress_steps_on_sample": 1,
+        "reachable_state_count": 584
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,0,0,1,2;1,0,1,1,0;1,2,2,2,2",
+      "stage_id": "BM-049",
+      "sequence": 49,
+      "chapter": "순서 계획",
+      "intended_role": "practice",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          2,
+          3
+        ],
+        [
+          2,
+          2,
+          0
+        ]
+      ],
+      "targets": [
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          1
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 3,
+        "shortest_solution_count": 3,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 2,
+        "blocked_steps_on_sample": 1,
+        "nonprogress_steps_on_sample": 1,
+        "reachable_state_count": 429
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,0,0,1,1;2,1,2,2,2;2,2,1,1,2",
+      "stage_id": "BM-050",
+      "sequence": 50,
+      "chapter": "순서 계획",
+      "intended_role": "recovery",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          0,
+          1,
+          3
+        ],
+        [
+          2,
+          2,
+          1
+        ],
+        [
+          1,
+          0,
+          0
+        ]
+      ],
+      "targets": [
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          0
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 4,
+        "shortest_solution_count": 3,
+        "optimal_opening_choices": 1,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 2,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 3,
+        "blocked_steps_on_sample": 3,
+        "nonprogress_steps_on_sample": 0,
+        "reachable_state_count": 422
+      },
+      "sample_solution": [
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          1,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,0,2,1,0;1,2,0,0,0;2,1,3,2,0",
+      "stage_id": "BM-051",
+      "sequence": 51,
+      "chapter": "순서 계획",
+      "intended_role": "stretch",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          1,
+          1,
+          2
+        ],
+        [
+          2,
+          0,
+          3
+        ],
+        [
+          2,
+          1,
+          0
+        ]
+      ],
+      "targets": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          1
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 4,
+        "shortest_solution_count": 7,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 1,
+        "forced_steps_on_sample": 2,
+        "blocked_steps_on_sample": 4,
+        "nonprogress_steps_on_sample": 2,
+        "reachable_state_count": 246
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,0,2,0,1;1,0,3,1,0;1,1,1,1,2",
+      "stage_id": "BM-052",
+      "sequence": 52,
+      "chapter": "순서 계획",
+      "intended_role": "practice",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          2,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          2
+        ],
+        [
+          0,
+          1,
+          0
+        ]
+      ],
+      "targets": [
+        [
+          2,
+          2
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 5,
+        "shortest_solution_count": 7,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 3,
+        "blocked_steps_on_sample": 4,
+        "nonprogress_steps_on_sample": 1,
+        "reachable_state_count": 367
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,1,0,1,0;1,1,2,0,0;2,1,3,2,0",
+      "stage_id": "BM-053",
+      "sequence": 53,
+      "chapter": "순서 계획",
+      "intended_role": "stretch",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          0,
+          2,
+          2
+        ],
+        [
+          1,
+          0,
+          3
+        ],
+        [
+          0,
+          1,
+          0
+        ]
+      ],
+      "targets": [
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          1,
+          0
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 4,
+        "shortest_solution_count": 2,
+        "optimal_opening_choices": 2,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 2,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 3,
+        "blocked_steps_on_sample": 3,
+        "nonprogress_steps_on_sample": 0,
+        "reachable_state_count": 422
+      },
+      "sample_solution": [
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,0,2,1,1;0,1,0,1,2;1,2,1,2,2",
+      "stage_id": "BM-054",
+      "sequence": 54,
+      "chapter": "순서 계획",
+      "intended_role": "recovery",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          2,
+          1,
+          1
+        ],
+        [
+          1,
+          0,
+          2
+        ],
+        [
+          1,
+          2,
+          0
+        ]
+      ],
+      "targets": [
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          0,
+          2
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 3,
+        "shortest_solution_count": 3,
+        "optimal_opening_choices": 2,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 2,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 1,
+        "blocked_steps_on_sample": 2,
+        "nonprogress_steps_on_sample": 1,
+        "reachable_state_count": 422
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,1,1,0,0;1,0,0,2,0;2,1,3,2,2",
+      "stage_id": "BM-055",
+      "sequence": 55,
+      "chapter": "순서 계획",
+      "intended_role": "recovery",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          2,
+          1,
+          3
+        ],
+        [
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          2
+        ]
+      ],
+      "targets": [
+        [
+          2,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 4,
+        "shortest_solution_count": 2,
+        "optimal_opening_choices": 1,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 2,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 3,
+        "blocked_steps_on_sample": 3,
+        "nonprogress_steps_on_sample": 0,
+        "reachable_state_count": 367
+      },
+      "sample_solution": [
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,1,1,0,2;1,1,2,2,2;2,1,0,1,2",
+      "stage_id": "BM-056",
+      "sequence": 56,
+      "chapter": "순서 계획",
+      "intended_role": "stretch",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          1,
+          1,
+          2
+        ],
+        [
+          2,
+          1,
+          3
+        ],
+        [
+          2,
+          0,
+          1
+        ]
+      ],
+      "targets": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 5,
+        "shortest_solution_count": 7,
+        "optimal_opening_choices": 2,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 2,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 2,
+        "blocked_steps_on_sample": 2,
+        "nonprogress_steps_on_sample": 1,
+        "reachable_state_count": 1141
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,0,0,1,1;1,0,2,2,1;1,1,1,0,2",
+      "stage_id": "BM-057",
+      "sequence": 57,
+      "chapter": "순서 계획",
+      "intended_role": "stretch",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          0,
+          0,
+          2
+        ],
+        [
+          0,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          3
+        ]
+      ],
+      "targets": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 4,
+        "shortest_solution_count": 4,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 1,
+        "forced_steps_on_sample": 2,
+        "blocked_steps_on_sample": 3,
+        "nonprogress_steps_on_sample": 2,
+        "reachable_state_count": 60
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,0,2,0,0;0,1,1,0,2;1,1,3,1,2",
+      "stage_id": "BM-058",
+      "sequence": 58,
+      "chapter": "순서 계획",
+      "intended_role": "recovery",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          2,
+          2,
+          0
+        ],
+        [
+          1,
+          0,
+          2
+        ],
+        [
+          1,
+          1,
+          1
+        ]
+      ],
+      "targets": [
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 4,
+        "shortest_solution_count": 4,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 1,
+        "forced_steps_on_sample": 2,
+        "blocked_steps_on_sample": 1,
+        "nonprogress_steps_on_sample": 2,
+        "reachable_state_count": 422
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,0,2,1,0;1,1,3,1,1;1,2,0,0,1",
+      "stage_id": "BM-059",
+      "sequence": 59,
+      "chapter": "순서 계획",
+      "intended_role": "practice",
+      "content_version": 1
+    },
+    {
+      "board_size": 3,
+      "piece_count": 3,
+      "start": [
+        [
+          1,
+          0,
+          3
+        ],
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          2,
+          0,
+          0
+        ]
+      ],
+      "targets": [
+        [
+          1,
+          1
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          2,
+          1
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 3,
+        "shortest_solution_count": 2,
+        "optimal_opening_choices": 2,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 1,
+        "initially_arrived_pieces": 1,
+        "forced_steps_on_sample": 2,
+        "blocked_steps_on_sample": 3,
+        "nonprogress_steps_on_sample": 1,
+        "reachable_state_count": 424
+      },
+      "sample_solution": [
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          1,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "3|0,0,0,0,0;0,1,2,1,1;0,2,1,1,2",
+      "stage_id": "BM-060",
+      "sequence": 60,
+      "chapter": "순서 계획",
+      "intended_role": "recovery",
+      "content_version": 1
+    },
+    {
+      "board_size": 4,
+      "piece_count": 3,
+      "start": [
+        [
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          3,
+          1
+        ],
+        [
+          0,
+          3,
+          3
+        ]
+      ],
+      "targets": [
+        [
+          2,
+          0
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 4,
+        "shortest_solution_count": 3,
+        "optimal_opening_choices": 2,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 1,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 2,
+        "blocked_steps_on_sample": 3,
+        "nonprogress_steps_on_sample": 0,
+        "reachable_state_count": 3906
+      },
+      "sample_solution": [
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "4|0,0,0,1,1;0,1,2,0,2;2,1,1,3,2",
+      "stage_id": "BM-061",
+      "sequence": 61,
+      "chapter": "넓은 보드 적응",
+      "intended_role": "stretch",
+      "content_version": 1
+    },
+    {
+      "board_size": 4,
+      "piece_count": 3,
+      "start": [
+        [
+          2,
+          0,
+          2
+        ],
+        [
+          1,
+          0,
+          3
+        ],
+        [
+          0,
+          3,
+          1
+        ]
+      ],
+      "targets": [
+        [
+          1,
+          2
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          2
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 4,
+        "shortest_solution_count": 3,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 3,
+        "blocked_steps_on_sample": 2,
+        "nonprogress_steps_on_sample": 0,
+        "reachable_state_count": 667
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "4|0,0,2,1,0;3,1,0,2,0;3,2,3,1,1",
+      "stage_id": "BM-062",
+      "sequence": 62,
+      "chapter": "넓은 보드 적응",
+      "intended_role": "practice",
+      "content_version": 1
+    },
+    {
+      "board_size": 4,
+      "piece_count": 3,
+      "start": [
+        [
+          3,
+          0,
+          3
+        ],
+        [
+          1,
+          3,
+          2
+        ],
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "targets": [
+        [
+          2,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          0
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 5,
+        "shortest_solution_count": 11,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 1,
+        "blocked_steps_on_sample": 3,
+        "nonprogress_steps_on_sample": 1,
+        "reachable_state_count": 245
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "4|0,0,0,1,0;1,3,2,0,1;3,0,3,2,0",
+      "stage_id": "BM-063",
+      "sequence": 63,
+      "chapter": "넓은 보드 적응",
+      "intended_role": "stretch",
+      "content_version": 1
+    },
+    {
+      "board_size": 4,
+      "piece_count": 3,
+      "start": [
+        [
+          3,
+          0,
+          1
+        ],
+        [
+          2,
+          3,
+          3
+        ],
+        [
+          1,
+          3,
+          0
+        ]
+      ],
+      "targets": [
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 4,
+        "shortest_solution_count": 7,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 2,
+        "blocked_steps_on_sample": 3,
+        "nonprogress_steps_on_sample": 1,
+        "reachable_state_count": 1078
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "4|0,0,0,1,0;3,1,2,2,0;3,2,3,3,1",
+      "stage_id": "BM-064",
+      "sequence": 64,
+      "chapter": "넓은 보드 적응",
+      "intended_role": "recovery",
+      "content_version": 1
+    },
+    {
+      "board_size": 4,
+      "piece_count": 3,
+      "start": [
+        [
+          3,
+          1,
+          1
+        ],
+        [
+          3,
+          3,
+          2
+        ],
+        [
+          1,
+          3,
+          3
+        ]
+      ],
+      "targets": [
+        [
+          2,
+          0
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          0,
+          2
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 3,
+        "shortest_solution_count": 2,
+        "optimal_opening_choices": 2,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 1,
+        "initially_arrived_pieces": 1,
+        "forced_steps_on_sample": 2,
+        "blocked_steps_on_sample": 2,
+        "nonprogress_steps_on_sample": 0,
+        "reachable_state_count": 3113
+      },
+      "sample_solution": [
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          1,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "4|0,0,0,0,0;0,2,3,1,3;2,0,1,3,1",
+      "stage_id": "BM-065",
+      "sequence": 65,
+      "chapter": "넓은 보드 적응",
+      "intended_role": "recovery",
+      "content_version": 1
+    },
+    {
+      "board_size": 4,
+      "piece_count": 3,
+      "start": [
+        [
+          1,
+          3,
+          1
+        ],
+        [
+          3,
+          3,
+          2
+        ],
+        [
+          2,
+          0,
+          0
+        ]
+      ],
+      "targets": [
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          1
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 4,
+        "shortest_solution_count": 5,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 1,
+        "forced_steps_on_sample": 2,
+        "blocked_steps_on_sample": 3,
+        "nonprogress_steps_on_sample": 1,
+        "reachable_state_count": 245
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "4|0,0,0,1,0;1,3,2,0,2;2,0,3,2,0",
+      "stage_id": "BM-066",
+      "sequence": 66,
+      "chapter": "넓은 보드 적응",
+      "intended_role": "stretch",
+      "content_version": 1
+    },
+    {
+      "board_size": 4,
+      "piece_count": 3,
+      "start": [
+        [
+          2,
+          2,
+          3
+        ],
+        [
+          1,
+          2,
+          0
+        ],
+        [
+          0,
+          0,
+          1
+        ]
+      ],
+      "targets": [
+        [
+          3,
+          3
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 5,
+        "shortest_solution_count": 7,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 2,
+        "blocked_steps_on_sample": 2,
+        "nonprogress_steps_on_sample": 1,
+        "reachable_state_count": 2534
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "4|0,0,0,1,1;2,1,1,1,2;2,2,2,3,3",
+      "stage_id": "BM-067",
+      "sequence": 67,
+      "chapter": "넓은 보드 적응",
+      "intended_role": "stretch",
+      "content_version": 1
+    },
+    {
+      "board_size": 4,
+      "piece_count": 3,
+      "start": [
+        [
+          1,
+          3,
+          2
+        ],
+        [
+          3,
+          3,
+          3
+        ],
+        [
+          1,
+          1,
+          1
+        ]
+      ],
+      "targets": [
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 4,
+        "shortest_solution_count": 4,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 1,
+        "forced_steps_on_sample": 2,
+        "blocked_steps_on_sample": 1,
+        "nonprogress_steps_on_sample": 1,
+        "reachable_state_count": 1755
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "4|0,0,0,1,2;0,2,1,0,2;2,2,2,3,3",
+      "stage_id": "BM-068",
+      "sequence": 68,
+      "chapter": "넓은 보드 적응",
+      "intended_role": "recovery",
+      "content_version": 1
+    },
+    {
+      "board_size": 4,
+      "piece_count": 3,
+      "start": [
+        [
+          3,
+          2,
+          1
+        ],
+        [
+          0,
+          2,
+          3
+        ],
+        [
+          0,
+          0,
+          2
+        ]
+      ],
+      "targets": [
+        [
+          1,
+          3
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 4,
+        "shortest_solution_count": 4,
+        "optimal_opening_choices": 2,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 1,
+        "initially_arrived_pieces": 1,
+        "forced_steps_on_sample": 1,
+        "blocked_steps_on_sample": 2,
+        "nonprogress_steps_on_sample": 1,
+        "reachable_state_count": 244
+      },
+      "sample_solution": [
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "4|0,0,2,0,0;0,2,3,0,3;3,2,1,1,3",
+      "stage_id": "BM-069",
+      "sequence": 69,
+      "chapter": "넓은 보드 적응",
+      "intended_role": "practice",
+      "content_version": 1
+    },
+    {
+      "board_size": 4,
+      "piece_count": 3,
+      "start": [
+        [
+          3,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          3
+        ]
+      ],
+      "targets": [
+        [
+          3,
+          1
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 3,
+        "shortest_solution_count": 2,
+        "optimal_opening_choices": 2,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 1,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 2,
+        "blocked_steps_on_sample": 2,
+        "nonprogress_steps_on_sample": 0,
+        "reachable_state_count": 1593
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          1,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "4|0,0,2,0,1;2,0,1,1,0;3,0,3,2,1",
+      "stage_id": "BM-070",
+      "sequence": 70,
+      "chapter": "넓은 보드 적응",
+      "intended_role": "recovery",
+      "content_version": 1
+    },
+    {
+      "board_size": 4,
+      "piece_count": 3,
+      "start": [
+        [
+          3,
+          0,
+          3
+        ],
+        [
+          3,
+          1,
+          1
+        ],
+        [
+          1,
+          0,
+          0
+        ]
+      ],
+      "targets": [
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          1,
+          0
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 4,
+        "shortest_solution_count": 8,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 1,
+        "forced_steps_on_sample": 1,
+        "blocked_steps_on_sample": 4,
+        "nonprogress_steps_on_sample": 2,
+        "reachable_state_count": 183
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "4|0,0,2,1,0;0,2,3,0,2;1,0,0,2,0",
+      "stage_id": "BM-071",
+      "sequence": 71,
+      "chapter": "넓은 보드 적응",
+      "intended_role": "stretch",
+      "content_version": 1
+    },
+    {
+      "board_size": 4,
+      "piece_count": 3,
+      "start": [
+        [
+          2,
+          3,
+          2
+        ],
+        [
+          3,
+          3,
+          3
+        ],
+        [
+          0,
+          2,
+          1
+        ]
+      ],
+      "targets": [
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 4,
+        "shortest_solution_count": 4,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 1,
+        "forced_steps_on_sample": 3,
+        "blocked_steps_on_sample": 2,
+        "nonprogress_steps_on_sample": 1,
+        "reachable_state_count": 1739
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "4|0,0,0,1,1;0,1,1,0,1;1,3,2,3,3",
+      "stage_id": "BM-072",
+      "sequence": 72,
+      "chapter": "넓은 보드 적응",
+      "intended_role": "practice",
+      "content_version": 1
+    },
+    {
+      "board_size": 4,
+      "piece_count": 3,
+      "start": [
+        [
+          3,
+          0,
+          3
+        ],
+        [
+          2,
+          1,
+          2
+        ],
+        [
+          0,
+          2,
+          0
+        ]
+      ],
+      "targets": [
+        [
+          2,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 5,
+        "shortest_solution_count": 5,
+        "optimal_opening_choices": 2,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 1,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 2,
+        "blocked_steps_on_sample": 4,
+        "nonprogress_steps_on_sample": 1,
+        "reachable_state_count": 1075
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "4|0,0,2,0,1;1,1,1,0,2;2,3,3,1,2",
+      "stage_id": "BM-073",
+      "sequence": 73,
+      "chapter": "넓은 보드 적응",
+      "intended_role": "stretch",
+      "content_version": 1
+    },
+    {
+      "board_size": 4,
+      "piece_count": 3,
+      "start": [
+        [
+          0,
+          2,
+          3
+        ],
+        [
+          0,
+          3,
+          1
+        ],
+        [
+          1,
+          2,
+          0
+        ]
+      ],
+      "targets": [
+        [
+          1,
+          2
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 4,
+        "shortest_solution_count": 4,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 1,
+        "forced_steps_on_sample": 3,
+        "blocked_steps_on_sample": 4,
+        "nonprogress_steps_on_sample": 1,
+        "reachable_state_count": 6068
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "4|0,0,2,0,0;1,0,0,1,1;1,1,1,0,2",
+      "stage_id": "BM-074",
+      "sequence": 74,
+      "chapter": "넓은 보드 적응",
+      "intended_role": "recovery",
+      "content_version": 1
+    },
+    {
+      "board_size": 4,
+      "piece_count": 3,
+      "start": [
+        [
+          3,
+          2,
+          3
+        ],
+        [
+          1,
+          3,
+          2
+        ],
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "targets": [
+        [
+          3,
+          1
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 3,
+        "shortest_solution_count": 3,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 1,
+        "forced_steps_on_sample": 2,
+        "blocked_steps_on_sample": 1,
+        "nonprogress_steps_on_sample": 1,
+        "reachable_state_count": 1739
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "4|0,0,0,0,0;1,3,2,2,2;3,2,3,3,1",
+      "stage_id": "BM-075",
+      "sequence": 75,
+      "chapter": "넓은 보드 적응",
+      "intended_role": "recovery",
+      "content_version": 1
+    },
+    {
+      "board_size": 4,
+      "piece_count": 3,
+      "start": [
+        [
+          1,
+          0,
+          1
+        ],
+        [
+          3,
+          2,
+          2
+        ],
+        [
+          1,
+          2,
+          3
+        ]
+      ],
+      "targets": [
+        [
+          0,
+          0
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          0,
+          3
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 4,
+        "shortest_solution_count": 4,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 3,
+        "blocked_steps_on_sample": 2,
+        "nonprogress_steps_on_sample": 1,
+        "reachable_state_count": 1783
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "4|0,1,0,0,0;2,1,2,3,0;2,3,3,2,2",
+      "stage_id": "BM-076",
+      "sequence": 76,
+      "chapter": "넓은 보드 적응",
+      "intended_role": "stretch",
+      "content_version": 1
+    },
+    {
+      "board_size": 4,
+      "piece_count": 3,
+      "start": [
+        [
+          0,
+          3,
+          3
+        ],
+        [
+          1,
+          2,
+          1
+        ],
+        [
+          1,
+          3,
+          0
+        ]
+      ],
+      "targets": [
+        [
+          1,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          1,
+          3
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 5,
+        "shortest_solution_count": 3,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 1,
+        "forced_steps_on_sample": 4,
+        "blocked_steps_on_sample": 2,
+        "nonprogress_steps_on_sample": 1,
+        "reachable_state_count": 4396
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "4|0,0,0,2,1;0,1,1,0,1;1,1,2,2,3",
+      "stage_id": "BM-077",
+      "sequence": 77,
+      "chapter": "넓은 보드 적응",
+      "intended_role": "stretch",
+      "content_version": 1
+    },
+    {
+      "board_size": 4,
+      "piece_count": 3,
+      "start": [
+        [
+          3,
+          1,
+          0
+        ],
+        [
+          3,
+          2,
+          1
+        ],
+        [
+          2,
+          2,
+          2
+        ]
+      ],
+      "targets": [
+        [
+          2,
+          2
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          1,
+          3
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 4,
+        "shortest_solution_count": 4,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 3,
+        "blocked_steps_on_sample": 2,
+        "nonprogress_steps_on_sample": 1,
+        "reachable_state_count": 1720
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "4|0,1,2,1,2;0,2,1,0,3;1,2,0,2,3",
+      "stage_id": "BM-078",
+      "sequence": 78,
+      "chapter": "넓은 보드 적응",
+      "intended_role": "recovery",
+      "content_version": 1
+    },
+    {
+      "board_size": 4,
+      "piece_count": 3,
+      "start": [
+        [
+          2,
+          3,
+          3
+        ],
+        [
+          0,
+          3,
+          2
+        ],
+        [
+          1,
+          2,
+          0
+        ]
+      ],
+      "targets": [
+        [
+          2,
+          2
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 4,
+        "shortest_solution_count": 3,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 3,
+        "blocked_steps_on_sample": 3,
+        "nonprogress_steps_on_sample": 1,
+        "reachable_state_count": 4917
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "4|0,0,2,0,1;1,1,0,1,2;2,0,1,2,1",
+      "stage_id": "BM-079",
+      "sequence": 79,
+      "chapter": "넓은 보드 적응",
+      "intended_role": "practice",
+      "content_version": 1
+    },
+    {
+      "board_size": 4,
+      "piece_count": 3,
+      "start": [
+        [
+          0,
+          2,
+          1
+        ],
+        [
+          2,
+          3,
+          2
+        ],
+        [
+          1,
+          3,
+          0
+        ]
+      ],
+      "targets": [
+        [
+          1,
+          3
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          0,
+          3
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 3,
+        "shortest_solution_count": 3,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 2,
+        "blocked_steps_on_sample": 1,
+        "nonprogress_steps_on_sample": 1,
+        "reachable_state_count": 158
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "4|0,1,1,0,0;0,2,3,0,3;1,0,2,0,1",
+      "stage_id": "BM-080",
+      "sequence": 80,
+      "chapter": "넓은 보드 적응",
+      "intended_role": "recovery",
+      "content_version": 1
+    },
+    {
+      "board_size": 4,
+      "piece_count": 3,
+      "start": [
+        [
+          0,
+          2,
+          0
+        ],
+        [
+          2,
+          0,
+          3
+        ],
+        [
+          1,
+          3,
+          1
+        ]
+      ],
+      "targets": [
+        [
+          2,
+          1
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 5,
+        "shortest_solution_count": 3,
+        "optimal_opening_choices": 2,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 1,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 3,
+        "blocked_steps_on_sample": 3,
+        "nonprogress_steps_on_sample": 1,
+        "reachable_state_count": 2294
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "4|0,1,0,2,2;1,0,3,2,0;2,3,1,3,3",
+      "stage_id": "BM-081",
+      "sequence": 81,
+      "chapter": "짧은 도전",
+      "intended_role": "stretch",
+      "content_version": 1
+    },
+    {
+      "board_size": 4,
+      "piece_count": 3,
+      "start": [
+        [
+          0,
+          0,
+          2
+        ],
+        [
+          3,
+          3,
+          0
+        ],
+        [
+          2,
+          1,
+          3
+        ]
+      ],
+      "targets": [
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          3,
+          0
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 5,
+        "shortest_solution_count": 2,
+        "optimal_opening_choices": 1,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 2,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 4,
+        "blocked_steps_on_sample": 4,
+        "nonprogress_steps_on_sample": 0,
+        "reachable_state_count": 1109
+      },
+      "sample_solution": [
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "4|0,0,2,1,0;2,1,3,3,0;3,3,0,2,1",
+      "stage_id": "BM-082",
+      "sequence": 82,
+      "chapter": "짧은 도전",
+      "intended_role": "practice",
+      "content_version": 1
+    },
+    {
+      "board_size": 4,
+      "piece_count": 3,
+      "start": [
+        [
+          0,
+          3,
+          2
+        ],
+        [
+          0,
+          2,
+          0
+        ],
+        [
+          2,
+          1,
+          3
+        ]
+      ],
+      "targets": [
+        [
+          1,
+          1
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          2,
+          1
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 6,
+        "shortest_solution_count": 4,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 1,
+        "forced_steps_on_sample": 4,
+        "blocked_steps_on_sample": 5,
+        "nonprogress_steps_on_sample": 1,
+        "reachable_state_count": 2537
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "4|0,0,2,1,2;0,1,0,0,3;2,2,1,2,2",
+      "stage_id": "BM-083",
+      "sequence": 83,
+      "chapter": "짧은 도전",
+      "intended_role": "stretch",
+      "content_version": 1
+    },
+    {
+      "board_size": 4,
+      "piece_count": 3,
+      "start": [
+        [
+          3,
+          2,
+          2
+        ],
+        [
+          0,
+          2,
+          0
+        ],
+        [
+          1,
+          2,
+          3
+        ]
+      ],
+      "targets": [
+        [
+          2,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          2,
+          1
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 5,
+        "shortest_solution_count": 2,
+        "optimal_opening_choices": 2,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 2,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 4,
+        "blocked_steps_on_sample": 3,
+        "nonprogress_steps_on_sample": 0,
+        "reachable_state_count": 3292
+      },
+      "sample_solution": [
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "4|0,1,0,0,3;1,1,1,2,2;3,1,2,2,3",
+      "stage_id": "BM-084",
+      "sequence": 84,
+      "chapter": "짧은 도전",
+      "intended_role": "recovery",
+      "content_version": 1
+    },
+    {
+      "board_size": 4,
+      "piece_count": 3,
+      "start": [
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          3,
+          1,
+          2
+        ],
+        [
+          1,
+          3,
+          0
+        ]
+      ],
+      "targets": [
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 4,
+        "shortest_solution_count": 3,
+        "optimal_opening_choices": 2,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 2,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 2,
+        "blocked_steps_on_sample": 2,
+        "nonprogress_steps_on_sample": 1,
+        "reachable_state_count": 1434
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "4|0,1,0,1,2;2,1,1,2,2;2,3,2,1,3",
+      "stage_id": "BM-085",
+      "sequence": 85,
+      "chapter": "짧은 도전",
+      "intended_role": "recovery",
+      "content_version": 1
+    },
+    {
+      "board_size": 4,
+      "piece_count": 3,
+      "start": [
+        [
+          2,
+          3,
+          0
+        ],
+        [
+          0,
+          3,
+          2
+        ],
+        [
+          0,
+          2,
+          3
+        ]
+      ],
+      "targets": [
+        [
+          2,
+          1
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 5,
+        "shortest_solution_count": 4,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 1,
+        "forced_steps_on_sample": 4,
+        "blocked_steps_on_sample": 3,
+        "nonprogress_steps_on_sample": 2,
+        "reachable_state_count": 5793
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "4|0,0,2,0,0;0,1,1,1,2;2,0,0,2,2",
+      "stage_id": "BM-086",
+      "sequence": 86,
+      "chapter": "짧은 도전",
+      "intended_role": "stretch",
+      "content_version": 1
+    },
+    {
+      "board_size": 4,
+      "piece_count": 3,
+      "start": [
+        [
+          2,
+          2,
+          2
+        ],
+        [
+          2,
+          3,
+          1
+        ],
+        [
+          1,
+          1,
+          0
+        ]
+      ],
+      "targets": [
+        [
+          3,
+          3
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          2,
+          2
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 6,
+        "shortest_solution_count": 3,
+        "optimal_opening_choices": 1,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 2,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 5,
+        "blocked_steps_on_sample": 4,
+        "nonprogress_steps_on_sample": 1,
+        "reachable_state_count": 1066
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "4|0,1,2,0,3;1,1,1,0,0;2,2,3,1,1",
+      "stage_id": "BM-087",
+      "sequence": 87,
+      "chapter": "짧은 도전",
+      "intended_role": "stretch",
+      "content_version": 1
+    },
+    {
+      "board_size": 4,
+      "piece_count": 3,
+      "start": [
+        [
+          1,
+          1,
+          2
+        ],
+        [
+          3,
+          2,
+          3
+        ],
+        [
+          3,
+          0,
+          1
+        ]
+      ],
+      "targets": [
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          0
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 5,
+        "shortest_solution_count": 3,
+        "optimal_opening_choices": 2,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 1,
+        "initially_arrived_pieces": 1,
+        "forced_steps_on_sample": 3,
+        "blocked_steps_on_sample": 2,
+        "nonprogress_steps_on_sample": 2,
+        "reachable_state_count": 2877
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "4|0,0,0,0,2;1,2,1,1,2;2,0,2,2,2",
+      "stage_id": "BM-088",
+      "sequence": 88,
+      "chapter": "짧은 도전",
+      "intended_role": "recovery",
+      "content_version": 1
+    },
+    {
+      "board_size": 4,
+      "piece_count": 3,
+      "start": [
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          1,
+          3,
+          3
+        ],
+        [
+          2,
+          2,
+          0
+        ]
+      ],
+      "targets": [
+        [
+          0,
+          0
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          3,
+          0
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 5,
+        "shortest_solution_count": 4,
+        "optimal_opening_choices": 2,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 2,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 4,
+        "blocked_steps_on_sample": 0,
+        "nonprogress_steps_on_sample": 2,
+        "reachable_state_count": 2360
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "4|0,1,0,1,2;1,2,1,3,3;2,0,3,3,0",
+      "stage_id": "BM-089",
+      "sequence": 89,
+      "chapter": "짧은 도전",
+      "intended_role": "practice",
+      "content_version": 1
+    },
+    {
+      "board_size": 4,
+      "piece_count": 3,
+      "start": [
+        [
+          0,
+          0,
+          1
+        ],
+        [
+          1,
+          3,
+          3
+        ],
+        [
+          0,
+          2,
+          2
+        ]
+      ],
+      "targets": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          3
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 4,
+        "shortest_solution_count": 3,
+        "optimal_opening_choices": 2,
+        "safe_opening_choices": 2,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 1,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 1,
+        "forced_steps_on_sample": 3,
+        "blocked_steps_on_sample": 2,
+        "nonprogress_steps_on_sample": 2,
+        "reachable_state_count": 164
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "4|0,0,0,0,0;2,0,3,3,0;3,1,2,2,0",
+      "stage_id": "BM-090",
+      "sequence": 90,
+      "chapter": "짧은 도전",
+      "intended_role": "recovery",
+      "content_version": 1
+    },
+    {
+      "board_size": 4,
+      "piece_count": 3,
+      "start": [
+        [
+          2,
+          0,
+          2
+        ],
+        [
+          1,
+          0,
+          3
+        ],
+        [
+          0,
+          3,
+          1
+        ]
+      ],
+      "targets": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          2
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 5,
+        "shortest_solution_count": 8,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 2,
+        "blocked_steps_on_sample": 4,
+        "nonprogress_steps_on_sample": 1,
+        "reachable_state_count": 667
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          1,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "4|0,0,2,1,0;3,1,0,2,0;3,2,3,3,0",
+      "stage_id": "BM-091",
+      "sequence": 91,
+      "chapter": "짧은 도전",
+      "intended_role": "stretch",
+      "content_version": 1
+    },
+    {
+      "board_size": 4,
+      "piece_count": 3,
+      "start": [
+        [
+          1,
+          3,
+          1
+        ],
+        [
+          3,
+          3,
+          2
+        ],
+        [
+          2,
+          0,
+          0
+        ]
+      ],
+      "targets": [
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 5,
+        "shortest_solution_count": 9,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 1,
+        "forced_steps_on_sample": 3,
+        "blocked_steps_on_sample": 4,
+        "nonprogress_steps_on_sample": 1,
+        "reachable_state_count": 245
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "4|0,0,0,1,0;1,3,2,2,1;2,0,3,2,0",
+      "stage_id": "BM-092",
+      "sequence": 92,
+      "chapter": "짧은 도전",
+      "intended_role": "practice",
+      "content_version": 1
+    },
+    {
+      "board_size": 4,
+      "piece_count": 3,
+      "start": [
+        [
+          3,
+          0,
+          3
+        ],
+        [
+          1,
+          3,
+          2
+        ],
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "targets": [
+        [
+          3,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          0
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 6,
+        "shortest_solution_count": 9,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 1,
+        "forced_steps_on_sample": 2,
+        "blocked_steps_on_sample": 4,
+        "nonprogress_steps_on_sample": 2,
+        "reachable_state_count": 245
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "4|0,0,0,1,0;1,3,2,0,1;3,0,3,3,0",
+      "stage_id": "BM-093",
+      "sequence": 93,
+      "chapter": "짧은 도전",
+      "intended_role": "stretch",
+      "content_version": 1
+    },
+    {
+      "board_size": 4,
+      "piece_count": 3,
+      "start": [
+        [
+          3,
+          0,
+          1
+        ],
+        [
+          2,
+          3,
+          3
+        ],
+        [
+          1,
+          3,
+          0
+        ]
+      ],
+      "targets": [
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          2,
+          1
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 5,
+        "shortest_solution_count": 9,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 3,
+        "blocked_steps_on_sample": 4,
+        "nonprogress_steps_on_sample": 1,
+        "reachable_state_count": 1078
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "4|0,0,0,1,0;3,1,2,3,0;3,2,3,1,1",
+      "stage_id": "BM-094",
+      "sequence": 94,
+      "chapter": "짧은 도전",
+      "intended_role": "recovery",
+      "content_version": 1
+    },
+    {
+      "board_size": 4,
+      "piece_count": 3,
+      "start": [
+        [
+          3,
+          2,
+          3
+        ],
+        [
+          1,
+          3,
+          2
+        ],
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "targets": [
+        [
+          3,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 4,
+        "shortest_solution_count": 3,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 1,
+        "forced_steps_on_sample": 3,
+        "blocked_steps_on_sample": 2,
+        "nonprogress_steps_on_sample": 1,
+        "reachable_state_count": 1739
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "4|0,0,0,0,0;1,3,2,2,1;3,2,3,3,1",
+      "stage_id": "BM-095",
+      "sequence": 95,
+      "chapter": "짧은 도전",
+      "intended_role": "recovery",
+      "content_version": 1
+    },
+    {
+      "board_size": 4,
+      "piece_count": 3,
+      "start": [
+        [
+          3,
+          0,
+          3
+        ],
+        [
+          3,
+          1,
+          1
+        ],
+        [
+          1,
+          0,
+          0
+        ]
+      ],
+      "targets": [
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          1,
+          0
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 5,
+        "shortest_solution_count": 8,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 1,
+        "forced_steps_on_sample": 2,
+        "blocked_steps_on_sample": 5,
+        "nonprogress_steps_on_sample": 2,
+        "reachable_state_count": 183
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "4|0,0,2,1,0;0,2,3,0,2;1,0,0,3,0",
+      "stage_id": "BM-096",
+      "sequence": 96,
+      "chapter": "짧은 도전",
+      "intended_role": "stretch",
+      "content_version": 1
+    },
+    {
+      "board_size": 4,
+      "piece_count": 3,
+      "start": [
+        [
+          0,
+          0,
+          2
+        ],
+        [
+          3,
+          3,
+          0
+        ],
+        [
+          2,
+          1,
+          3
+        ]
+      ],
+      "targets": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          3,
+          0
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 6,
+        "shortest_solution_count": 9,
+        "optimal_opening_choices": 1,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 1,
+        "initially_arrived_pieces": 1,
+        "forced_steps_on_sample": 3,
+        "blocked_steps_on_sample": 5,
+        "nonprogress_steps_on_sample": 1,
+        "reachable_state_count": 1109
+      },
+      "sample_solution": [
+        [
+          2,
+          3
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          1,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "4|0,0,2,0,0;2,1,3,3,0;3,3,0,1,1",
+      "stage_id": "BM-097",
+      "sequence": 97,
+      "chapter": "짧은 도전",
+      "intended_role": "stretch",
+      "content_version": 1
+    },
+    {
+      "board_size": 4,
+      "piece_count": 3,
+      "start": [
+        [
+          2,
+          3,
+          2
+        ],
+        [
+          3,
+          3,
+          3
+        ],
+        [
+          0,
+          2,
+          1
+        ]
+      ],
+      "targets": [
+        [
+          0,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 5,
+        "shortest_solution_count": 7,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 2,
+        "blocked_steps_on_sample": 2,
+        "nonprogress_steps_on_sample": 2,
+        "reachable_state_count": 1739
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "4|0,0,0,0,1;0,1,1,0,3;1,3,2,2,3",
+      "stage_id": "BM-098",
+      "sequence": 98,
+      "chapter": "짧은 도전",
+      "intended_role": "recovery",
+      "content_version": 1
+    },
+    {
+      "board_size": 4,
+      "piece_count": 3,
+      "start": [
+        [
+          0,
+          2,
+          3
+        ],
+        [
+          0,
+          3,
+          1
+        ],
+        [
+          1,
+          2,
+          0
+        ]
+      ],
+      "targets": [
+        [
+          1,
+          3
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          3,
+          3
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 5,
+        "shortest_solution_count": 4,
+        "optimal_opening_choices": 3,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 0,
+        "initially_arrived_pieces": 1,
+        "forced_steps_on_sample": 4,
+        "blocked_steps_on_sample": 4,
+        "nonprogress_steps_on_sample": 1,
+        "reachable_state_count": 6068
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "4|0,0,2,0,0;1,0,0,0,1;1,1,1,0,3",
+      "stage_id": "BM-099",
+      "sequence": 99,
+      "chapter": "짧은 도전",
+      "intended_role": "practice",
+      "content_version": 1
+    },
+    {
+      "board_size": 4,
+      "piece_count": 3,
+      "start": [
+        [
+          1,
+          3,
+          2
+        ],
+        [
+          3,
+          3,
+          3
+        ],
+        [
+          1,
+          1,
+          1
+        ]
+      ],
+      "targets": [
+        [
+          0,
+          3
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          0,
+          2
+        ]
+      ],
+      "metrics": {
+        "minimum_moves": 4,
+        "shortest_solution_count": 3,
+        "optimal_opening_choices": 2,
+        "safe_opening_choices": 3,
+        "available_opening_choices": 3,
+        "unsafe_opening_choices": 0,
+        "worst_safe_opening_extra_moves": 1,
+        "initially_arrived_pieces": 0,
+        "forced_steps_on_sample": 2,
+        "blocked_steps_on_sample": 1,
+        "nonprogress_steps_on_sample": 1,
+        "reachable_state_count": 1755
+      },
+      "sample_solution": [
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          3
+        ]
+      ],
+      "validation": "EXHAUSTIVE_SOLVER_PASS",
+      "human_playtest": "NOT_YET_TESTED",
+      "canonical_key": "4|0,0,0,1,1;0,2,1,0,3;2,2,2,1,3",
+      "stage_id": "BM-100",
+      "sequence": 100,
+      "chapter": "짧은 도전",
+      "intended_role": "recovery",
+      "content_version": 1
+    }
+  ]
+}
