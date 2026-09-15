@@ -221,6 +221,33 @@
   /* confetti */
   #confetti { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 60; opacity: 0; transition: opacity .3s; }
 
+  /* win flash */
+  #flash { position: fixed; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 65; }
+  #flash.go { animation: flashGo .5s ease-out; }
+  @keyframes flashGo { 0% { opacity: 0 } 12% { opacity: .5 } 100% { opacity: 0 } }
+
+  /* target lock-in ring pulse when a piece arrives */
+  .target.lit { animation: targetLock .6s ease-out; }
+  @keyframes targetLock {
+    0%   { box-shadow: 0 0 0 2px color-mix(in srgb, var(--c) 75%, transparent); border-color: var(--c); }
+    100% { box-shadow: 0 0 0 16px color-mix(in srgb, var(--c) 0%, transparent); }
+  }
+  /* piece glow when it lands on its target */
+  .piece.arrived { animation: arrivePop .5s ease; }
+  @keyframes arrivePop { 0% { filter: brightness(1); } 30% { filter: brightness(1.55) saturate(1.2); } 100% { filter: brightness(1); } }
+  /* victory bounce (keeps the translate(-50%,-50%) centering base) */
+  .piece.win-bounce { animation: winBounce .6s ease; }
+  @keyframes winBounce {
+    0%   { transform: translate(-50%, -50%) scale(1); }
+    30%  { transform: translate(-50%, -64%) scale(1.08); }
+    55%  { transform: translate(-50%, -50%) scale(1); }
+    75%  { transform: translate(-50%, -56%) scale(1.03); }
+    100% { transform: translate(-50%, -50%) scale(1); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #flash.go, .target.lit, .piece.arrived, .piece.win-bounce { animation: none; }
+  }
+
   /* generic centered overlay card (tutorial / album / sticker) */
   .modal { position: fixed; inset: 0; z-index: 55; display: none; align-items: center; justify-content: center; padding: 22px; }
   .modal.show { display: flex; animation: fade .2s; }
@@ -341,8 +368,9 @@
   </div>
 </div>
 
-<!-- confetti -->
+<!-- confetti + win flash -->
 <canvas id="confetti"></canvas>
+<div id="flash"></div>
 
 <!-- tutorial / rules -->
 <div class="modal" id="tutorial">
