@@ -94,32 +94,52 @@ const CLEARS_PER_STICKER = 5;
 const firstClearCount = () => Object.values(progress.completed).filter(Boolean).length;
 const stickersEarned = () => Math.min(STICKERS.length, Math.floor(firstClearCount() / CLEARS_PER_STICKER));
 
-/* ---------- sound (WebAudio, no asset files) + haptics ---------- */
+/* ---------- sound (WebAudio synth, no asset files) + haptics ---------- */
 const Sound = (() => {
-  let ctx = null;
+  let ctx = null, master = null, echo = null;
   const ready = () => {
-    if (!ctx) { try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { ctx = false; } }
+    if (!ctx) {
+      try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { ctx = false; }
+      if (ctx) {
+        master = ctx.createGain(); master.gain.value = 0.85; master.connect(ctx.destination);
+        // gentle feedback delay for warmth/space
+        const d = ctx.createDelay(); d.delayTime.value = 0.13;
+        const fb = ctx.createGain(); fb.gain.value = 0.24;
+        const wet = ctx.createGain(); wet.gain.value = 0.9;
+        d.connect(fb); fb.connect(d); d.connect(wet); wet.connect(master);
+        echo = d;
+      }
+    }
     if (ctx && ctx.state === 'suspended') ctx.resume();
     return ctx;
   };
-  function tone(freq, dur, type = 'sine', gain = 0.15, when = 0) {
+  // one enveloped oscillator voice, optional pitch glide + echo send
+  function voice(freq, dur, o = {}) {
     const c = ready(); if (!c) return;
+    const { type = 'sine', gain = 0.15, when = 0, attack = 0.008, glide = 0, wet = 0.4 } = o;
     const t = c.currentTime + when;
-    const o = c.createOscillator(), g = c.createGain();
-    o.type = type; o.frequency.setValueAtTime(freq, t);
-    g.gain.setValueAtTime(0, t);
-    g.gain.linearRampToValueAtTime(gain, t + 0.01);
+    const osc = c.createOscillator(), g = c.createGain();
+    osc.type = type; osc.frequency.setValueAtTime(freq, t);
+    if (glide) osc.frequency.exponentialRampToValueAtTime(Math.max(1, glide), t + dur);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(gain, t + attack);
     g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    o.connect(g); g.connect(c.destination);
-    o.start(t); o.stop(t + dur + 0.02);
+    osc.connect(g); g.connect(master);
+    if (echo && wet) { const s = c.createGain(); s.gain.value = gain * wet; g.connect(s); s.connect(echo); }
+    osc.start(t); osc.stop(t + dur + 0.05);
   }
   const on = () => progress.settings && progress.settings.sound !== false;
+  const SEL = [523.25, 587.33, 659.25, 783.99];               // C5 D5 E5 G5 by piece
+  const LOCK = [523.25, 659.25, 783.99, 987.77, 1174.66];      // rising as pieces land
   return {
-    select() { if (on()) tone(520, 0.08, 'triangle', 0.12); },
-    move() { if (on()) { tone(340, 0.1, 'sine', 0.14); tone(510, 0.12, 'sine', 0.1, 0.05); } },
-    blocked() { if (on()) tone(150, 0.16, 'sawtooth', 0.1); },
-    win() { if (on()) [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.35, 'triangle', 0.16, i * 0.09)); },
-    sticker() { if (on()) [784, 988, 1319].forEach((f, i) => tone(f, 0.4, 'sine', 0.16, i * 0.08)); },
+    selectAt(i) { if (on()) voice(SEL[i % SEL.length], 0.13, { type: 'triangle', gain: 0.12, attack: 0.004, wet: 0.3 }); },
+    select() { this.selectAt(0); },
+    swap() { if (on()) { voice(660, 0.1, { type: 'triangle', gain: 0.09, glide: 500, wet: 0.4 }); voice(500, 0.12, { type: 'triangle', gain: 0.08, when: 0.045, glide: 680, wet: 0.4 }); } },
+    move() { if (on()) voice(300, 0.17, { type: 'sine', gain: 0.13, glide: 540, wet: 0.5 }); },
+    blocked() { if (on()) { voice(150, 0.15, { type: 'sawtooth', gain: 0.1, glide: 85, wet: 0.2 }); voice(95, 0.1, { type: 'square', gain: 0.05, when: 0.02, wet: 0.1 }); } },
+    lock(step) { if (on()) { const f = LOCK[Math.min(step, LOCK.length - 1)]; voice(f, 0.55, { type: 'sine', gain: 0.18, attack: 0.003, wet: 0.9 }); voice(f * 2, 0.35, { type: 'triangle', gain: 0.05, when: 0.004, wet: 0.6 }); } },
+    win() { if (on()) [523.25, 659.25, 783.99, 1046.5, 1318.5].forEach((f, i) => voice(f, 0.5, { type: 'triangle', gain: 0.16, when: i * 0.085, wet: 0.8 })); },
+    sticker() { if (on()) [784, 988, 1319, 1568].forEach((f, i) => voice(f, 0.4, { type: 'sine', gain: 0.14, when: i * 0.07, wet: 0.9 })); },
     unlock() { ready(); }, // call on first user gesture
   };
 })();
@@ -332,7 +352,7 @@ function onPieceClick(i) {
     // replace oldest
     G.selected = [G.selected[1], i];
   }
-  Sound.select(); haptic(8);
+  Sound.selectAt(i); haptic(8);
   updatePreview();
 }
 
@@ -354,9 +374,17 @@ function updatePreview() {
 
 function commitMove() {
   if (G.selected.length !== 2 || G.animating) return;
+  const tg = G.stage.targets;
+  const onTgt = st => st.map((p, i) => p[0] === tg[i][0] && p[1] === tg[i][1]);
+  const before = onTgt(G.state);
   const next = outcome(G.state, G.selected, G.stage.n);
   const anyBlocked = G.selected.some(i =>
     G.state[i][0] === next[i][0] && G.state[i][1] === next[i][1]);
+  const after = onTgt(next);
+  const arrivals = next.map((_, i) => i).filter(i => after[i] && !before[i]);
+  const placedAfter = after.filter(Boolean).length;
+  const willWin = after.every(Boolean);
+
   G.history.push(clone(G.state));
   G.state = next;
   G.selected = [];
@@ -364,12 +392,39 @@ function commitMove() {
   boardEl.classList.remove('previewing');
   refreshPieces();
   updateHud();
+
+  Sound.swap();
   if (anyBlocked) { Sound.blocked(); haptic([12, 30, 12]); } else { Sound.move(); haptic(16); }
+  // target lock-in: ring pulse (always) + rising chime (except on the winning move,
+  // where the win jingle takes over)
+  arrivals.forEach((i, k) => {
+    setTimeout(() => {
+      pulseTarget(i);
+      if (!willWin) { Sound.lock(placedAfter - arrivals.length + k); haptic(10); }
+    }, 300 + k * 90);
+  });
+
   setTimeout(() => {
     G.animating = false;
     if (isGoal(G.state, G.stage.targets)) onWin();
     else updatePreview();
   }, 320);
+}
+
+// ring pulse on a target + brief glow on the piece that just landed there
+function pulseTarget(i) {
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const t = targetEls()[i], p = pieceEls()[i];
+  if (t) { t.classList.remove('lit'); void t.offsetWidth; t.classList.add('lit'); }
+  if (p) { p.classList.remove('arrived'); void p.offsetWidth; p.classList.add('arrived'); }
+}
+
+// quick white flash on win
+function screenFlash() {
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const f = document.getElementById('flash');
+  if (!f) return;
+  f.classList.remove('go'); void f.offsetWidth; f.classList.add('go');
 }
 
 function undo() {
@@ -428,7 +483,8 @@ function onWin() {
   const hasNext = G.index < STAGES.length - 1;
   overlay.querySelector('#btnNext').style.display = hasNext ? '' : 'none';
   overlay.classList.add('show');
-  Sound.win(); haptic([20, 40, 60]); confettiBurst();
+  Sound.win(); haptic([20, 40, 60]); confettiBurst(); screenFlash();
+  pieceEls().forEach((el, k) => { setTimeout(() => { el.classList.remove('win-bounce'); void el.offsetWidth; el.classList.add('win-bounce'); }, k * 70); });
   renderStageList();
   renderProgress();
 
