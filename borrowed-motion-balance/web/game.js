@@ -525,28 +525,43 @@ function renderProgress() {
 
 function renderStageList() {
   stageListEl.innerHTML = '';
-  let currentChapter = null;
-  let chips = null;
+  // group into contiguous chapters
+  const groups = [];
   STAGES.forEach((s, i) => {
-    if (s.chapter !== currentChapter) {
-      currentChapter = s.chapter;
-      const h = document.createElement('div');
-      h.className = 'chapter-head';
-      h.textContent = s.chapter;
-      stageListEl.appendChild(h);
-      chips = document.createElement('div');
-      chips.className = 'chips';
-      stageListEl.appendChild(chips);
-    }
-    const b = document.createElement('button');
-    b.className = 'stage-chip';
-    b.textContent = s.seq;
-    if (progress.completed[s.id]) b.classList.add('done');
-    if (i === G.index) b.classList.add('current');
-    b.title = `${s.id} · 최소 ${s.min}수`;
-    b.addEventListener('click', () => { loadStage(i); closeDrawer(); });
-    chips.appendChild(b);
+    let g = groups[groups.length - 1];
+    if (!g || g.chapter !== s.chapter) { g = { chapter: s.chapter, items: [] }; groups.push(g); }
+    g.items.push({ s, i });
   });
+  const currentChapter = G.stage.chapter;
+  for (const g of groups) {
+    const done = g.items.filter(({ s }) => progress.completed[s.id]).length;
+    const details = document.createElement('details');
+    details.className = 'chapter';
+    if (g.chapter === currentChapter) details.open = true;
+    const sum = document.createElement('summary');
+    sum.className = 'chapter-head';
+    sum.innerHTML =
+      `<span class="cv"></span><span class="nm">${g.chapter}</span>` +
+      `<span class="cnt">${done}/${g.items.length}</span>`;
+    details.appendChild(sum);
+    const chips = document.createElement('div');
+    chips.className = 'chips';
+    for (const { s, i } of g.items) {
+      const b = document.createElement('button');
+      b.className = 'stage-chip';
+      b.textContent = s.seq;
+      if (progress.completed[s.id]) b.classList.add('done');
+      if (i === G.index) b.classList.add('current');
+      b.title = `${s.id} · 최소 ${s.min}수`;
+      b.addEventListener('click', () => { loadStage(i); closeDrawer(); });
+      chips.appendChild(b);
+    }
+    details.appendChild(chips);
+    stageListEl.appendChild(details);
+  }
+  // bring the open (current) chapter into view
+  const openEl = stageListEl.querySelector('details[open]');
+  if (openEl) requestAnimationFrame(() => { try { openEl.scrollIntoView({ block: 'nearest' }); } catch (e) {} });
 }
 
 /* ---------- album ---------- */
