@@ -68,16 +68,54 @@ function solveNext(state, targets, n) {
 /* ---------- persistence ---------- */
 const SAVE_KEY = 'bm_progress_v1';
 function loadProgress() {
-  let p = { completed: {}, best: {}, solo: {}, last: 0, tutorialSeen: false, settings: { sound: true } };
+  let p = {
+    completed: {}, best: {}, solo: {}, last: 0, tutorialSeen: false,
+    settings: { sound: true },
+    hints: { date: '', free: 0, ad: 0 }, // daily hint quotas (free / rewarded-ad)
+    premium: false, theme: 'default',
+  };
   try {
     const raw = localStorage.getItem(SAVE_KEY);
     if (raw) p = Object.assign(p, JSON.parse(raw));
   } catch (e) {}
   if (!p.settings) p.settings = { sound: true };
+  if (!p.hints) p.hints = { date: '', free: 0, ad: 0 };
   return p;
 }
 function saveProgress(p) {
   try { localStorage.setItem(SAVE_KEY, JSON.stringify(p)); } catch (e) {}
+}
+
+/* ---------- monetization (prototype: ad/payment points are stubbed) ----------
+ * Model from the commercial design doc:
+ *  - free: 3 hints/day (undo/restart/preview always free)
+ *  - rewarded ad: +1 hint, max 3/day and at most 1 per stage attempt
+ *  - premium one-time (proposed ₩4,900): unlimited hints, no ad button,
+ *    exclusive theme, restore. Real ads (AdMob) and IAP are wired later in a
+ *    native wrapper — here the ad is simulated and the purchase is a test unlock.
+ */
+const FREE_HINTS_PER_DAY = 3;
+const AD_HINTS_PER_DAY = 3;
+const PREMIUM_PRICE = '₩4,900';
+const todayKey = () => { const d = new Date(); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; };
+function resetDailyIfNeeded() {
+  if (!progress.hints || progress.hints.date !== todayKey()) {
+    progress.hints = { date: todayKey(), free: 0, ad: 0 };
+    saveProgress(progress);
+  }
+}
+const isPremium = () => !!progress.premium;
+const freeHintsLeft = () => { resetDailyIfNeeded(); return Math.max(0, FREE_HINTS_PER_DAY - progress.hints.free); };
+const adHintsLeft = () => { resetDailyIfNeeded(); return Math.max(0, AD_HINTS_PER_DAY - progress.hints.ad); };
+// lightweight analytics log (prototype) — separate key so progress stays small
+function logEvent(name, data = {}) {
+  try {
+    const k = 'bm_events_v1';
+    const arr = JSON.parse(localStorage.getItem(k) || '[]');
+    arr.push({ t: Date.now(), name, stage: G.stage && G.stage.id, ...data });
+    while (arr.length > 300) arr.shift();
+    localStorage.setItem(k, JSON.stringify(arr));
+  } catch (e) {}
 }
 
 /* ---------- album (travel stickers) ---------- */
@@ -188,6 +226,7 @@ const G = {
   history: [],      // committed states for undo
   selected: [],     // piece indices, max 2
   usedHint: false,  // hint used on this attempt
+  attemptAdUsed: false, // a rewarded-ad hint was used on this attempt (max 1)
   animating: false,
 };
 
@@ -442,22 +481,126 @@ function restart() {
   G.history = [];
   G.selected = [];
   G.usedHint = false;
+  G.attemptAdUsed = false;
   refreshPieces();
   updateHud();
   updatePreview();
 }
 
+// hint entry point — routes through free quota / rewarded ad / premium
 function useHint() {
   if (G.animating) return;
   const pair = solveNext(G.state, G.stage.targets, G.stage.n);
   if (!pair) {
-    hintTextEl.textContent = '지금 상태에서는 되돌리기로 유효한 상태로 돌아가세요.';
+    // stuck (needs undo): always free, never charged or ad-gated
+    hintTextEl.textContent = '지금은 되돌리기로 유효한 상태로 돌아가세요. (무료 안내)';
+    logEvent('hint_stuck_free');
     return;
   }
+  if (isPremium()) { applyHint(pair, 'premium'); return; }
+  if (freeHintsLeft() > 0) { progress.hints.free++; saveProgress(progress); applyHint(pair, 'free'); return; }
+  // free exhausted → offer a rewarded ad if available for this day/attempt
+  if (adHintsLeft() > 0 && !G.attemptAdUsed) { offerAd(pair); return; }
+  hintTextEl.textContent = '오늘 무료·광고 힌트를 모두 사용했어요.';
+  openStore('힌트가 더 필요하면 프리미엄으로 무제한 이용할 수 있어요.');
+}
+function applyHint(pair, src) {
   G.usedHint = true;
   G.selected = pair.slice();
   updatePreview();
-  hintTextEl.textContent = `힌트: 조각 ${pair[0] + 1} 과(와) ${pair[1] + 1} 을(를) 선택했어요. 미리보기를 확인하고 이동하세요.`;
+  const left = isPremium() ? '무제한' : `무료 ${freeHintsLeft()}회 남음`;
+  hintTextEl.textContent = `힌트: 조각 ${pair[0] + 1} 과(와) ${pair[1] + 1}. 미리보기 확인 후 이동하세요. (${left})`;
+  updateHintButton();
+  logEvent('hint_used', { src });
+}
+function updateHintButton() {
+  if (!btnHint) return;
+  if (isPremium()) btnHint.innerHTML = '💡 힌트 <span style="color:var(--muted);font-weight:600">∞</span>';
+  else btnHint.innerHTML = `💡 힌트 <span style="color:var(--muted);font-weight:600">(${freeHintsLeft()})</span>`;
+}
+
+/* ---------- rewarded ad (simulated) ---------- */
+let pendingHintPair = null, adTimer = null;
+function offerAd(pair) {
+  pendingHintPair = pair;
+  logEvent('ad_offer');
+  $('#adOffer').classList.add('show');
+}
+function watchAd() {
+  $('#adOffer').classList.remove('show');
+  logEvent('ad_impression');
+  const modal = $('#adPlay'); modal.classList.add('show');
+  const btn = $('#adReward'); btn.disabled = true;
+  $('#adCountWrap').hidden = false;
+  let t = 3; $('#adCount').textContent = t;
+  clearInterval(adTimer);
+  adTimer = setInterval(() => {
+    t--; $('#adCount').textContent = t;
+    if (t <= 0) { clearInterval(adTimer); btn.disabled = false; $('#adCountWrap').hidden = true; }
+  }, 1000);
+}
+function grantAdReward() {
+  clearInterval(adTimer);
+  $('#adPlay').classList.remove('show');
+  resetDailyIfNeeded(); progress.hints.ad++; saveProgress(progress);
+  G.attemptAdUsed = true;
+  logEvent('ad_reward_granted');
+  if (pendingHintPair) { applyHint(pendingHintPair, 'ad'); pendingHintPair = null; }
+}
+function closeAd() {
+  clearInterval(adTimer);
+  $('#adPlay').classList.remove('show');
+  $('#adOffer').classList.remove('show');
+  pendingHintPair = null;
+  hintTextEl.textContent = '광고를 닫았어요. 무료 도움·재시작·다른 문제는 계속 이용할 수 있어요.';
+  logEvent('ad_dismissed');
+}
+
+/* ---------- store / premium ---------- */
+function openStore(note) { renderStore(note || ''); $('#store').classList.add('show'); logEvent('store_open'); }
+function closeStore() { $('#store').classList.remove('show'); }
+function renderStore(note) {
+  resetDailyIfNeeded();
+  $('#storeNote').textContent = note || '';
+  $('#storeNote').hidden = !note;
+  $('#storeStatus').textContent = isPremium()
+    ? '프리미엄 이용 중 · 힌트 무제한'
+    : `오늘 무료 힌트 ${freeHintsLeft()}/${FREE_HINTS_PER_DAY} · 광고 힌트 ${adHintsLeft()}/${AD_HINTS_PER_DAY}`;
+  $('#premiumCard').hidden = isPremium();
+  $('#premiumOwned').hidden = !isPremium();
+  $('#themeRow').hidden = !isPremium();
+  $('#premiumPrice').textContent = PREMIUM_PRICE;
+  updateThemeButtons();
+}
+function buyPremium() {
+  // PROTOTYPE ONLY — no real payment. Native build wires this to store IAP.
+  progress.premium = true;
+  saveProgress(progress);
+  logEvent('purchase_success', { product: 'premium', prototype: true });
+  applyThemePack(); updateHintButton();
+  renderStore('프리미엄이 활성화되었어요. (프로토타입 · 실제 결제 미연동)');
+}
+function restorePurchase() {
+  logEvent('purchase_restore', { prototype: true });
+  applyThemePack(); updateHintButton();
+  renderStore(isPremium() ? '구매를 복원했어요.' : '복원할 구매가 없어요. (프로토타입)');
+}
+
+/* ---------- theme pack (premium exclusive) ---------- */
+function applyThemePack() {
+  const pack = (isPremium() && progress.theme === 'premium') ? 'premium' : 'default';
+  document.documentElement.dataset.pack = pack;
+}
+function setThemePack(t) {
+  if (t === 'premium' && !isPremium()) return;
+  progress.theme = t; saveProgress(progress);
+  applyThemePack(); updateThemeButtons();
+}
+function updateThemeButtons() {
+  const cur = (isPremium() && progress.theme === 'premium') ? 'premium' : 'default';
+  const a = $('#themeDefault'), b = $('#themePremium');
+  if (a) a.classList.toggle('sel', cur === 'default');
+  if (b) b.classList.toggle('sel', cur === 'premium');
 }
 
 /* ---------- win ---------- */
@@ -503,8 +646,10 @@ function loadStage(index) {
   G.history = [];
   G.selected = [];
   G.usedHint = false;
+  G.attemptAdUsed = false;
   progress.last = G.index;
   saveProgress(progress);
+  updateHintButton();
 
   stageTitleEl.textContent = `${G.stage.id} · ${G.index + 1}/${STAGES.length}`;
   chapterEl.textContent = G.stage.chapter;
@@ -656,6 +801,20 @@ $('#tutorialStart').addEventListener('click', closeTutorial);
 // settings
 $('#btnSound').addEventListener('click', toggleSound);
 
+// store / monetization
+$('#btnStore').addEventListener('click', () => openStore());
+$('#storeClose').addEventListener('click', closeStore);
+$('#storeBackdrop').addEventListener('click', closeStore);
+$('#buyPremium').addEventListener('click', buyPremium);
+$('#restorePurchase').addEventListener('click', restorePurchase);
+$('#themeDefault').addEventListener('click', () => setThemePack('default'));
+$('#themePremium').addEventListener('click', () => setThemePack('premium'));
+// rewarded ad (simulated)
+$('#adWatch').addEventListener('click', watchAd);
+$('#adOfferClose').addEventListener('click', closeAd);
+$('#adReward').addEventListener('click', grantAdReward);
+$('#adClose').addEventListener('click', closeAd);
+
 document.addEventListener('keydown', e => {
   if (e.key === 'z' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); undo(); }
   else if (e.key === 'Enter' && !btnCommit.disabled) commitMove();
@@ -679,6 +838,9 @@ document.addEventListener('pointerdown', () => Sound.unlock(), { once: true });
 
 // init
 applySoundIcon();
+resetDailyIfNeeded();
+applyThemePack();
+updateHintButton();
 registerSW();
 // start at last played stage
 loadStage(progress.last || 0);
