@@ -16,6 +16,9 @@ const CHAPTER_KEY = {
   '네 조각 계획': 'ch_four_plan', '긴 여정': 'ch_journey',
 };
 const chapterName = ko => (CHAPTER_KEY[ko] ? t(CHAPTER_KEY[ko]) : ko);
+const WORLD_SIZE = 50; // stages per world in the picker
+const worldOf = index => Math.floor(index / WORLD_SIZE); // 0-based world of a stage index
+const worldLabel = index => t('world', { n: worldOf(index) + 1 });
 
 const VECTORS = [[1, 0], [0, 1], [-1, 0], [0, -1]]; // 0=right 1=down 2=left 3=up
 const DIR_LABEL = ['→', '↓', '←', '↑'];
@@ -632,6 +635,50 @@ function updateThemeButtons() {
   if (b) b.classList.toggle('sel', cur === 'premium');
 }
 
+/* ---------- progress backup / restore (Base64 code) ---------- */
+function exportCode() {
+  try { return 'SS1.' + btoa(unescape(encodeURIComponent(JSON.stringify({ v: 1, p: progress })))); }
+  catch (e) { return ''; }
+}
+function importCode(code) {
+  try {
+    code = String(code).trim();
+    if (code.startsWith('SS1.')) code = code.slice(4);
+    const obj = JSON.parse(decodeURIComponent(escape(atob(code))));
+    const p = (obj && obj.p) ? obj.p : obj; // tolerate a raw progress object too
+    if (!p || typeof p !== 'object' || typeof p.completed !== 'object') return false;
+    localStorage.setItem(SAVE_KEY, JSON.stringify(p));
+    return true;
+  } catch (e) { return false; }
+}
+function openBackup() {
+  $('#backupCode').value = exportCode();
+  $('#importCode').value = '';
+  $('#backupStatus').textContent = '';
+  $('#backup').classList.add('show');
+  logEvent('backup_open');
+}
+function closeBackup() { $('#backup').classList.remove('show'); }
+function copyBackup() {
+  const code = $('#backupCode').value;
+  const ok = () => { $('#backupStatus').textContent = t('backup_copied'); };
+  const fallback = () => { try { $('#backupCode').select(); document.execCommand('copy'); ok(); } catch (e) {} };
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(code).then(ok).catch(fallback);
+    else fallback();
+  } catch (e) { fallback(); }
+}
+function doRestore() {
+  if (importCode($('#importCode').value)) {
+    $('#backupStatus').textContent = t('backup_ok');
+    logEvent('backup_restore_ok');
+    setTimeout(() => location.reload(), 700);
+  } else {
+    $('#backupStatus').textContent = t('backup_bad');
+    logEvent('backup_restore_bad');
+  }
+}
+
 /* ---------- win ---------- */
 function onWin() {
   const moves = G.history.length;
@@ -682,7 +729,7 @@ function loadStage(index) {
   updateHintButton();
 
   stageTitleEl.textContent = `${G.stage.id} · ${G.index + 1}/${STAGES.length}`;
-  chapterEl.textContent = chapterName(G.stage.chapter);
+  chapterEl.textContent = worldLabel(G.index);
   overlay.classList.remove('show');
   buildBoard();
   updateHud();
@@ -699,37 +746,36 @@ function renderProgress() {
 
 function renderStageList() {
   stageListEl.innerHTML = '';
-  // group into contiguous chapters
-  const groups = [];
-  STAGES.forEach((s, i) => {
-    let g = groups[groups.length - 1];
-    if (!g || g.chapter !== s.chapter) { g = { chapter: s.chapter, items: [] }; groups.push(g); }
-    g.items.push({ s, i });
-  });
-  const currentChapter = G.stage.chapter;
-  for (const g of groups) {
-    const done = g.items.filter(({ s }) => progress.completed[s.id]).length;
+  const total = STAGES.length;
+  const worldCount = Math.ceil(total / WORLD_SIZE);
+  const curWorld = worldOf(G.index);
+  for (let w = 0; w < worldCount; w++) {
+    const start = w * WORLD_SIZE, end = Math.min(total, start + WORLD_SIZE);
+    const items = [];
+    for (let i = start; i < end; i++) items.push({ s: STAGES[i], i });
+    const done = items.filter(({ s }) => progress.completed[s.id]).length;
     const details = document.createElement('details');
     details.className = 'chapter';
-    const isCur = g.chapter === currentChapter;
+    const isCur = w === curWorld;
     if (isCur) details.open = true;
+    const theme = chapterName(STAGES[start].chapter); // difficulty flavor of this world
     const sum = document.createElement('summary');
     sum.className = 'chapter-head';
     sum.innerHTML =
-      `<span class="cv"></span><span class="nm">${chapterName(g.chapter)}</span>` +
-      `<span class="cnt">${done}/${g.items.length}</span>`;
+      `<span class="cv"></span>` +
+      `<span class="nm">${t('world', { n: w + 1 })} <em>${theme}</em></span>` +
+      `<span class="cnt">${done}/${items.length}</span>`;
     details.appendChild(sum);
     const chips = document.createElement('div');
     chips.className = 'chips';
     details.appendChild(chips);
-    // lazy: build a chapter's chips only when it is (or becomes) open — keeps
-    // opening the drawer O(chapters), so the stage count can grow freely
-    const build = () => { if (details.dataset.built) return; details.dataset.built = '1'; buildChips(chips, g.items); };
+    // lazy: build a world's chips only when it is (or becomes) open — keeps
+    // opening the drawer O(one world), so the stage count can grow freely
+    const build = () => { if (details.dataset.built) return; details.dataset.built = '1'; buildChips(chips, items); };
     details.addEventListener('toggle', () => { if (details.open) build(); });
     if (isCur) build();
     stageListEl.appendChild(details);
   }
-  // bring the open (current) chapter into view
   const openEl = stageListEl.querySelector('details[open]');
   if (openEl) requestAnimationFrame(() => { try { openEl.scrollIntoView({ block: 'nearest' }); } catch (e) {} });
 }
@@ -851,14 +897,22 @@ langSelect.value = window.I18N.lang;
 langSelect.addEventListener('change', () => window.I18N.setLang(langSelect.value));
 // re-render dynamic strings when language changes (static handled by I18N.apply)
 function refreshDynamic() {
+  if ($('#langSelect')) $('#langSelect').value = window.I18N.lang;
   updateHud(); updateHintButton(); applySoundIcon(); renderProgress();
-  if (G.stage) chapterEl.textContent = chapterName(G.stage.chapter);
+  if (G.stage) chapterEl.textContent = worldLabel(G.index);
   updatePreview();
   if (drawer.classList.contains('open')) renderStageList();
   if ($('#store').classList.contains('show')) renderStore('');
   if (albumOverlay.classList.contains('show')) renderAlbum();
 }
 window.onLangChange = refreshDynamic;
+
+// backup / restore
+$('#btnBackup').addEventListener('click', openBackup);
+$('#backupClose').addEventListener('click', closeBackup);
+$('#backupBackdrop').addEventListener('click', closeBackup);
+$('#backupCopy').addEventListener('click', copyBackup);
+$('#backupRestore').addEventListener('click', doRestore);
 
 // store / monetization
 $('#btnStore').addEventListener('click', () => openStore());

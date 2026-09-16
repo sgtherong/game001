@@ -58,6 +58,11 @@ node borrowed-motion-balance/generate-stages-1000.cjs
 node -e "const fs=require('fs');const d=JSON.parse(fs.readFileSync('borrowed-motion-balance/stages-1000.json','utf8'));const stages=d.stages.map(s=>({id:s.stage_id,seq:s.sequence,chapter:s.chapter,role:s.intended_role,n:s.board_size,pieces:s.piece_count,start:s.start,targets:s.targets,min:s.min,ways:s.ways}));fs.writeFileSync('borrowed-motion-balance/web/stages-data.js','window.BM_DATA='+JSON.stringify({rules:d.rules_version,dir:{0:'right',1:'down',2:'left',3:'up'},stages})+';\n')"
 ```
 
+## 월드(스테이지 선택) · 진행도 백업
+
+- 스테이지 선택은 **50개 단위 월드**(예: World 1 · 1–50)로 나뉘며, 각 월드에 그 구간의 난이도 테마와 진행도(x/50)가 표시됩니다. 월드 칩은 **펼칠 때만** 생성되어 스테이지 수가 늘어도 가볍습니다.
+- 설정(스테이지 서랍)의 **백업 / 복원**: 진행도를 `SS1.<Base64>` 텍스트 코드로 내보내고(복사), 다른 브라우저·기기에서 붙여넣어 복원합니다. 캐시가 비워져도 세이브를 지킬 수 있습니다.
+
 ## 다국어 (i18n)
 
 `web/i18n.js`에 UI 문자열을 언어별로 분리했습니다. 기본 **영어**, 브라우저 언어로 자동 선택, 설정(스테이지 서랍)에서 변경 가능하며 선택은 저장됩니다. 지원: 영어(en)·한국어(ko)·스페인어(es)·포르투갈어(pt)·러시아어(ru). 정적 문자열은 `data-i18n`/`data-i18n-html`/`data-i18n-title` 속성으로, 동적 문자열은 `t('key', {vars})`로 처리합니다. 튜토리얼은 언어 장벽을 줄이도록 **손가락 애니메이션 데모**(언어 무관)를 중심에 두고 캡션만 번역합니다. 언어 추가 = `i18n.js`의 사전에 코드 하나 추가.
