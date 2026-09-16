@@ -519,41 +519,62 @@ function updateHintButton() {
   else btnHint.innerHTML = `💡 힌트 <span style="color:var(--muted);font-weight:600">(${freeHintsLeft()})</span>`;
 }
 
-/* ---------- rewarded ad (simulated) ---------- */
+/* ---------- rewarded ad (routed through AdsManager adapter) ---------- */
 let pendingHintPair = null, adTimer = null;
 function offerAd(pair) {
   pendingHintPair = pair;
-  logEvent('ad_offer');
+  logEvent('ad_offer', { platform: AdsManager.platform });
   $('#adOffer').classList.add('show');
 }
+// user accepted the offer -> ask the platform to show a rewarded ad.
+// On 'local' this resolves via the simulated ad UI (showSimulatedAd);
+// on a portal it resolves from that portal's SDK.
 function watchAd() {
   $('#adOffer').classList.remove('show');
-  logEvent('ad_impression');
-  const modal = $('#adPlay'); modal.classList.add('show');
-  const btn = $('#adReward'); btn.disabled = true;
-  $('#adCountWrap').hidden = false;
-  let t = 3; $('#adCount').textContent = t;
-  clearInterval(adTimer);
-  adTimer = setInterval(() => {
-    t--; $('#adCount').textContent = t;
-    if (t <= 0) { clearInterval(adTimer); btn.disabled = false; $('#adCountWrap').hidden = true; }
-  }, 1000);
+  logEvent('ad_impression', { platform: AdsManager.platform });
+  AdsManager.showRewarded().then(rewarded => {
+    if (rewarded) {
+      resetDailyIfNeeded(); progress.hints.ad++; saveProgress(progress);
+      G.attemptAdUsed = true;
+      logEvent('ad_reward_granted', { platform: AdsManager.platform });
+      if (pendingHintPair) { applyHint(pendingHintPair, 'ad'); pendingHintPair = null; }
+    } else {
+      logEvent('ad_no_reward', { platform: AdsManager.platform });
+      hintTextEl.textContent = '광고를 끝까지 보지 않아 힌트를 받지 못했어요. 계속 플레이하세요.';
+      pendingHintPair = null;
+    }
+  }).catch(() => {
+    logEvent('ad_error', { platform: AdsManager.platform });
+    hintTextEl.textContent = '광고를 불러오지 못했어요. 무료 도움·재시작은 계속 이용할 수 있어요.';
+    pendingHintPair = null;
+  });
 }
-function grantAdReward() {
-  clearInterval(adTimer);
-  $('#adPlay').classList.remove('show');
-  resetDailyIfNeeded(); progress.hints.ad++; saveProgress(progress);
-  G.attemptAdUsed = true;
-  logEvent('ad_reward_granted');
-  if (pendingHintPair) { applyHint(pendingHintPair, 'ad'); pendingHintPair = null; }
+// local adapter's rewarded UI: resolves true (reward) / false (skipped)
+function showSimulatedAd() {
+  return new Promise(resolve => {
+    const modal = $('#adPlay'); modal.classList.add('show');
+    const rewardBtn = $('#adReward'), skipBtn = $('#adClose');
+    rewardBtn.disabled = true; $('#adCountWrap').hidden = false;
+    let t = 3; $('#adCount').textContent = t;
+    clearInterval(adTimer);
+    adTimer = setInterval(() => {
+      t--; $('#adCount').textContent = t;
+      if (t <= 0) { clearInterval(adTimer); rewardBtn.disabled = false; $('#adCountWrap').hidden = true; }
+    }, 1000);
+    const done = result => {
+      clearInterval(adTimer); modal.classList.remove('show');
+      rewardBtn.onclick = null; skipBtn.onclick = null; resolve(result);
+    };
+    rewardBtn.onclick = () => done(true);
+    skipBtn.onclick = () => done(false);
+  });
 }
+// close the offer (declined before watching)
 function closeAd() {
-  clearInterval(adTimer);
-  $('#adPlay').classList.remove('show');
   $('#adOffer').classList.remove('show');
   pendingHintPair = null;
   hintTextEl.textContent = '광고를 닫았어요. 무료 도움·재시작·다른 문제는 계속 이용할 수 있어요.';
-  logEvent('ad_dismissed');
+  logEvent('ad_dismissed', { platform: AdsManager.platform });
 }
 
 /* ---------- store / premium ---------- */
@@ -626,6 +647,7 @@ function onWin() {
   const hasNext = G.index < STAGES.length - 1;
   overlay.querySelector('#btnNext').style.display = hasNext ? '' : 'none';
   overlay.classList.add('show');
+  if (window.AdsManager) { AdsManager.gameplayStop(); AdsManager.happyTime(1); } // portal signals
   Sound.win(); haptic([20, 40, 60]); confettiBurst(); screenFlash();
   pieceEls().forEach((el, k) => { setTimeout(() => { el.classList.remove('win-bounce'); void el.offsetWidth; el.classList.add('win-bounce'); }, k * 70); });
   renderStageList();
@@ -660,6 +682,7 @@ function loadStage(index) {
   updatePreview();
   renderStageList();
   renderProgress();
+  if (window.AdsManager) AdsManager.gameplayStart(); // portal signal: level active
 }
 
 function renderProgress() {
@@ -809,11 +832,10 @@ $('#buyPremium').addEventListener('click', buyPremium);
 $('#restorePurchase').addEventListener('click', restorePurchase);
 $('#themeDefault').addEventListener('click', () => setThemePack('default'));
 $('#themePremium').addEventListener('click', () => setThemePack('premium'));
-// rewarded ad (simulated)
+// rewarded ad — offer buttons; the play-modal buttons (#adReward/#adClose)
+// are wired per-invocation by showSimulatedAd (local adapter)
 $('#adWatch').addEventListener('click', watchAd);
 $('#adOfferClose').addEventListener('click', closeAd);
-$('#adReward').addEventListener('click', grantAdReward);
-$('#adClose').addEventListener('click', closeAd);
 
 document.addEventListener('keydown', e => {
   if (e.key === 'z' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); undo(); }
@@ -842,6 +864,11 @@ resetDailyIfNeeded();
 applyThemePack();
 updateHintButton();
 registerSW();
+// platform ads adapter (local simulation here; portal SDK on portal domains)
+if (window.AdsManager) {
+  AdsManager.init({ onRewardedSimulate: showSimulatedAd })
+    .then(name => logEvent('platform_ready', { platform: name }));
+}
 // start at last played stage
 loadStage(progress.last || 0);
 // first-run tutorial
