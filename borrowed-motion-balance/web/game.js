@@ -658,7 +658,6 @@ function onWin() {
   if (window.AdsManager) { AdsManager.gameplayStop(); AdsManager.happyTime(1); } // portal signals
   Sound.win(); haptic([20, 40, 60]); confettiBurst(); screenFlash();
   pieceEls().forEach((el, k) => { setTimeout(() => { el.classList.remove('win-bounce'); void el.offsetWidth; el.classList.add('win-bounce'); }, k * 70); });
-  renderStageList();
   renderProgress();
 
   if (newSticker) setTimeout(() => showStickerReward(stickersEarned() - 1), 900);
@@ -688,7 +687,6 @@ function loadStage(index) {
   buildBoard();
   updateHud();
   updatePreview();
-  renderStageList();
   renderProgress();
   if (window.AdsManager) AdsManager.gameplayStart(); // portal signal: level active
 }
@@ -713,7 +711,8 @@ function renderStageList() {
     const done = g.items.filter(({ s }) => progress.completed[s.id]).length;
     const details = document.createElement('details');
     details.className = 'chapter';
-    if (g.chapter === currentChapter) details.open = true;
+    const isCur = g.chapter === currentChapter;
+    if (isCur) details.open = true;
     const sum = document.createElement('summary');
     sum.className = 'chapter-head';
     sum.innerHTML =
@@ -722,22 +721,31 @@ function renderStageList() {
     details.appendChild(sum);
     const chips = document.createElement('div');
     chips.className = 'chips';
-    for (const { s, i } of g.items) {
-      const b = document.createElement('button');
-      b.className = 'stage-chip';
-      b.textContent = s.seq;
-      if (progress.completed[s.id]) b.classList.add('done');
-      if (i === G.index) b.classList.add('current');
-      b.title = `${s.id} · 최소 ${s.min}수`;
-      b.addEventListener('click', () => { loadStage(i); closeDrawer(); });
-      chips.appendChild(b);
-    }
     details.appendChild(chips);
+    // lazy: build a chapter's chips only when it is (or becomes) open — keeps
+    // opening the drawer O(chapters), so the stage count can grow freely
+    const build = () => { if (details.dataset.built) return; details.dataset.built = '1'; buildChips(chips, g.items); };
+    details.addEventListener('toggle', () => { if (details.open) build(); });
+    if (isCur) build();
     stageListEl.appendChild(details);
   }
   // bring the open (current) chapter into view
   const openEl = stageListEl.querySelector('details[open]');
   if (openEl) requestAnimationFrame(() => { try { openEl.scrollIntoView({ block: 'nearest' }); } catch (e) {} });
+}
+function buildChips(chips, items) {
+  const frag = document.createDocumentFragment();
+  for (const { s, i } of items) {
+    const b = document.createElement('button');
+    b.className = 'stage-chip';
+    b.textContent = s.seq;
+    if (progress.completed[s.id]) b.classList.add('done');
+    if (i === G.index) b.classList.add('current');
+    b.title = `${s.id} · ${s.min}`;
+    b.addEventListener('click', () => { loadStage(i); closeDrawer(); });
+    frag.appendChild(b);
+  }
+  chips.appendChild(frag);
 }
 
 /* ---------- album ---------- */
@@ -804,7 +812,7 @@ function registerSW() {
 
 /* ---------- drawer ---------- */
 const drawer = $('#drawer');
-function openDrawer() { drawer.classList.add('open'); }
+function openDrawer() { renderStageList(); drawer.classList.add('open'); } // build list on open only
 function closeDrawer() { drawer.classList.remove('open'); }
 
 /* ---------- wire up ---------- */
@@ -846,7 +854,7 @@ function refreshDynamic() {
   updateHud(); updateHintButton(); applySoundIcon(); renderProgress();
   if (G.stage) chapterEl.textContent = chapterName(G.stage.chapter);
   updatePreview();
-  renderStageList();
+  if (drawer.classList.contains('open')) renderStageList();
   if ($('#store').classList.contains('show')) renderStore('');
   if (albumOverlay.classList.contains('show')) renderAlbum();
 }
