@@ -341,11 +341,25 @@
   .sound-toggle {
     margin-top: auto; padding-top: 12px; border-top: 1px solid var(--line);
   }
-  #btnSound {
+  #btnSound, #btnBackup {
     width: 100%; border: 1px solid var(--line); background: var(--cell); color: var(--ink);
     padding: 12px; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer;
   }
+  #btnBackup { margin-top: 8px; }
   #btnSound.off { color: var(--muted); }
+  /* world theme flavor in the picker header */
+  .chapter-head .nm em { font-style: normal; color: var(--muted); font-weight: 600; font-size: 11px; }
+  /* backup modal */
+  .backup-sheet { text-align: left; }
+  .backup-sheet h3 { text-align: center; }
+  .bk-label { font-size: 12px; font-weight: 700; color: var(--muted); margin: 4px 2px 6px; }
+  .bk-area {
+    width: 100%; box-sizing: border-box; resize: none; margin-bottom: 8px;
+    border: 1px solid var(--line); border-radius: 10px; background: var(--cell); color: var(--ink);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11px;
+    padding: 8px; line-height: 1.4; word-break: break-all;
+  }
+  .bk-status { font-size: 12px; font-weight: 700; color: var(--accent); text-align: center; min-height: 16px; margin-top: 8px; }
 
   /* store */
   .store-sheet { text-align: left; }
@@ -455,6 +469,7 @@
     <div class="sound-toggle">
       <div class="lang-row"><span class="lang-lbl" data-i18n="lang_label">Language</span><select id="langSelect"></select></div>
       <button id="btnSound">🔊 Sound on</button>
+      <button id="btnBackup" data-i18n="backup_open">Backup / Restore</button>
     </div>
   </div>
 </div>
@@ -580,6 +595,22 @@
     <div class="album-status" id="adCountWrap"></div>
     <button class="btn primary" id="adReward" data-i18n="ad_reward" style="width:100%;" disabled>Get hint</button>
     <button class="btn ghost" id="adClose" data-i18n="ad_skip" style="width:100%;margin-top:8px;">Skip</button>
+  </div>
+</div>
+
+<!-- backup / restore -->
+<div class="modal" id="backup">
+  <div class="backdrop" id="backupBackdrop"></div>
+  <div class="sheet backup-sheet">
+    <h3 data-i18n="backup_title">Backup &amp; Restore</h3>
+    <div class="bk-label" data-i18n="backup_export_label"></div>
+    <textarea id="backupCode" class="bk-area" readonly rows="3"></textarea>
+    <button class="btn" id="backupCopy" data-i18n="backup_copy" style="width:100%;margin-bottom:14px;">Copy</button>
+    <div class="bk-label" data-i18n="backup_import_label"></div>
+    <textarea id="importCode" class="bk-area" rows="3" placeholder="SS1..."></textarea>
+    <button class="btn primary" id="backupRestore" data-i18n="backup_restore" style="width:100%;">Restore</button>
+    <div class="bk-status" id="backupStatus"></div>
+    <button class="btn ghost" id="backupClose" data-i18n="album_close" style="width:100%;margin-top:8px;">Close</button>
   </div>
 </div>
 
