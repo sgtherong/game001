@@ -303,6 +303,43 @@
     padding: 12px; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer;
   }
   #btnSound.off { color: var(--muted); }
+
+  /* store */
+  .store-sheet { text-align: left; }
+  .store-sheet h3 { text-align: center; }
+  .store-status { font-size: 12.5px; font-weight: 700; color: var(--accent); text-align: center; margin-bottom: 10px; }
+  .store-note { font-size: 12px; color: var(--ink); background: color-mix(in srgb, var(--accent) 12%, var(--card)); border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--line)); padding: 8px 10px; border-radius: 10px; margin-bottom: 12px; text-align: center; }
+  .prod { border: 1px solid var(--line); border-radius: 16px; padding: 14px; margin-bottom: 10px; background: var(--cell); }
+  .prod.owned { text-align: center; }
+  .prod-top { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px; }
+  .prod-name { font-size: 16px; font-weight: 800; }
+  .prod-price { font-size: 18px; font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums; }
+  .prod-feat { list-style: none; margin: 0 0 12px; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+  .prod-feat li { font-size: 13px; color: var(--ink); padding-left: 20px; position: relative; }
+  .prod-feat li::before { content: "✓"; position: absolute; left: 0; color: var(--accent); font-weight: 800; }
+  .proto-tag { font-size: 10.5px; color: var(--muted); text-align: center; margin-top: 8px; }
+  .store-sub { font-size: 12px; color: var(--muted); }
+  .theme-row { margin: 6px 0 4px; }
+  .theme-label { font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 6px; }
+  .theme-opts { display: flex; gap: 8px; }
+  .theme-opt { flex: 1; padding: 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--cell); color: var(--ink); font-size: 12px; font-weight: 700; cursor: pointer; }
+  .theme-opt.sel { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 40%, transparent); }
+  .store-legal { font-size: 10.5px; color: var(--muted); line-height: 1.5; margin-top: 12px; text-align: center; }
+
+  /* rewarded ad placeholder */
+  .ad-slot { position: relative; border: 2px dashed var(--line); border-radius: 14px; background: var(--cell); height: 150px; display: grid; place-items: center; margin-bottom: 14px; overflow: hidden; }
+  .ad-badge { position: absolute; top: 8px; left: 8px; font-size: 10px; font-weight: 800; color: #fff; background: #8a7f6d; padding: 2px 8px; border-radius: 6px; }
+  .ad-ph { text-align: center; color: var(--muted); font-size: 14px; font-weight: 700; line-height: 1.6; }
+  .ad-ph small { font-weight: 600; font-size: 11px; }
+
+  /* premium theme pack (황혼) — overrides tokens */
+  :root[data-pack="premium"] {
+    --bg: #241f38; --card: #322b4d; --ink: #f2ecff; --muted: #b3a9d6;
+    --line: #4a4170; --cell: #2c2646; --cell-line: #433a63; --accent: #e8a45c;
+    --shadow: 0 10px 30px rgba(0,0,0,.4);
+  }
+  :root[data-pack="premium"] body { background: radial-gradient(120% 120% at 50% 0%, #3a3160 0%, var(--bg) 60%); }
+  :root[data-pack="premium"] .sticker.got { background: radial-gradient(120% 120% at 30% 20%, #4a4170, #322b4d); color: var(--ink); }
 </style>
 </head>
 <body>
@@ -312,6 +349,7 @@
     <div class="spacer"></div>
     <button class="icon-btn" id="btnHelp" title="규칙 보기">❔</button>
     <button class="icon-btn" id="btnAlbum" title="여행 앨범">📖</button>
+    <button class="icon-btn" id="btnStore" title="상점">💎</button>
     <button class="icon-btn" id="btnStages" title="스테이지 선택">☰</button>
   </header>
 
@@ -423,6 +461,74 @@
     <h3 id="stickerName">스티커 획득!</h3>
     <div class="album-status" id="stickerSub"></div>
     <button class="btn primary" id="stickerOk" style="width:100%;">앨범 보기</button>
+  </div>
+</div>
+
+<!-- store -->
+<div class="modal" id="store">
+  <div class="backdrop" id="storeBackdrop"></div>
+  <div class="sheet store-sheet">
+    <h3>💎 상점</h3>
+    <div class="store-status" id="storeStatus"></div>
+    <div class="store-note" id="storeNote" hidden></div>
+
+    <div class="prod" id="premiumCard">
+      <div class="prod-top">
+        <span class="prod-name">프리미엄</span>
+        <span class="prod-price" id="premiumPrice">₩4,900</span>
+      </div>
+      <ul class="prod-feat">
+        <li>힌트 <b>무제한</b></li>
+        <li>광고 힌트 버튼 제거</li>
+        <li>프리미엄 <b>전용 테마</b></li>
+        <li>기기 변경 시 구매 복원</li>
+      </ul>
+      <button class="btn primary" id="buyPremium" style="width:100%;">구매하기</button>
+      <div class="proto-tag">프로토타입 · 실제 결제 미연동 (테스트용 잠금 해제)</div>
+    </div>
+
+    <div class="prod owned" id="premiumOwned" hidden>
+      <div class="prod-top"><span class="prod-name">프리미엄 이용 중 ✓</span></div>
+      <div class="store-sub">힌트 무제한 · 전용 테마 사용 가능</div>
+    </div>
+
+    <div class="theme-row" id="themeRow" hidden>
+      <div class="theme-label">테마</div>
+      <div class="theme-opts">
+        <button class="theme-opt" id="themeDefault">여행 앨범</button>
+        <button class="theme-opt" id="themePremium">황혼(프리미엄)</button>
+      </div>
+    </div>
+
+    <button class="btn ghost" id="restorePurchase" style="width:100%;margin-top:4px;">구매 복원</button>
+    <button class="btn" id="storeClose" style="width:100%;margin-top:8px;">닫기</button>
+    <div class="store-legal">가격·횟수는 기획 제안치이며 확정 판매가가 아닙니다. 무료 되돌리기·재시작·미리보기는 항상 제공됩니다.</div>
+  </div>
+</div>
+
+<!-- rewarded ad: offer -->
+<div class="modal" id="adOffer">
+  <div class="backdrop"></div>
+  <div class="sheet">
+    <div class="sticker-big">🎬</div>
+    <h3>광고 보고 힌트 1회</h3>
+    <div class="album-status">무료 힌트를 모두 사용했어요. 짧은 광고를 보면 이번 문제에 힌트 1회를 드려요.</div>
+    <button class="btn primary" id="adWatch" style="width:100%;">광고 보기</button>
+    <button class="btn ghost" id="adOfferClose" style="width:100%;margin-top:8px;">닫기</button>
+  </div>
+</div>
+
+<!-- rewarded ad: playback (placeholder for real ad SDK) -->
+<div class="modal" id="adPlay">
+  <div class="backdrop"></div>
+  <div class="sheet">
+    <div class="ad-slot">
+      <div class="ad-badge">광고</div>
+      <div class="ad-ph">광고 영역<br><small>실제 광고 SDK(AdMob) 연동 위치</small></div>
+    </div>
+    <div class="album-status" id="adCountWrap"><span id="adCount">3</span>초 후 보상을 받을 수 있어요</div>
+    <button class="btn primary" id="adReward" style="width:100%;" disabled>힌트 받기</button>
+    <button class="btn ghost" id="adClose" style="width:100%;margin-top:8px;">건너뛰기</button>
   </div>
 </div>
 
