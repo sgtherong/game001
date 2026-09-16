@@ -1,5 +1,5 @@
 /* 스왑스텝 service worker — offline app shell */
-const CACHE = 'swapstep-v8';
+const CACHE = 'swapstep-v9';
 const ASSETS = [
   './',
   './index.html',
