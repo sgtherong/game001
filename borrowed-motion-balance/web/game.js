@@ -624,22 +624,43 @@ function restorePurchase() {
   renderStore(isPremium() ? t('restored') : t('restore_none'));
 }
 
-/* ---------- theme pack (premium exclusive) ---------- */
+/* ---------- theme packs ---------- */
+// default (free) · mint (free, unlocked by clearing World 1) · dusk (premium-only)
+function themeAllowed(pack) {
+  if (pack === 'default') return true;
+  if (pack === 'mint') return !!progress.themeUnlocked || isPremium();
+  if (pack === 'dusk') return isPremium();
+  return false;
+}
+function currentThemePack() {
+  let p = progress.theme || 'default';
+  if (p === 'premium') p = 'dusk'; // back-compat with earlier saves
+  return themeAllowed(p) ? p : 'default';
+}
 function applyThemePack() {
-  const pack = (canDusk() && progress.theme === 'premium') ? 'premium' : 'default';
-  document.documentElement.dataset.pack = pack;
+  document.documentElement.dataset.pack = currentThemePack();
 }
 function setThemePack(pack) {
-  if (pack === 'premium' && !canDusk()) return;
+  if (!themeAllowed(pack)) return;
   progress.theme = pack; saveProgress(progress);
   applyThemePack(); updateThemeButtons();
 }
 function updateThemeButtons() {
-  const cur = (isPremium() && progress.theme === 'premium') ? 'premium' : 'default';
-  const a = $('#themeDefault'), b = $('#themePremium');
-  if (a) a.classList.toggle('sel', cur === 'default');
-  if (b) b.classList.toggle('sel', cur === 'premium');
+  const cur = currentThemePack();
+  const defs = [
+    ['#themeDefault', 'default', 'theme_default'],
+    ['#themeMint', 'mint', 'theme_mint'],
+    ['#themePremium', 'dusk', 'theme_dusk'],
+  ];
+  for (const [sel, pack, key] of defs) {
+    const el = $(sel); if (!el) continue;
+    const locked = !themeAllowed(pack);
+    el.classList.toggle('sel', cur === pack && !locked);
+    el.classList.toggle('locked', locked);
+    el.innerHTML = t(key) + (locked ? ' <span class="lk">🔒</span>' : '');
+  }
 }
+const canDusk = () => themeAllowed('mint') || themeAllowed('dusk'); // any extra theme available
 
 /* ---------- progress backup / restore (Base64 code) ---------- */
 function exportCode() {
@@ -761,7 +782,6 @@ function showWorldReward(w, themeUnlocked) {
   $('#worldOverlay').classList.add('show');
   Sound.sticker(); haptic([30, 40, 30, 40, 60]); confettiBurst();
 }
-const canDusk = () => isPremium() || !!progress.themeUnlocked;
 
 /* ---------- hud / navigation ---------- */
 function updateHud() {
@@ -1038,7 +1058,8 @@ $('#storeBackdrop').addEventListener('click', closeStore);
 $('#buyPremium').addEventListener('click', buyPremium);
 $('#restorePurchase').addEventListener('click', restorePurchase);
 $('#themeDefault').addEventListener('click', () => setThemePack('default'));
-$('#themePremium').addEventListener('click', () => setThemePack('premium'));
+$('#themeMint').addEventListener('click', () => setThemePack('mint'));
+$('#themePremium').addEventListener('click', () => setThemePack('dusk'));
 // rewarded ad — offer buttons; the play-modal buttons (#adReward/#adClose)
 // are wired per-invocation by showSimulatedAd (local adapter)
 $('#adWatch').addEventListener('click', watchAd);
