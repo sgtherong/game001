@@ -405,14 +405,26 @@
   .ad-ph { text-align: center; color: var(--muted); font-size: 14px; font-weight: 700; line-height: 1.6; }
   .ad-ph small { font-weight: 600; font-size: 11px; }
 
-  /* premium theme pack (황혼) — overrides tokens */
-  :root[data-pack="premium"] {
+  /* theme pack: Mint (world-1 reward, free) — light cool palette */
+  :root[data-pack="mint"] {
+    --bg: #e4f3ef; --card: #ffffff; --ink: #1f4039; --muted: #6c8f88;
+    --line: #cbe6df; --cell: #eef8f5; --cell-line: #d6ece6; --accent: #2f9e8f;
+    --shadow: 0 10px 30px rgba(30,80,70,.12);
+  }
+  :root[data-pack="mint"] body { background: radial-gradient(120% 120% at 50% 0%, #f1faf8 0%, var(--bg) 60%); }
+
+  /* theme pack: Dusk (황혼, premium-exclusive) — dark palette */
+  :root[data-pack="dusk"] {
     --bg: #241f38; --card: #322b4d; --ink: #f2ecff; --muted: #b3a9d6;
     --line: #4a4170; --cell: #2c2646; --cell-line: #433a63; --accent: #e8a45c;
     --shadow: 0 10px 30px rgba(0,0,0,.4);
   }
-  :root[data-pack="premium"] body { background: radial-gradient(120% 120% at 50% 0%, #3a3160 0%, var(--bg) 60%); }
-  :root[data-pack="premium"] .sticker.got { background: radial-gradient(120% 120% at 30% 20%, #4a4170, #322b4d); color: var(--ink); }
+  :root[data-pack="dusk"] body { background: radial-gradient(120% 120% at 50% 0%, #3a3160 0%, var(--bg) 60%); }
+  :root[data-pack="dusk"] .sticker.got { background: radial-gradient(120% 120% at 30% 20%, #4a4170, #322b4d); color: var(--ink); }
+
+  /* locked theme option */
+  .theme-opt.locked { opacity: .5; }
+  .theme-opt .lk { font-size: 10px; }
 </style>
 </head>
 <body>
@@ -604,8 +616,9 @@
     <div class="theme-row" id="themeRow" hidden>
       <div class="theme-label" data-i18n="theme_label">Theme</div>
       <div class="theme-opts">
-        <button class="theme-opt" id="themeDefault" data-i18n="theme_default">Travel Album</button>
-        <button class="theme-opt" id="themePremium" data-i18n="theme_premium">Dusk (Premium)</button>
+        <button class="theme-opt" id="themeDefault">Travel Album</button>
+        <button class="theme-opt" id="themeMint">Mint</button>
+        <button class="theme-opt" id="themePremium">Dusk</button>
       </div>
     </div>
 
