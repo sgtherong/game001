@@ -86,6 +86,7 @@ function loadProgress() {
     hints: { date: '', free: 0, ad: 0 }, // daily hint quotas (free / rewarded-ad)
     premium: false, theme: 'default',
     worldsDone: {}, themeUnlocked: false, // world-clear rewards
+    daily: {}, streak: { n: 0, last: '' }, // daily challenge state
   };
   try {
     const raw = localStorage.getItem(SAVE_KEY);
@@ -94,6 +95,8 @@ function loadProgress() {
   if (!p.settings) p.settings = { sound: true };
   if (!p.hints) p.hints = { date: '', free: 0, ad: 0 };
   if (!p.worldsDone) p.worldsDone = {};
+  if (!p.daily) p.daily = {};
+  if (!p.streak) p.streak = { n: 0, last: '' };
   return p;
 }
 function saveProgress(p) {
@@ -242,6 +245,7 @@ const G = {
   usedHint: false,  // hint used on this attempt
   attemptAdUsed: false, // a rewarded-ad hint was used on this attempt (max 1)
   animating: false,
+  daily: null,      // slot 0-2 when playing a daily puzzle, else null
 };
 
 /* ---------- DOM ---------- */
@@ -701,8 +705,26 @@ function onWin() {
     t('result_moves', { moves, min: st.min }) +
     (G.usedHint ? t('result_used_hint') : (optimal ? t('result_perfect') : '')) +
     (firstClear ? '' : t('result_recleared'));
-  const hasNext = G.index < STAGES.length - 1;
-  overlay.querySelector('#btnNext').style.display = hasNext ? '' : 'none';
+  const daily = G.daily != null;
+  const btnNextEl = overlay.querySelector('#btnNext');
+  if (daily) {
+    // record today's daily completion + streak
+    const dk = todayKey();
+    progress.daily[dk] = progress.daily[dk] || [false, false, false];
+    progress.daily[dk][G.daily] = true;
+    if (progress.daily[dk].every(Boolean) && progress.streak.last !== dk) {
+      progress.streak.n = (progress.streak.last === shiftDay(dk, -1)) ? (progress.streak.n + 1) : 1;
+      progress.streak.last = dk;
+    }
+    saveProgress(progress);
+    btnNextEl.style.display = ''; btnNextEl.textContent = t('daily_back');
+    overlay.dataset.mode = 'daily';
+  } else {
+    const hasNext = G.index < STAGES.length - 1;
+    btnNextEl.textContent = t('win_next');
+    btnNextEl.style.display = hasNext ? '' : 'none';
+    overlay.dataset.mode = 'normal';
+  }
   overlay.classList.add('show');
   if (window.AdsManager) { AdsManager.gameplayStop(); AdsManager.happyTime(1); } // portal signals
   Sound.win(); haptic([20, 40, 60]); confettiBurst(); screenFlash();
@@ -710,8 +732,9 @@ function onWin() {
   renderProgress();
 
   // world-clear reward: did this first-clear complete its whole world?
+  // (skipped in daily mode to keep the daily flow clean)
   let worldDone = false, themeJustUnlocked = false;
-  if (firstClear) {
+  if (firstClear && !daily) {
     const w = worldOf(G.index);
     if (!progress.worldsDone[w]) {
       const start = w * WORLD_SIZE, end = Math.min(STAGES.length, start + WORLD_SIZE);
@@ -727,7 +750,7 @@ function onWin() {
     }
   }
   // one reward popup at a time: world milestone takes priority over a sticker
-  if (!worldDone && newSticker) setTimeout(() => showStickerReward(stickersEarned() - 1), 900);
+  if (!daily && !worldDone && newSticker) setTimeout(() => showStickerReward(stickersEarned() - 1), 900);
 }
 
 // world completion celebration (keeps the win overlay behind, like sticker reward)
@@ -746,7 +769,7 @@ function updateHud() {
   btnUndo.innerHTML = `${t('undo')} <span style="color:var(--muted);font-weight:600">${t('undo_meta', { n: G.history.length, min })}</span>`;
 }
 
-function loadStage(index) {
+function loadStage(index, dailySlot = null) {
   G.index = Math.max(0, Math.min(STAGES.length - 1, index));
   G.stage = STAGES[G.index];
   G.state = clone(G.stage.start);
@@ -754,8 +777,8 @@ function loadStage(index) {
   G.selected = [];
   G.usedHint = false;
   G.attemptAdUsed = false;
-  progress.last = G.index;
-  saveProgress(progress);
+  G.daily = dailySlot; // non-null => playing today's daily puzzle
+  if (dailySlot === null) { progress.last = G.index; saveProgress(progress); } // daily doesn't move main progress
   updateHintButton();
 
   stageTitleEl.textContent = `${G.stage.id} · ${G.index + 1}/${STAGES.length}`;
@@ -859,6 +882,50 @@ function showStickerReward(index) {
   Sound.sticker(); haptic([30, 40, 30, 40, 60]); confettiBurst();
 }
 
+/* ---------- daily challenge (date-seeded 3 puzzles) ---------- */
+let _dailyPools = null;
+function dailyPools() {
+  if (_dailyPools) return _dailyPools;
+  const easy = [], med = [], hard = [];
+  STAGES.forEach((s, i) => { if (s.min <= 2) easy.push(i); else if (s.min <= 4) med.push(i); else hard.push(i); });
+  _dailyPools = [easy.length ? easy : [0], med.length ? med : [0], hard.length ? hard : [0]];
+  return _dailyPools;
+}
+function hashStr(str) { let h = 2166136261 >>> 0; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+function dailyIndices(dateStr) {
+  const pools = dailyPools(), base = hashStr('swapstep-' + dateStr);
+  return pools.map((pool, k) => pool[(((base ^ Math.imul(k + 1, 0x9e3779b1)) >>> 0) % pool.length)]);
+}
+function shiftDay(dateStr, delta) {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const dt = new Date(y, m - 1, d + delta);
+  return `${dt.getFullYear()}-${dt.getMonth() + 1}-${dt.getDate()}`;
+}
+const dailyOverlay = $('#daily');
+function openDaily() { renderDaily(); dailyOverlay.classList.add('show'); logEvent('daily_open'); }
+function closeDaily() { dailyOverlay.classList.remove('show'); }
+function renderDaily() {
+  const dk = todayKey();
+  const idxs = dailyIndices(dk);
+  const done = progress.daily[dk] || [false, false, false];
+  $('#dailyDate').textContent = dk;
+  $('#dailyStreak').textContent = t('daily_streak', { n: progress.streak.n || 0 });
+  const labels = [t('daily_easy'), t('daily_medium'), t('daily_hard')];
+  const wrap = $('#dailyList'); wrap.innerHTML = '';
+  idxs.forEach((idx, slot) => {
+    const s = STAGES[idx];
+    const card = document.createElement('button');
+    card.className = 'daily-card' + (done[slot] ? ' done' : '');
+    card.innerHTML =
+      `<span class="dc-lv">${labels[slot]}</span>` +
+      `<span class="dc-meta">${s.n}×${s.n} · ${s.pieces}p · min ${s.min}</span>` +
+      `<span class="dc-go">${done[slot] ? '✓' : '▶'}</span>`;
+    card.addEventListener('click', () => { closeDaily(); loadStage(idx, slot); });
+    wrap.appendChild(card);
+  });
+  $('#dailyAllDone').hidden = !done.every(Boolean);
+}
+
 /* ---------- tutorial ---------- */
 const tutorial = $('#tutorial');
 function openTutorial() { tutorial.classList.add('show'); }
@@ -879,6 +946,17 @@ function toggleSound() {
   if (progress.settings.sound) { Sound.unlock(); Sound.select(); }
 }
 
+/* ---------- branding (rebranding config) ---------- */
+function applyBranding() {
+  const b = window.BM_BRAND || {};
+  const name = b.name || '스왑스텝', tag = b.tagline || '';
+  const brandEl = document.querySelector('header .brand');
+  if (brandEl) brandEl.innerHTML = name + (tag ? `<small>${tag}</small>` : '');
+  if (name) document.title = name;
+  // recolor only when a licensee set a non-default accent (keeps themes intact by default)
+  if (b.accent && b.accent !== '#d98b4a') document.documentElement.style.setProperty('--accent', b.accent);
+}
+
 /* ---------- PWA ---------- */
 function registerSW() {
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
@@ -897,9 +975,16 @@ btnRestart.addEventListener('click', restart);
 btnHint.addEventListener('click', useHint);
 btnCommit.addEventListener('click', commitMove);
 btnCancel.addEventListener('click', () => { G.selected = []; updatePreview(); });
-$('#btnNext').addEventListener('click', () => loadStage(G.index + 1));
+$('#btnNext').addEventListener('click', () => {
+  if (overlay.dataset.mode === 'daily') { overlay.classList.remove('show'); openDaily(); }
+  else loadStage(G.index + 1);
+});
 $('#btnReplay').addEventListener('click', () => { overlay.classList.remove('show'); restart(); });
 $('#btnStages').addEventListener('click', openDrawer);
+// daily challenge
+$('#btnDaily').addEventListener('click', openDaily);
+$('#dailyClose').addEventListener('click', closeDaily);
+$('#dailyBackdrop').addEventListener('click', closeDaily);
 $('#drawerClose').addEventListener('click', closeDrawer);
 $('#drawerBackdrop').addEventListener('click', closeDrawer);
 
@@ -935,6 +1020,7 @@ function refreshDynamic() {
   if (drawer.classList.contains('open')) renderStageList();
   if ($('#store').classList.contains('show')) renderStore('');
   if (albumOverlay.classList.contains('show')) renderAlbum();
+  if (dailyOverlay.classList.contains('show')) renderDaily();
 }
 window.onLangChange = refreshDynamic;
 
@@ -980,6 +1066,7 @@ window.addEventListener('resize', () => {
 document.addEventListener('pointerdown', () => Sound.unlock(), { once: true });
 
 // init
+applyBranding();           // apply rebranding config (name/tagline/accent)
 window.I18N.apply();       // fill static data-i18n strings
 applySoundIcon();
 resetDailyIfNeeded();

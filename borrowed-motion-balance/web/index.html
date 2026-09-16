@@ -337,6 +337,22 @@
   /* sticker reward */
   .sticker-big { font-size: 76px; animation: pop .5s cubic-bezier(.2,1.4,.4,1); margin-bottom: 6px; }
 
+  /* daily challenge */
+  .daily-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .daily-date { font-size: 12px; color: var(--muted); font-weight: 700; font-variant-numeric: tabular-nums; }
+  .daily-streak { font-size: 13px; color: var(--accent); font-weight: 800; }
+  .daily-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+  .daily-card {
+    display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
+    border: 1px solid var(--line); background: var(--cell); color: var(--ink);
+    border-radius: 14px; padding: 14px; cursor: pointer;
+  }
+  .daily-card .dc-lv { font-size: 15px; font-weight: 800; }
+  .daily-card .dc-meta { flex: 1; font-size: 11px; color: var(--muted); font-weight: 600; }
+  .daily-card .dc-go { font-size: 18px; font-weight: 800; color: var(--accent); }
+  .daily-card.done { background: color-mix(in srgb, #5aa88c 14%, var(--cell)); border-color: color-mix(in srgb, #5aa88c 45%, var(--line)); }
+  .daily-card.done .dc-go { color: #5aa88c; }
+
   /* sound toggle in drawer */
   .sound-toggle {
     margin-top: auto; padding-top: 12px; border-top: 1px solid var(--line);
@@ -405,6 +421,7 @@
     <div class="brand">스왑스텝<small>SwapStep</small></div>
     <div class="spacer"></div>
     <button class="icon-btn" id="btnHelp" data-i18n-title="header_help" title="Rules">❔</button>
+    <button class="icon-btn" id="btnDaily" data-i18n-title="header_daily" title="Daily">📅</button>
     <button class="icon-btn" id="btnAlbum" data-i18n-title="header_album" title="Travel album">📖</button>
     <button class="icon-btn" id="btnStore" data-i18n-title="header_store" title="Store">💎</button>
     <button class="icon-btn" id="btnStages" data-i18n-title="header_stages" title="Stages">☰</button>
@@ -530,6 +547,21 @@
   </div>
 </div>
 
+<!-- daily challenge -->
+<div class="modal" id="daily">
+  <div class="backdrop" id="dailyBackdrop"></div>
+  <div class="sheet">
+    <h3 data-i18n="daily_title">Daily Challenge</h3>
+    <div class="daily-top">
+      <span class="daily-date" id="dailyDate"></span>
+      <span class="daily-streak" id="dailyStreak"></span>
+    </div>
+    <div class="daily-list" id="dailyList"></div>
+    <div class="album-status" id="dailyAllDone" data-i18n="daily_all_done" hidden></div>
+    <button class="btn" id="dailyClose" data-i18n="album_close" style="width:100%;">Close</button>
+  </div>
+</div>
+
 <!-- world clear reward -->
 <div class="modal" id="worldOverlay">
   <div class="backdrop"></div>
@@ -625,6 +657,7 @@
   </div>
 </div>
 
+<script src="branding.js"></script>
 <script src="i18n.js"></script>
 <script src="platform.js"></script>
 <script src="stages-data.js"></script>
