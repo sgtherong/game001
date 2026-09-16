@@ -336,9 +336,8 @@
   let lang = 'en';
 
   function pickInitial() {
+    // honor the player's saved choice; otherwise default to English (global default)
     try { const s = localStorage.getItem(LS_KEY); if (s && S[s]) return s; } catch (e) {}
-    const nav = (navigator.languages || [navigator.language || 'en']);
-    for (const l of nav) { const code = String(l).slice(0, 2).toLowerCase(); if (S[code]) return code; }
     return 'en';
   }
 
