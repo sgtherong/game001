@@ -58,6 +58,19 @@ node borrowed-motion-balance/generate-stages-1000.cjs
 node -e "const fs=require('fs');const d=JSON.parse(fs.readFileSync('borrowed-motion-balance/stages-1000.json','utf8'));const stages=d.stages.map(s=>({id:s.stage_id,seq:s.sequence,chapter:s.chapter,role:s.intended_role,n:s.board_size,pieces:s.piece_count,start:s.start,targets:s.targets,min:s.min,ways:s.ways}));fs.writeFileSync('borrowed-motion-balance/web/stages-data.js','window.BM_DATA='+JSON.stringify({rules:d.rules_version,dir:{0:'right',1:'down',2:'left',3:'up'},stages})+';\n')"
 ```
 
+## 광고/플랫폼 어댑터 (수익화)
+
+`web/platform.js`는 광고 호출을 단일 인터페이스로 추상화합니다. 게임 코드는 `AdsManager.showRewarded()` 등만 호출하고, 접속 **도메인**에 따라 플랫폼 SDK(Poki·CrazyGames·GameDistribution)를 동적으로 로드·호출합니다. 포털이 아닌 곳(자체 호스팅·gh-pages·Artifact)에서는 `local`(시뮬레이션) 어댑터로 동작합니다.
+
+```
+AdsManager.showRewarded()   // Promise<boolean> — 보상형 광고 (true=보상 지급)
+AdsManager.showInterstitial() // 전면(레벨 전환) — config.interstitialEnabled 로 gate (기본 off)
+AdsManager.gameplayStart() / gameplayStop() / happyTime()
+AdsManager.platform          // 현재 어댑터 이름
+```
+
+새 포털 추가 = `platform.js`에 어댑터 하나 추가 + `detect()`에 도메인 규칙 추가. **게임 코드는 수정하지 않습니다.** 결제(프리미엄)는 `game.js`의 `buyPremium`/`restorePurchase`에 스토어 IAP를 연결하면 됩니다.
+
 ## 규칙 버전
 
 `borrowed-motion-easy-v1` — 벽·회전 바닥 등 추가 장치는 포함하지 않은 기본 규칙입니다.

@@ -1,8 +1,9 @@
 /* 스왑스텝 service worker — offline app shell */
-const CACHE = 'swapstep-v6';
+const CACHE = 'swapstep-v7';
 const ASSETS = [
   './',
   './index.html',
+  './platform.js',
   './game.js',
   './stages-data.js',
   './manifest.webmanifest',
