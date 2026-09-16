@@ -266,6 +266,49 @@
   }
   .modal h3 { font-size: 20px; font-weight: 800; margin: 2px 0 14px; }
 
+  /* tutorial visual demo (language-independent) */
+  .tut-demo { margin: 6px 0 14px; }
+  .td-board { position: relative; width: 236px; height: 62px; margin: 0 auto; background: var(--cell); border: 1px solid var(--line); border-radius: 12px; }
+  .td-cell { position: absolute; top: 6px; width: 50px; height: 50px; border-radius: 9px; background: color-mix(in srgb, var(--ink) 5%, var(--card)); }
+  .td-target { position: absolute; top: 6px; width: 50px; height: 50px; border-radius: 9px; border: 2px dashed; display: grid; place-items: center; font-weight: 800; font-size: 18px; }
+  .td-target.t1 { left: 6px; color: #e8743b; border-color: #e8743b; } .td-target.t1 span { opacity: .5; }
+  .td-target.t2 { left: 180px; color: #2f8f83; border-color: #2f8f83; } .td-target.t2 span { opacity: .5; }
+  .td-target.lit { animation: tdLit 5s ease-out infinite; }
+  @keyframes tdLit { 0%,58% { box-shadow: 0 0 0 0 transparent; } 68% { box-shadow: 0 0 0 7px color-mix(in srgb, currentColor 32%, transparent); } 82%,100% { box-shadow: 0 0 0 11px transparent; } }
+  .td-piece { position: absolute; top: 10px; width: 42px; height: 42px; border-radius: 11px; display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 18px; box-shadow: 0 4px 8px rgba(0,0,0,.2); }
+  .td-piece .td-num { position: relative; z-index: 1; text-shadow: 0 1px 2px rgba(0,0,0,.25); }
+  .td-piece .td-arrow { position: absolute; inset: 0; }
+  .td-piece .td-arrow::after { content: ""; position: absolute; right: 7%; top: 50%; width: 16%; height: 3px; background: #fff; transform: translateY(-50%); border-radius: 3px; }
+  .td-piece .td-arrow::before { content: ""; position: absolute; right: 5%; top: 50%; width: 0; height: 0; transform: translateY(-50%); border-top: 4px solid transparent; border-bottom: 4px solid transparent; border-left: 6px solid #fff; }
+  .td-piece.p1 { background: #e8743b; }
+  .td-piece.p2 { background: #2f8f83; }
+  .td-piece.p1 { animation: tdP1 5s ease-in-out infinite; }
+  .td-piece.p2 { animation: tdP2 5s ease-in-out infinite; }
+  .td-piece.p1 .td-arrow { animation: tdA1 5s ease-in-out infinite; }
+  .td-piece.p2 .td-arrow { animation: tdA2 5s ease-in-out infinite; }
+  .td-finger { position: absolute; font-size: 26px; left: 78px; top: 44px; animation: tdFinger 5s ease-in-out infinite; }
+  /* p1: cell1(89) -> cell0(31 center => left 68? use left of element) ; element left = center-21 */
+  @keyframes tdP1 { 0%,44% { left: 68px; } 60%,86% { left: 10px; } 92% { opacity: 1; } 96% { opacity: 0; left: 10px; } 100% { opacity: 1; left: 68px; } }
+  @keyframes tdP2 { 0%,44% { left: 126px; } 60%,86% { left: 184px; } 92% { opacity: 1; } 96% { opacity: 0; left: 184px; } 100% { opacity: 1; left: 126px; } }
+  @keyframes tdA1 { 0%,30% { transform: rotate(0deg); } 42%,100% { transform: rotate(180deg); } } /* → becomes ← */
+  @keyframes tdA2 { 0%,30% { transform: rotate(180deg); } 42%,100% { transform: rotate(360deg); } } /* ← becomes → */
+  @keyframes tdFinger {
+    0% { left: 120px; top: 60px; opacity: 0; }
+    6% { opacity: 1; } 12% { left: 78px; top: 44px; } 16% { top: 40px; } 20% { top: 44px; }
+    26% { left: 136px; top: 44px; } 30% { top: 40px; } 34% { top: 44px; }
+    44% { opacity: 1; } 50% { opacity: 0; top: 60px; } 100% { opacity: 0; }
+  }
+  .tut-demo-cap { text-align: center; font-size: 12px; color: var(--muted); margin-top: 8px; }
+  @media (prefers-reduced-motion: reduce) {
+    .td-piece.p1, .td-piece.p2, .td-piece .td-arrow, .td-finger, .td-target.lit { animation: none; }
+    .td-piece.p1 { left: 10px; } .td-piece.p2 { left: 184px; } .td-finger { display: none; }
+  }
+
+  /* language selector */
+  .lang-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .lang-lbl { font-size: 12px; font-weight: 700; color: var(--muted); }
+  #langSelect { flex: 1; padding: 9px 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--cell); color: var(--ink); font-size: 13px; font-weight: 700; cursor: pointer; }
+
   /* tutorial */
   .tut-step { display: flex; gap: 12px; align-items: center; text-align: left; margin: 12px 2px; }
   .tut-step .ic {
@@ -347,10 +390,10 @@
   <header>
     <div class="brand">스왑스텝<small>SwapStep</small></div>
     <div class="spacer"></div>
-    <button class="icon-btn" id="btnHelp" title="규칙 보기">❔</button>
-    <button class="icon-btn" id="btnAlbum" title="여행 앨범">📖</button>
-    <button class="icon-btn" id="btnStore" title="상점">💎</button>
-    <button class="icon-btn" id="btnStages" title="스테이지 선택">☰</button>
+    <button class="icon-btn" id="btnHelp" data-i18n-title="header_help" title="Rules">❔</button>
+    <button class="icon-btn" id="btnAlbum" data-i18n-title="header_album" title="Travel album">📖</button>
+    <button class="icon-btn" id="btnStore" data-i18n-title="header_store" title="Store">💎</button>
+    <button class="icon-btn" id="btnStages" data-i18n-title="header_stages" title="Stages">☰</button>
   </header>
 
   <div class="progress">
@@ -368,25 +411,25 @@
     <div id="board"><div id="grid"></div><div id="layer"></div></div>
   </div>
 
-  <div class="hint" id="hintText">조각 두 개를 선택하세요.</div>
+  <div class="hint" id="hintText"></div>
 
   <div class="actions">
     <div class="row">
-      <button class="btn" id="btnCancel" disabled>선택 취소</button>
-      <button class="btn primary" id="btnCommit" disabled>이동 ▶</button>
+      <button class="btn" id="btnCancel" data-i18n="btn_cancel" disabled>Cancel</button>
+      <button class="btn primary" id="btnCommit" data-i18n="btn_move" disabled>Move ▶</button>
     </div>
     <div class="row">
-      <button class="btn" id="btnUndo">↶ 되돌리기 <span style="color:var(--muted);font-weight:600">(<span id="moveCount">0</span>수 · 최소 <span id="minMoves">1</span>)</span></button>
+      <button class="btn" id="btnUndo"></button>
     </div>
     <div class="row">
-      <button class="btn ghost" id="btnRestart">↺ 재시작</button>
-      <button class="btn ghost" id="btnHint">💡 힌트</button>
+      <button class="btn ghost" id="btnRestart" data-i18n="restart">↺ Restart</button>
+      <button class="btn ghost" id="btnHint">💡 Hint</button>
     </div>
   </div>
 
   <div class="foot">
-    두 조각을 선택하면 방향이 서로 바뀌고, 그 두 조각만 한 칸 움직입니다.<br>
-    모든 조각이 자기 번호 목표에 도착하면 성공. 되돌리기·재시작은 무료입니다.
+    <span data-i18n="foot1"></span><br>
+    <span data-i18n="foot2"></span>
   </div>
 </div>
 
@@ -397,8 +440,8 @@
     <div class="result-title">성공!</div>
     <div class="result-sub"></div>
     <div class="btns">
-      <button class="btn ghost" id="btnReplay">다시 풀기</button>
-      <button class="btn primary" id="btnNext">다음 문제 ▶</button>
+      <button class="btn ghost" id="btnReplay" data-i18n="win_replay">Replay</button>
+      <button class="btn primary" id="btnNext" data-i18n="win_next">Next ▶</button>
     </div>
   </div>
 </div>
@@ -407,9 +450,12 @@
 <div class="drawer" id="drawer">
   <div class="backdrop" id="drawerBackdrop"></div>
   <div class="panel">
-    <h2>스테이지 <span class="spacer"></span><button class="icon-btn" id="drawerClose">✕</button></h2>
+    <h2><span data-i18n="drawer_title">Stages</span> <span class="spacer"></span><button class="icon-btn" id="drawerClose">✕</button></h2>
     <div class="stage-list" id="stageList"></div>
-    <div class="sound-toggle"><button id="btnSound">🔊 소리 켜짐</button></div>
+    <div class="sound-toggle">
+      <div class="lang-row"><span class="lang-lbl" data-i18n="lang_label">Language</span><select id="langSelect"></select></div>
+      <button id="btnSound">🔊 Sound on</button>
+    </div>
   </div>
 </div>
 
@@ -421,24 +467,29 @@
 <div class="modal" id="tutorial">
   <div class="backdrop"></div>
   <div class="sheet">
-    <h3>스왑스텝 규칙</h3>
-    <div class="tut-step">
-      <div class="ic">🔀</div>
-      <div class="tx">조각 <b>두 개</b>를 선택하면 두 조각의 <b>화살표 방향이 서로 바뀝니다</b>.</div>
+    <h3 data-i18n="tut_title">How to play</h3>
+
+    <!-- visual demo (language-independent): tap two → arrows swap → each steps -->
+    <div class="tut-demo">
+      <div class="td-board">
+        <div class="td-cell" style="left:6px"></div>
+        <div class="td-cell" style="left:64px"></div>
+        <div class="td-cell" style="left:122px"></div>
+        <div class="td-cell" style="left:180px"></div>
+        <div class="td-target t1 lit"><span>1</span></div>
+        <div class="td-target t2 lit"><span>2</span></div>
+        <div class="td-piece p1"><span class="td-arrow"></span><span class="td-num">1</span></div>
+        <div class="td-piece p2"><span class="td-arrow"></span><span class="td-num">2</span></div>
+        <div class="td-finger">👆</div>
+      </div>
+      <div class="tut-demo-cap" data-i18n="tut_demo_cap">Tap two → swap → each steps once</div>
     </div>
-    <div class="tut-step">
-      <div class="ic">👣</div>
-      <div class="tx">그 두 조각만 <b>새 방향으로 한 칸</b> 움직여요. 미리보기로 확인한 뒤 이동하세요.</div>
-    </div>
-    <div class="tut-step">
-      <div class="ic">⛔</div>
-      <div class="tx">보드 밖이나 다른 조각이 있던 칸으로는 못 가요. 막히면 <b>정지</b>로 표시됩니다.</div>
-    </div>
-    <div class="tut-step">
-      <div class="ic">🎯</div>
-      <div class="tx">모든 조각이 <b>자기 번호 목표</b>에 도착하면 성공! 되돌리기·힌트는 무료예요.</div>
-    </div>
-    <button class="btn primary" id="tutorialStart" style="width:100%;margin-top:8px;">시작하기</button>
+
+    <div class="tut-step"><div class="ic">🔀</div><div class="tx" data-i18n-html="tut_s1"></div></div>
+    <div class="tut-step"><div class="ic">👣</div><div class="tx" data-i18n-html="tut_s2"></div></div>
+    <div class="tut-step"><div class="ic">⛔</div><div class="tx" data-i18n-html="tut_s3"></div></div>
+    <div class="tut-step"><div class="ic">🎯</div><div class="tx" data-i18n-html="tut_s4"></div></div>
+    <button class="btn primary" id="tutorialStart" data-i18n="tut_start" style="width:100%;margin-top:8px;">Start</button>
   </div>
 </div>
 
@@ -446,10 +497,10 @@
 <div class="modal" id="albumOverlay">
   <div class="backdrop" id="albumBackdrop"></div>
   <div class="sheet">
-    <h3>📖 여행 앨범</h3>
+    <h3 data-i18n="album_title">📖 Travel Album</h3>
     <div class="album-grid" id="albumGrid"></div>
     <div class="album-status" id="albumStatus"></div>
-    <button class="btn" id="albumClose" style="width:100%;">닫기</button>
+    <button class="btn" id="albumClose" data-i18n="album_close" style="width:100%;">Close</button>
   </div>
 </div>
 
@@ -458,9 +509,9 @@
   <div class="backdrop"></div>
   <div class="sheet">
     <div class="sticker-big" id="stickerEmoji">🧭</div>
-    <h3 id="stickerName">스티커 획득!</h3>
+    <h3 id="stickerName"></h3>
     <div class="album-status" id="stickerSub"></div>
-    <button class="btn primary" id="stickerOk" style="width:100%;">앨범 보기</button>
+    <button class="btn primary" id="stickerOk" data-i18n="sticker_ok" style="width:100%;">View album</button>
   </div>
 </div>
 
@@ -468,41 +519,41 @@
 <div class="modal" id="store">
   <div class="backdrop" id="storeBackdrop"></div>
   <div class="sheet store-sheet">
-    <h3>💎 상점</h3>
+    <h3 data-i18n="store_title">💎 Store</h3>
     <div class="store-status" id="storeStatus"></div>
     <div class="store-note" id="storeNote" hidden></div>
 
     <div class="prod" id="premiumCard">
       <div class="prod-top">
-        <span class="prod-name">프리미엄</span>
+        <span class="prod-name" data-i18n="prod_premium">Premium</span>
         <span class="prod-price" id="premiumPrice">₩4,900</span>
       </div>
       <ul class="prod-feat">
-        <li>힌트 <b>무제한</b></li>
-        <li>광고 힌트 버튼 제거</li>
-        <li>프리미엄 <b>전용 테마</b></li>
-        <li>기기 변경 시 구매 복원</li>
+        <li data-i18n-html="feat_unlimited"></li>
+        <li data-i18n-html="feat_noads"></li>
+        <li data-i18n-html="feat_theme"></li>
+        <li data-i18n-html="feat_restore"></li>
       </ul>
-      <button class="btn primary" id="buyPremium" style="width:100%;">구매하기</button>
-      <div class="proto-tag">프로토타입 · 실제 결제 미연동 (테스트용 잠금 해제)</div>
+      <button class="btn primary" id="buyPremium" data-i18n="buy" style="width:100%;">Buy</button>
+      <div class="proto-tag" data-i18n="proto_tag"></div>
     </div>
 
     <div class="prod owned" id="premiumOwned" hidden>
-      <div class="prod-top"><span class="prod-name">프리미엄 이용 중 ✓</span></div>
-      <div class="store-sub">힌트 무제한 · 전용 테마 사용 가능</div>
+      <div class="prod-top"><span class="prod-name" data-i18n="owned">Premium active ✓</span></div>
+      <div class="store-sub" data-i18n="owned_sub"></div>
     </div>
 
     <div class="theme-row" id="themeRow" hidden>
-      <div class="theme-label">테마</div>
+      <div class="theme-label" data-i18n="theme_label">Theme</div>
       <div class="theme-opts">
-        <button class="theme-opt" id="themeDefault">여행 앨범</button>
-        <button class="theme-opt" id="themePremium">황혼(프리미엄)</button>
+        <button class="theme-opt" id="themeDefault" data-i18n="theme_default">Travel Album</button>
+        <button class="theme-opt" id="themePremium" data-i18n="theme_premium">Dusk (Premium)</button>
       </div>
     </div>
 
-    <button class="btn ghost" id="restorePurchase" style="width:100%;margin-top:4px;">구매 복원</button>
-    <button class="btn" id="storeClose" style="width:100%;margin-top:8px;">닫기</button>
-    <div class="store-legal">가격·횟수는 기획 제안치이며 확정 판매가가 아닙니다. 무료 되돌리기·재시작·미리보기는 항상 제공됩니다.</div>
+    <button class="btn ghost" id="restorePurchase" data-i18n="restore" style="width:100%;margin-top:4px;">Restore purchase</button>
+    <button class="btn" id="storeClose" data-i18n="store_close" style="width:100%;margin-top:8px;">Close</button>
+    <div class="store-legal" data-i18n="store_legal"></div>
   </div>
 </div>
 
@@ -511,10 +562,10 @@
   <div class="backdrop"></div>
   <div class="sheet">
     <div class="sticker-big">🎬</div>
-    <h3>광고 보고 힌트 1회</h3>
-    <div class="album-status">무료 힌트를 모두 사용했어요. 짧은 광고를 보면 이번 문제에 힌트 1회를 드려요.</div>
-    <button class="btn primary" id="adWatch" style="width:100%;">광고 보기</button>
-    <button class="btn ghost" id="adOfferClose" style="width:100%;margin-top:8px;">닫기</button>
+    <h3 data-i18n="ad_offer_title">Watch an ad for 1 hint</h3>
+    <div class="album-status" data-i18n="ad_offer_desc"></div>
+    <button class="btn primary" id="adWatch" data-i18n="ad_watch" style="width:100%;">Watch ad</button>
+    <button class="btn ghost" id="adOfferClose" data-i18n="ad_offer_close" style="width:100%;margin-top:8px;">Close</button>
   </div>
 </div>
 
@@ -523,15 +574,16 @@
   <div class="backdrop"></div>
   <div class="sheet">
     <div class="ad-slot">
-      <div class="ad-badge">광고</div>
-      <div class="ad-ph">광고 영역<br><small>실제 광고 SDK(AdMob) 연동 위치</small></div>
+      <div class="ad-badge" data-i18n="ad_label">Ad</div>
+      <div class="ad-ph"><span data-i18n="ad_ph">Ad area</span><br><small data-i18n="ad_ph_sub"></small></div>
     </div>
-    <div class="album-status" id="adCountWrap"><span id="adCount">3</span>초 후 보상을 받을 수 있어요</div>
-    <button class="btn primary" id="adReward" style="width:100%;" disabled>힌트 받기</button>
-    <button class="btn ghost" id="adClose" style="width:100%;margin-top:8px;">건너뛰기</button>
+    <div class="album-status" id="adCountWrap"></div>
+    <button class="btn primary" id="adReward" data-i18n="ad_reward" style="width:100%;" disabled>Get hint</button>
+    <button class="btn ghost" id="adClose" data-i18n="ad_skip" style="width:100%;margin-top:8px;">Skip</button>
   </div>
 </div>
 
+<script src="i18n.js"></script>
 <script src="platform.js"></script>
 <script src="stages-data.js"></script>
 <script src="game.js"></script>

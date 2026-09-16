@@ -58,6 +58,10 @@ node borrowed-motion-balance/generate-stages-1000.cjs
 node -e "const fs=require('fs');const d=JSON.parse(fs.readFileSync('borrowed-motion-balance/stages-1000.json','utf8'));const stages=d.stages.map(s=>({id:s.stage_id,seq:s.sequence,chapter:s.chapter,role:s.intended_role,n:s.board_size,pieces:s.piece_count,start:s.start,targets:s.targets,min:s.min,ways:s.ways}));fs.writeFileSync('borrowed-motion-balance/web/stages-data.js','window.BM_DATA='+JSON.stringify({rules:d.rules_version,dir:{0:'right',1:'down',2:'left',3:'up'},stages})+';\n')"
 ```
 
+## 다국어 (i18n)
+
+`web/i18n.js`에 UI 문자열을 언어별로 분리했습니다. 기본 **영어**, 브라우저 언어로 자동 선택, 설정(스테이지 서랍)에서 변경 가능하며 선택은 저장됩니다. 지원: 영어(en)·한국어(ko)·스페인어(es)·포르투갈어(pt)·러시아어(ru). 정적 문자열은 `data-i18n`/`data-i18n-html`/`data-i18n-title` 속성으로, 동적 문자열은 `t('key', {vars})`로 처리합니다. 튜토리얼은 언어 장벽을 줄이도록 **손가락 애니메이션 데모**(언어 무관)를 중심에 두고 캡션만 번역합니다. 언어 추가 = `i18n.js`의 사전에 코드 하나 추가.
+
 ## 광고/플랫폼 어댑터 (수익화)
 
 `web/platform.js`는 광고 호출을 단일 인터페이스로 추상화합니다. 게임 코드는 `AdsManager.showRewarded()` 등만 호출하고, 접속 **도메인**에 따라 플랫폼 SDK(Poki·CrazyGames·GameDistribution)를 동적으로 로드·호출합니다. 포털이 아닌 곳(자체 호스팅·gh-pages·Artifact)에서는 `local`(시뮬레이션) 어댑터로 동작합니다.
