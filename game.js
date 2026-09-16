@@ -85,6 +85,7 @@ function loadProgress() {
     settings: { sound: true },
     hints: { date: '', free: 0, ad: 0 }, // daily hint quotas (free / rewarded-ad)
     premium: false, theme: 'default',
+    worldsDone: {}, themeUnlocked: false, // world-clear rewards
   };
   try {
     const raw = localStorage.getItem(SAVE_KEY);
@@ -92,6 +93,7 @@ function loadProgress() {
   } catch (e) {}
   if (!p.settings) p.settings = { sound: true };
   if (!p.hints) p.hints = { date: '', free: 0, ad: 0 };
+  if (!p.worldsDone) p.worldsDone = {};
   return p;
 }
 function saveProgress(p) {
@@ -600,7 +602,7 @@ function renderStore(note) {
     : t('store_status_free', { free: freeHintsLeft(), fmax: FREE_HINTS_PER_DAY, ad: adHintsLeft(), amax: AD_HINTS_PER_DAY });
   $('#premiumCard').hidden = isPremium();
   $('#premiumOwned').hidden = !isPremium();
-  $('#themeRow').hidden = !isPremium();
+  $('#themeRow').hidden = !canDusk(); // theme selectable via premium OR world-1 reward
   $('#premiumPrice').textContent = PREMIUM_PRICE;
   updateThemeButtons();
 }
@@ -620,11 +622,11 @@ function restorePurchase() {
 
 /* ---------- theme pack (premium exclusive) ---------- */
 function applyThemePack() {
-  const pack = (isPremium() && progress.theme === 'premium') ? 'premium' : 'default';
+  const pack = (canDusk() && progress.theme === 'premium') ? 'premium' : 'default';
   document.documentElement.dataset.pack = pack;
 }
 function setThemePack(pack) {
-  if (pack === 'premium' && !isPremium()) return;
+  if (pack === 'premium' && !canDusk()) return;
   progress.theme = pack; saveProgress(progress);
   applyThemePack(); updateThemeButtons();
 }
@@ -707,8 +709,36 @@ function onWin() {
   pieceEls().forEach((el, k) => { setTimeout(() => { el.classList.remove('win-bounce'); void el.offsetWidth; el.classList.add('win-bounce'); }, k * 70); });
   renderProgress();
 
-  if (newSticker) setTimeout(() => showStickerReward(stickersEarned() - 1), 900);
+  // world-clear reward: did this first-clear complete its whole world?
+  let worldDone = false, themeJustUnlocked = false;
+  if (firstClear) {
+    const w = worldOf(G.index);
+    if (!progress.worldsDone[w]) {
+      const start = w * WORLD_SIZE, end = Math.min(STAGES.length, start + WORLD_SIZE);
+      let all = true;
+      for (let i = start; i < end; i++) { if (!progress.completed[STAGES[i].id]) { all = false; break; } }
+      if (all) {
+        progress.worldsDone[w] = true;
+        if (!progress.themeUnlocked) { progress.themeUnlocked = true; themeJustUnlocked = true; }
+        saveProgress(progress);
+        worldDone = true;
+        setTimeout(() => showWorldReward(w, themeJustUnlocked), 900);
+      }
+    }
+  }
+  // one reward popup at a time: world milestone takes priority over a sticker
+  if (!worldDone && newSticker) setTimeout(() => showStickerReward(stickersEarned() - 1), 900);
 }
+
+// world completion celebration (keeps the win overlay behind, like sticker reward)
+function showWorldReward(w, themeUnlocked) {
+  $('#worldEmoji').textContent = themeUnlocked ? '🎨' : '🏅';
+  $('#worldTitle').textContent = t('world_done_title', { n: w + 1 });
+  $('#worldSub').textContent = themeUnlocked ? t('world_done_theme') : t('world_done_go');
+  $('#worldOverlay').classList.add('show');
+  Sound.sticker(); haptic([30, 40, 30, 40, 60]); confettiBurst();
+}
+const canDusk = () => isPremium() || !!progress.themeUnlocked;
 
 /* ---------- hud / navigation ---------- */
 function updateHud() {
@@ -878,6 +908,7 @@ $('#btnAlbum').addEventListener('click', openAlbum);
 $('#albumClose').addEventListener('click', closeAlbum);
 $('#albumBackdrop').addEventListener('click', closeAlbum);
 $('#stickerOk').addEventListener('click', () => { $('#stickerOverlay').classList.remove('show'); openAlbum(); });
+$('#worldOk').addEventListener('click', () => { $('#worldOverlay').classList.remove('show'); });
 
 // tutorial / help
 $('#btnHelp').addEventListener('click', openTutorial);
