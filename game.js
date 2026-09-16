@@ -8,6 +8,15 @@
  */
 'use strict';
 
+// i18n shortcut + chapter-name mapping (data chapters are Korean; map to keys)
+const t = (k, v) => window.I18N.t(k, v);
+const CHAPTER_KEY = {
+  '규칙 익히기': 'ch_learn', '편안한 반복': 'ch_relax', '순서 계획': 'ch_plan',
+  '넓은 보드 적응': 'ch_board', '4×4 계획': 'ch_plan4', '네 조각 입문': 'ch_four_intro',
+  '네 조각 계획': 'ch_four_plan', '긴 여정': 'ch_journey',
+};
+const chapterName = ko => (CHAPTER_KEY[ko] ? t(CHAPTER_KEY[ko]) : ko);
+
 const VECTORS = [[1, 0], [0, 1], [-1, 0], [0, -1]]; // 0=right 1=down 2=left 3=up
 const DIR_LABEL = ['→', '↓', '←', '↑'];
 const PIECE_COLORS = ['#e8743b', '#2f8f83', '#7b6cd9', '#c0497b']; // supports up to 4
@@ -121,12 +130,12 @@ function logEvent(name, data = {}) {
 /* ---------- album (travel stickers) ---------- */
 // One sticker per 5 first-clears; 6 stickers complete page one (at 30 clears).
 const STICKERS = [
-  { emoji: '🧭', name: '나침반' },
-  { emoji: '🗺️', name: '지도' },
-  { emoji: '🎒', name: '배낭' },
-  { emoji: '📸', name: '사진' },
-  { emoji: '✈️', name: '비행기' },
-  { emoji: '🏝️', name: '섬' },
+  { emoji: '🧭', key: 'st_compass' },
+  { emoji: '🗺️', key: 'st_map' },
+  { emoji: '🎒', key: 'st_backpack' },
+  { emoji: '📸', key: 'st_photo' },
+  { emoji: '✈️', key: 'st_plane' },
+  { emoji: '🏝️', key: 'st_island' },
 ];
 const CLEARS_PER_STICKER = 5;
 const firstClearCount = () => Object.values(progress.completed).filter(Boolean).length;
@@ -237,8 +246,6 @@ const gridEl = $('#grid');
 const layerEl = $('#layer');
 const stageTitleEl = $('#stageTitle');
 const chapterEl = $('#chapter');
-const moveCountEl = $('#moveCount');
-const minMovesEl = $('#minMoves');
 const hintTextEl = $('#hintText');
 const btnUndo = $('#btnUndo');
 const btnRestart = $('#btnRestart');
@@ -406,9 +413,7 @@ function updatePreview() {
   refreshPieces(preview);
   btnCommit.disabled = G.selected.length !== 2;
   btnCancel.disabled = G.selected.length === 0;
-  hintTextEl.textContent = G.selected.length === 2
-    ? '미리보기 — 조각의 방향을 바꾸고 한 칸 움직입니다. 좋으면 이동하세요.'
-    : '조각 두 개를 선택하세요.';
+  hintTextEl.textContent = t(G.selected.length === 2 ? 'preview_hint' : 'select_two');
 }
 
 function commitMove() {
@@ -493,7 +498,7 @@ function useHint() {
   const pair = solveNext(G.state, G.stage.targets, G.stage.n);
   if (!pair) {
     // stuck (needs undo): always free, never charged or ad-gated
-    hintTextEl.textContent = '지금은 되돌리기로 유효한 상태로 돌아가세요. (무료 안내)';
+    hintTextEl.textContent = t('hint_stuck_free');
     logEvent('hint_stuck_free');
     return;
   }
@@ -501,22 +506,22 @@ function useHint() {
   if (freeHintsLeft() > 0) { progress.hints.free++; saveProgress(progress); applyHint(pair, 'free'); return; }
   // free exhausted → offer a rewarded ad if available for this day/attempt
   if (adHintsLeft() > 0 && !G.attemptAdUsed) { offerAd(pair); return; }
-  hintTextEl.textContent = '오늘 무료·광고 힌트를 모두 사용했어요.';
-  openStore('힌트가 더 필요하면 프리미엄으로 무제한 이용할 수 있어요.');
+  hintTextEl.textContent = t('hint_none_left');
+  openStore(t('store_note_hint'));
 }
 function applyHint(pair, src) {
   G.usedHint = true;
   G.selected = pair.slice();
   updatePreview();
-  const left = isPremium() ? '무제한' : `무료 ${freeHintsLeft()}회 남음`;
-  hintTextEl.textContent = `힌트: 조각 ${pair[0] + 1} 과(와) ${pair[1] + 1}. 미리보기 확인 후 이동하세요. (${left})`;
+  const left = isPremium() ? t('hint_left_unlimited') : t('hint_left_free', { n: freeHintsLeft() });
+  hintTextEl.textContent = t('hint_applied', { a: pair[0] + 1, b: pair[1] + 1, left });
   updateHintButton();
   logEvent('hint_used', { src });
 }
 function updateHintButton() {
   if (!btnHint) return;
-  if (isPremium()) btnHint.innerHTML = '💡 힌트 <span style="color:var(--muted);font-weight:600">∞</span>';
-  else btnHint.innerHTML = `💡 힌트 <span style="color:var(--muted);font-weight:600">(${freeHintsLeft()})</span>`;
+  const badge = isPremium() ? '∞' : `(${freeHintsLeft()})`;
+  btnHint.innerHTML = `💡 ${t('hint_btn')} <span style="color:var(--muted);font-weight:600">${badge}</span>`;
 }
 
 /* ---------- rewarded ad (routed through AdsManager adapter) ---------- */
@@ -540,12 +545,12 @@ function watchAd() {
       if (pendingHintPair) { applyHint(pendingHintPair, 'ad'); pendingHintPair = null; }
     } else {
       logEvent('ad_no_reward', { platform: AdsManager.platform });
-      hintTextEl.textContent = '광고를 끝까지 보지 않아 힌트를 받지 못했어요. 계속 플레이하세요.';
+      hintTextEl.textContent = t('ad_no_reward');
       pendingHintPair = null;
     }
   }).catch(() => {
     logEvent('ad_error', { platform: AdsManager.platform });
-    hintTextEl.textContent = '광고를 불러오지 못했어요. 무료 도움·재시작은 계속 이용할 수 있어요.';
+    hintTextEl.textContent = t('ad_error');
     pendingHintPair = null;
   });
 }
@@ -554,12 +559,15 @@ function showSimulatedAd() {
   return new Promise(resolve => {
     const modal = $('#adPlay'); modal.classList.add('show');
     const rewardBtn = $('#adReward'), skipBtn = $('#adClose');
-    rewardBtn.disabled = true; $('#adCountWrap').hidden = false;
-    let t = 3; $('#adCount').textContent = t;
+    rewardBtn.disabled = true;
+    const wrap = $('#adCountWrap'); wrap.hidden = false;
+    let sec = 3;
+    wrap.innerHTML = t('ad_count', { n: '<span id="adCount">' + sec + '</span>' });
     clearInterval(adTimer);
     adTimer = setInterval(() => {
-      t--; $('#adCount').textContent = t;
-      if (t <= 0) { clearInterval(adTimer); rewardBtn.disabled = false; $('#adCountWrap').hidden = true; }
+      sec--;
+      const c = $('#adCount'); if (c) c.textContent = sec;
+      if (sec <= 0) { clearInterval(adTimer); rewardBtn.disabled = false; wrap.hidden = true; }
     }, 1000);
     const done = result => {
       clearInterval(adTimer); modal.classList.remove('show');
@@ -573,7 +581,7 @@ function showSimulatedAd() {
 function closeAd() {
   $('#adOffer').classList.remove('show');
   pendingHintPair = null;
-  hintTextEl.textContent = '광고를 닫았어요. 무료 도움·재시작·다른 문제는 계속 이용할 수 있어요.';
+  hintTextEl.textContent = t('ad_closed');
   logEvent('ad_dismissed', { platform: AdsManager.platform });
 }
 
@@ -585,8 +593,8 @@ function renderStore(note) {
   $('#storeNote').textContent = note || '';
   $('#storeNote').hidden = !note;
   $('#storeStatus').textContent = isPremium()
-    ? '프리미엄 이용 중 · 힌트 무제한'
-    : `오늘 무료 힌트 ${freeHintsLeft()}/${FREE_HINTS_PER_DAY} · 광고 힌트 ${adHintsLeft()}/${AD_HINTS_PER_DAY}`;
+    ? t('store_status_premium')
+    : t('store_status_free', { free: freeHintsLeft(), fmax: FREE_HINTS_PER_DAY, ad: adHintsLeft(), amax: AD_HINTS_PER_DAY });
   $('#premiumCard').hidden = isPremium();
   $('#premiumOwned').hidden = !isPremium();
   $('#themeRow').hidden = !isPremium();
@@ -599,12 +607,12 @@ function buyPremium() {
   saveProgress(progress);
   logEvent('purchase_success', { product: 'premium', prototype: true });
   applyThemePack(); updateHintButton();
-  renderStore('프리미엄이 활성화되었어요. (프로토타입 · 실제 결제 미연동)');
+  renderStore(t('premium_activated'));
 }
 function restorePurchase() {
   logEvent('purchase_restore', { prototype: true });
   applyThemePack(); updateHintButton();
-  renderStore(isPremium() ? '구매를 복원했어요.' : '복원할 구매가 없어요. (프로토타입)');
+  renderStore(isPremium() ? t('restored') : t('restore_none'));
 }
 
 /* ---------- theme pack (premium exclusive) ---------- */
@@ -612,9 +620,9 @@ function applyThemePack() {
   const pack = (isPremium() && progress.theme === 'premium') ? 'premium' : 'default';
   document.documentElement.dataset.pack = pack;
 }
-function setThemePack(t) {
-  if (t === 'premium' && !isPremium()) return;
-  progress.theme = t; saveProgress(progress);
+function setThemePack(pack) {
+  if (pack === 'premium' && !isPremium()) return;
+  progress.theme = pack; saveProgress(progress);
   applyThemePack(); updateThemeButtons();
 }
 function updateThemeButtons() {
@@ -639,11 +647,11 @@ function onWin() {
   const newSticker = firstClear && stickersEarned() > stickersBefore;
   const optimal = moves === st.min;
   overlay.querySelector('.badge').textContent = optimal ? '🏆' : '🎉';
-  overlay.querySelector('.result-title').textContent = optimal ? '최단으로 성공!' : '성공!';
+  overlay.querySelector('.result-title').textContent = t(optimal ? 'win_title_optimal' : 'win_title');
   overlay.querySelector('.result-sub').innerHTML =
-    `${moves}번 이동 · 최소 ${st.min}번` +
-    (G.usedHint ? ' · 힌트 사용' : (optimal ? ' · 완벽해요' : '')) +
-    (firstClear ? '' : ' · 다시 완료');
+    t('result_moves', { moves, min: st.min }) +
+    (G.usedHint ? t('result_used_hint') : (optimal ? t('result_perfect') : '')) +
+    (firstClear ? '' : t('result_recleared'));
   const hasNext = G.index < STAGES.length - 1;
   overlay.querySelector('#btnNext').style.display = hasNext ? '' : 'none';
   overlay.classList.add('show');
@@ -658,7 +666,8 @@ function onWin() {
 
 /* ---------- hud / navigation ---------- */
 function updateHud() {
-  moveCountEl.textContent = G.history.length;
+  const min = G.stage ? G.stage.min : 0;
+  btnUndo.innerHTML = `${t('undo')} <span style="color:var(--muted);font-weight:600">${t('undo_meta', { n: G.history.length, min })}</span>`;
 }
 
 function loadStage(index) {
@@ -674,8 +683,7 @@ function loadStage(index) {
   updateHintButton();
 
   stageTitleEl.textContent = `${G.stage.id} · ${G.index + 1}/${STAGES.length}`;
-  chapterEl.textContent = G.stage.chapter;
-  minMovesEl.textContent = G.stage.min;
+  chapterEl.textContent = chapterName(G.stage.chapter);
   overlay.classList.remove('show');
   buildBoard();
   updateHud();
@@ -688,7 +696,7 @@ function loadStage(index) {
 function renderProgress() {
   const done = Object.keys(progress.completed).filter(k => progress.completed[k]).length;
   progressBarEl.style.width = (done / STAGES.length * 100) + '%';
-  progressTextEl.textContent = `${done} / ${STAGES.length} 완료`;
+  progressTextEl.textContent = t('progress_done', { done, total: STAGES.length });
 }
 
 function renderStageList() {
@@ -709,7 +717,7 @@ function renderStageList() {
     const sum = document.createElement('summary');
     sum.className = 'chapter-head';
     sum.innerHTML =
-      `<span class="cv"></span><span class="nm">${g.chapter}</span>` +
+      `<span class="cv"></span><span class="nm">${chapterName(g.chapter)}</span>` +
       `<span class="cnt">${done}/${g.items.length}</span>`;
     details.appendChild(sum);
     const chips = document.createElement('div');
@@ -742,15 +750,15 @@ function renderAlbum() {
     const cell = document.createElement('div');
     cell.className = 'sticker' + (i < earned ? ' got' : '');
     cell.innerHTML = i < earned
-      ? `<span class="emoji">${s.emoji}</span><span class="nm">${s.name}</span>`
+      ? `<span class="emoji">${s.emoji}</span><span class="nm">${t(s.key)}</span>`
       : `<span class="emoji">?</span>`;
     grid.appendChild(cell);
   });
   const clears = firstClearCount();
   const next = earned < STICKERS.length ? (earned + 1) * CLEARS_PER_STICKER - clears : 0;
   $('#albumStatus').textContent = earned >= STICKERS.length
-    ? '첫 페이지 완성! 모두 모았어요 🎉'
-    : `스티커 ${earned}/${STICKERS.length} · 다음 스티커까지 ${next}개 더 완료`;
+    ? t('album_status_done')
+    : t('album_status', { n: earned, total: STICKERS.length, k: next });
 }
 function openAlbum() { renderAlbum(); albumOverlay.classList.add('show'); }
 function closeAlbum() { albumOverlay.classList.remove('show'); }
@@ -761,8 +769,8 @@ function showStickerReward(index) {
   // returns after the sticker/album is closed
   const so = $('#stickerOverlay');
   $('#stickerEmoji').textContent = s.emoji;
-  $('#stickerName').textContent = `‘${s.name}’ 스티커 획득!`;
-  $('#stickerSub').textContent = `여행 앨범에 붙였어요 · ${stickersEarned()}/${STICKERS.length}`;
+  $('#stickerName').textContent = t('sticker_got', { name: t(s.key) });
+  $('#stickerSub').textContent = t('sticker_sub', { n: stickersEarned(), total: STICKERS.length });
   so.classList.add('show');
   Sound.sticker(); haptic([30, 40, 30, 40, 60]); confettiBurst();
 }
@@ -779,7 +787,7 @@ function closeTutorial() {
 function applySoundIcon() {
   const on = progress.settings.sound !== false;
   const b = $('#btnSound');
-  if (b) { b.textContent = on ? '🔊 소리 켜짐' : '🔇 소리 꺼짐'; b.classList.toggle('off', !on); }
+  if (b) { b.textContent = on ? t('sound_on') : t('sound_off'); b.classList.toggle('off', !on); }
 }
 function toggleSound() {
   progress.settings.sound = progress.settings.sound === false;
@@ -824,6 +832,26 @@ $('#tutorialStart').addEventListener('click', closeTutorial);
 // settings
 $('#btnSound').addEventListener('click', toggleSound);
 
+// language selector
+const langSelect = $('#langSelect');
+window.I18N.langs.forEach(code => {
+  const o = document.createElement('option');
+  o.value = code; o.textContent = window.I18N.name(code);
+  langSelect.appendChild(o);
+});
+langSelect.value = window.I18N.lang;
+langSelect.addEventListener('change', () => window.I18N.setLang(langSelect.value));
+// re-render dynamic strings when language changes (static handled by I18N.apply)
+function refreshDynamic() {
+  updateHud(); updateHintButton(); applySoundIcon(); renderProgress();
+  if (G.stage) chapterEl.textContent = chapterName(G.stage.chapter);
+  updatePreview();
+  renderStageList();
+  if ($('#store').classList.contains('show')) renderStore('');
+  if (albumOverlay.classList.contains('show')) renderAlbum();
+}
+window.onLangChange = refreshDynamic;
+
 // store / monetization
 $('#btnStore').addEventListener('click', () => openStore());
 $('#storeClose').addEventListener('click', closeStore);
@@ -859,6 +887,7 @@ window.addEventListener('resize', () => {
 document.addEventListener('pointerdown', () => Sound.unlock(), { once: true });
 
 // init
+window.I18N.apply();       // fill static data-i18n strings
 applySoundIcon();
 resetDailyIfNeeded();
 applyThemePack();
