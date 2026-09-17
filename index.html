@@ -679,8 +679,11 @@
     <div class="sticker-big">🎬</div>
     <h3 data-i18n="ad_offer_title">Watch an ad for 1 hint</h3>
     <div class="album-status" data-i18n="ad_offer_desc"></div>
-    <button class="btn primary" id="adWatch" data-i18n="ad_watch" style="width:100%;">Watch ad</button>
-    <button class="btn ghost" id="adOfferClose" data-i18n="ad_offer_close" style="width:100%;margin-top:8px;">Close</button>
+    <!-- 보상형 광고 규격: '안 보고 계속'을 '광고 보기'와 동일 크기·색·폰트로(다크패턴 금지) -->
+    <div style="display:flex;gap:10px;">
+      <button class="btn" id="adOfferClose" data-i18n="ad_offer_close" style="flex:1;">Close</button>
+      <button class="btn" id="adWatch" data-i18n="ad_watch" style="flex:1;">Watch ad</button>
+    </div>
   </div>
 </div>
 
