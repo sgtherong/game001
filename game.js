@@ -87,6 +87,7 @@ function loadProgress() {
     premium: false, theme: 'default',
     worldsDone: {}, themeUnlocked: false, // world-clear rewards
     daily: {}, streak: { n: 0, last: '' }, // daily challenge state
+    reached: 0, // furthest stage index unlocked via linear main progression
   };
   try {
     const raw = localStorage.getItem(SAVE_KEY);
@@ -97,6 +98,8 @@ function loadProgress() {
   if (!p.worldsDone) p.worldsDone = {};
   if (!p.daily) p.daily = {};
   if (!p.streak) p.streak = { n: 0, last: '' };
+  if (typeof p.reached !== 'number') p.reached = 0;
+  // migrate: existing players keep access up to their furthest completed stage
   return p;
 }
 function saveProgress(p) {
@@ -234,7 +237,19 @@ function confettiBurst() {
 
 /* ---------- game state ---------- */
 const STAGES = window.BM_DATA.stages;
+const STAGE_INDEX = new Map(STAGES.map((s, i) => [s.id, i]));
 let progress = loadProgress();
+// a stage is unlocked if it's within the reached frontier or already completed
+const isUnlocked = i => i <= progress.reached || !!progress.completed[STAGES[i].id];
+// keep the reached frontier consistent with completed stages (migration + safety)
+function reconcileReached() {
+  let maxDone = -1;
+  for (const id in progress.completed) {
+    if (progress.completed[id]) { const ix = STAGE_INDEX.get(id); if (ix != null && ix > maxDone) maxDone = ix; }
+  }
+  const target = Math.min(STAGES.length - 1, maxDone + 1);
+  if (target > progress.reached) { progress.reached = target; saveProgress(progress); }
+}
 
 const G = {
   index: 0,
@@ -720,7 +735,9 @@ function onWin() {
 
   const newSticker = firstClear && stickersEarned() > stickersBefore;
   const optimal = moves === st.min;
-  overlay.querySelector('.badge').textContent = optimal ? '🏆' : '🎉';
+  const badgeEl = overlay.querySelector('.badge');
+  badgeEl.textContent = '★';
+  badgeEl.className = 'badge star ' + (optimal ? 'gold' : 'gray');
   overlay.querySelector('.result-title').textContent = t(optimal ? 'win_title_optimal' : 'win_title');
   overlay.querySelector('.result-sub').innerHTML =
     t('result_moves', { moves, min: st.min }) +
@@ -741,6 +758,9 @@ function onWin() {
     btnNextEl.style.display = ''; btnNextEl.textContent = t('daily_back');
     overlay.dataset.mode = 'daily';
   } else {
+    // linear progression: clearing unlocks the next stage
+    progress.reached = Math.max(progress.reached, Math.min(STAGES.length - 1, G.index + 1));
+    saveProgress(progress);
     const hasNext = G.index < STAGES.length - 1;
     btnNextEl.textContent = t('win_next');
     btnNextEl.style.display = hasNext ? '' : 'none';
@@ -857,11 +877,21 @@ function buildChips(chips, items) {
   for (const { s, i } of items) {
     const b = document.createElement('button');
     b.className = 'stage-chip';
-    b.textContent = s.seq;
-    if (progress.completed[s.id]) b.classList.add('done');
+    const done = !!progress.completed[s.id];
+    const unlocked = isUnlocked(i);
+    b.innerHTML = `<span class="sc-num">${s.seq}</span>`;
+    if (done) {
+      b.classList.add('done');
+      const gold = progress.best[s.id] === s.min; // optimal (min moves) = yellow star
+      b.insertAdjacentHTML('beforeend', `<span class="sc-star${gold ? ' gold' : ''}">★</span>`);
+    } else if (!unlocked) {
+      b.classList.add('locked');
+      b.insertAdjacentHTML('beforeend', `<span class="sc-lock">🔒</span>`);
+    }
     if (i === G.index) b.classList.add('current');
     b.title = `${s.id} · ${s.min}`;
-    b.addEventListener('click', () => { loadStage(i); closeDrawer(); });
+    if (unlocked) b.addEventListener('click', () => { loadStage(i); closeDrawer(); });
+    else b.disabled = true;
     frag.appendChild(b);
   }
   chips.appendChild(frag);
@@ -1087,6 +1117,7 @@ window.addEventListener('resize', () => {
 document.addEventListener('pointerdown', () => Sound.unlock(), { once: true });
 
 // init
+reconcileReached();        // unlock up to the furthest completed stage (migration)
 applyBranding();           // apply rebranding config (name/tagline/accent)
 window.I18N.apply();       // fill static data-i18n strings
 applySoundIcon();
