@@ -203,6 +203,9 @@
   .stage-list { overflow-y: auto; padding: 4px; display: flex; flex-direction: column; }
   /* collapsible chapter sections */
   .chapter { border: 1px solid var(--line); border-radius: 12px; margin: 5px 2px; overflow: hidden; background: var(--card); }
+  /* keep each world at its natural height — otherwise a short (mobile) viewport
+     compresses these flex items instead of scrolling the list, squashing them to a sliver */
+  .stage-list > .chapter { flex: 0 0 auto; }
   .chapter-head {
     list-style: none; cursor: pointer; display: flex; align-items: center; gap: 8px;
     padding: 12px 12px; font-size: 13px; font-weight: 800; color: var(--ink);
