@@ -92,7 +92,8 @@ function loadProgress() {
     reached: 0, // furthest stage index unlocked via linear main progression
   };
   try {
-    const raw = localStorage.getItem(SAVE_KEY);
+    // 저장소는 platform.js의 Store(포털=SDK data / 그 외=localStorage). 미로드 시 localStorage 폴백.
+    const raw = window.Store ? Store.get(SAVE_KEY) : localStorage.getItem(SAVE_KEY);
     if (raw) p = Object.assign(p, JSON.parse(raw));
   } catch (e) {}
   if (!p.settings) p.settings = { sound: true };
@@ -108,7 +109,7 @@ function loadProgress() {
   return p;
 }
 function saveProgress(p) {
-  try { localStorage.setItem(SAVE_KEY, JSON.stringify(p)); } catch (e) {}
+  try { if (window.Store) Store.set(SAVE_KEY, JSON.stringify(p)); else localStorage.setItem(SAVE_KEY, JSON.stringify(p)); } catch (e) {}
 }
 
 /* ---------- monetization (prototype: ad/payment points are stubbed) ----------
@@ -722,7 +723,7 @@ function importCode(code) {
     const obj = JSON.parse(decodeURIComponent(escape(atob(code))));
     const p = (obj && obj.p) ? obj.p : obj; // tolerate a raw progress object too
     if (!p || typeof p !== 'object' || typeof p.completed !== 'object') return false;
-    localStorage.setItem(SAVE_KEY, JSON.stringify(p));
+    if (window.Store) Store.set(SAVE_KEY, JSON.stringify(p)); else localStorage.setItem(SAVE_KEY, JSON.stringify(p));
     return true;
   } catch (e) { return false; }
 }
@@ -1210,24 +1211,32 @@ window.addEventListener('resize', () => {
 // unlock audio on the first user gesture (autoplay policies)
 document.addEventListener('pointerdown', () => Sound.unlock(), { once: true });
 
-// init
-reconcileReached();        // unlock up to the furthest completed stage (migration)
-applyBranding();           // apply rebranding config (name/tagline/accent)
-window.I18N.apply();       // fill static data-i18n strings
-applySoundIcon();
-resetDailyIfNeeded();
-applyThemePack();
-updateHintButton();
-registerSW();
-// platform ads adapter (local simulation here; portal SDK on portal domains)
-if (window.AdsManager) {
-  AdsManager.init({
-    onRewardedSimulate: showSimulatedAd,
-    onAdStarted: () => { Sound.mute(); },   // 광고 실제 표시 → 음소거
-    onAdEnded: () => { Sound.unmute(); },   // 광고 종료(성공/실패) → 복구
-  }).then(name => logEvent('platform_ready', { platform: name }));
+// init — bring up the platform + storage backend first (SDK loads on portals),
+// then load progress from the correct backend, then render the UI.
+const withTimeout = (p, ms) => Promise.race([p, new Promise(r => setTimeout(() => r('timeout'), ms))]);
+async function boot() {
+  if (window.AdsManager) {
+    try {
+      const name = await withTimeout(AdsManager.init({
+        onRewardedSimulate: showSimulatedAd,
+        onAdStarted: () => { Sound.mute(); },   // 광고 실제 표시 → 음소거
+        onAdEnded: () => { Sound.unmute(); },   // 광고 종료(성공/실패) → 복구
+      }), 6000); // SDK가 멈춰도 게임은 항상 뜨도록 타임아웃 후 진행
+      logEvent('platform_ready', { platform: name });
+    } catch (e) {}
+  }
+  // 포털 SDK 저장소가 준비됐다면 그 백엔드에서 진행도를 다시 읽는다(부팅 전엔 localStorage 기본값).
+  if (window.Store && Store.backend === 'sdk') progress = loadProgress();
+
+  reconcileReached();        // unlock up to the furthest completed stage (migration)
+  applyBranding();           // apply rebranding config (name/tagline/accent)
+  window.I18N.apply();       // fill static data-i18n strings
+  applySoundIcon();
+  resetDailyIfNeeded();
+  applyThemePack();
+  updateHintButton();
+  registerSW();
+  loadStage(progress.last || 0);        // start at last played stage
+  if (!progress.tutorialSeen) openTutorial(); // first-run tutorial
 }
-// start at last played stage
-loadStage(progress.last || 0);
-// first-run tutorial
-if (!progress.tutorialSeen) openTutorial();
+boot();

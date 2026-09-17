@@ -22,6 +22,39 @@
   // 포털 규격: 광고가 "실제로 표시될 때"만 음소거하고, 종료(성공/실패) 시 복구한다.
   const hooks = { adStarted() {}, adEnded() {} };
 
+  /* ---------- 진행도 저장소 (Store) ----------
+   * 포털 iframe에서는 브라우저가 서드파티 localStorage를 파티셔닝/차단할 수 있어
+   * 진행도가 유지되지 않을 수 있다. CrazyGames는 SDK data 모듈(도메인/앱 간 영속)을
+   * 권장하므로 포털에선 그것을, 그 외(자체호스팅/Artifact)에선 localStorage를 쓴다.
+   * 게임 코드는 window.Store 만 호출한다. get/set/remove 는 동기.
+   * backend 는 AdsManager.init()이 SDK 로드 후 initFor()로 확정한다. */
+  const Store = {
+    backend: 'local', // 'local' | 'sdk'
+    _sdk: null,
+    initFor(name) {
+      try {
+        const d = window.CrazyGames && window.CrazyGames.SDK && window.CrazyGames.SDK.data;
+        if (name === 'crazygames' && d && typeof d.getItem === 'function') {
+          this._sdk = d; this.backend = 'sdk'; return;
+        }
+      } catch (e) {}
+      this.backend = 'local';
+    },
+    get(key) {
+      try { return this.backend === 'sdk' ? this._sdk.getItem(key) : localStorage.getItem(key); }
+      catch (e) { try { return localStorage.getItem(key); } catch (_) { return null; } }
+    },
+    set(key, val) {
+      try { if (this.backend === 'sdk') this._sdk.setItem(key, val); else localStorage.setItem(key, val); }
+      catch (e) { try { localStorage.setItem(key, val); } catch (_) {} }
+    },
+    remove(key) {
+      try { if (this.backend === 'sdk') this._sdk.removeItem(key); else localStorage.removeItem(key); }
+      catch (e) {}
+    },
+  };
+  window.Store = Store;
+
   function loadScript(src) {
     return new Promise((resolve, reject) => {
       const s = document.createElement('script');
@@ -159,6 +192,7 @@
         console.warn('[AdsManager] "' + adapter.name + '" init failed, falling back to local:', e);
         adapter = local; await local.init(opts);
       }
+      Store.initFor(adapter.name); // SDK 로드 후 저장소 백엔드 확정
       return adapter.name;
     },
     gameplayStart() { try { adapter.gameplayStart(); } catch (e) {} },
