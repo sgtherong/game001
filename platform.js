@@ -18,6 +18,10 @@
     interstitialEnabled: false, // 기획서상 첫 출시엔 전면광고 미사용. 포털 배포 시 켠다.
   };
 
+  // 광고 표시 중 오디오/게임 훅. 게임이 init()에서 onAdStarted/onAdEnded를 넘긴다.
+  // 포털 규격: 광고가 "실제로 표시될 때"만 음소거하고, 종료(성공/실패) 시 복구한다.
+  const hooks = { adStarted() {}, adEnded() {} };
+
   function loadScript(src) {
     return new Promise((resolve, reject) => {
       const s = document.createElement('script');
@@ -35,7 +39,12 @@
     name: 'local',
     async init(opts) { this._sim = opts && opts.onRewardedSimulate; },
     gameplayStart() {}, gameplayStop() {}, happyTime() {},
-    showRewarded() { return this._sim ? this._sim() : Promise.resolve(true); },
+    showRewarded() {
+      if (!this._sim) return Promise.resolve(true);
+      hooks.adStarted();
+      return Promise.resolve(this._sim())
+        .then(r => { hooks.adEnded(); return r; }, () => { hooks.adEnded(); return false; });
+    },
     showInterstitial() { return Promise.resolve(); },
   };
 
@@ -50,8 +59,16 @@
     gameplayStart() { try { window.PokiSDK.gameplayStart(); } catch (e) {} },
     gameplayStop() { try { window.PokiSDK.gameplayStop(); } catch (e) {} },
     happyTime(v) { try { window.PokiSDK.happyTime(v == null ? 1 : v); } catch (e) {} },
-    showRewarded() { return window.PokiSDK.rewardedBreak().then(x => !!x).catch(() => false); },
-    showInterstitial() { return window.PokiSDK.commercialBreak().catch(() => {}); },
+    showRewarded() {
+      hooks.adStarted();
+      return window.PokiSDK.rewardedBreak()
+        .then(x => { hooks.adEnded(); return !!x; }).catch(() => { hooks.adEnded(); return false; });
+    },
+    showInterstitial() {
+      // commercialBreak(beforeAd): beforeAd가 실제 표시 직전에 호출됨 → 그때 음소거
+      return window.PokiSDK.commercialBreak(() => hooks.adStarted())
+        .then(() => hooks.adEnded()).catch(() => hooks.adEnded());
+    },
   };
 
   // CrazyGames (SDK v3)
@@ -66,14 +83,24 @@
     happyTime() { try { window.CrazyGames.SDK.game.happytime(); } catch (e) {} },
     showRewarded() {
       return new Promise(res => {
-        try { window.CrazyGames.SDK.ad.requestAd('rewarded', { adFinished: () => res(true), adError: () => res(false) }); }
-        catch (e) { res(false); }
+        try {
+          window.CrazyGames.SDK.ad.requestAd('rewarded', {
+            adStarted: () => hooks.adStarted(),                 // 실제 표시 시 음소거
+            adFinished: () => { hooks.adEnded(); res(true); },  // 완주 → 보상 지급
+            adError: () => { hooks.adEnded(); res(false); },    // 실패/미충전 → 보상 없음
+          });
+        } catch (e) { hooks.adEnded(); res(false); }
       });
     },
     showInterstitial() {
       return new Promise(res => {
-        try { window.CrazyGames.SDK.ad.requestAd('midgame', { adFinished: () => res(), adError: () => res() }); }
-        catch (e) { res(); }
+        try {
+          window.CrazyGames.SDK.ad.requestAd('midgame', {
+            adStarted: () => hooks.adStarted(),
+            adFinished: () => { hooks.adEnded(); res(); },
+            adError: () => { hooks.adEnded(); res(); },
+          });
+        } catch (e) { hooks.adEnded(); res(); }
       });
     },
   };
@@ -87,15 +114,17 @@
     },
     gameplayStart() {}, gameplayStop() {}, happyTime() {},
     showRewarded() {
+      hooks.adStarted();
       return new Promise(res => {
-        try { window.gdsdk.showAd('rewarded').then(() => res(true)).catch(() => res(false)); }
-        catch (e) { res(false); }
+        try { window.gdsdk.showAd('rewarded').then(() => { hooks.adEnded(); res(true); }).catch(() => { hooks.adEnded(); res(false); }); }
+        catch (e) { hooks.adEnded(); res(false); }
       });
     },
     showInterstitial() {
+      hooks.adStarted();
       return new Promise(res => {
-        try { window.gdsdk.showAd().then(() => res()).catch(() => res()); }
-        catch (e) { res(); }
+        try { window.gdsdk.showAd().then(() => { hooks.adEnded(); res(); }).catch(() => { hooks.adEnded(); res(); }); }
+        catch (e) { hooks.adEnded(); res(); }
       });
     },
   };
@@ -109,11 +138,19 @@
   }
 
   let adapter = local;
+  // 로드 시점에 포털 여부를 확정(동기). SW/PWA 게이팅 등에서 init() 완료 전에 참조 가능.
+  const IS_PORTAL = detect() !== local;
 
   const AdsManager = {
     config,
+    isPortal: IS_PORTAL, // true면 포털 iframe(자체호스팅 전용 기능은 끈다)
     get platform() { return adapter.name; },
     async init(opts) {
+      // 광고 표시 중 오디오 훅 등록(게임이 mute/unmute 제공)
+      if (opts) {
+        if (typeof opts.onAdStarted === 'function') hooks.adStarted = opts.onAdStarted;
+        if (typeof opts.onAdEnded === 'function') hooks.adEnded = opts.onAdEnded;
+      }
       adapter = detect();
       // CrazyGames expects midgame (interstitial) ads at natural breaks — enable them there.
       if (adapter.name === 'crazygames') config.interstitialEnabled = true;
