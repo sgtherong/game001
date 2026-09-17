@@ -225,6 +225,9 @@ const Sound = (() => {
     win() { if (on()) [523.25, 659.25, 783.99, 1046.5, 1318.5].forEach((f, i) => voice(f, 0.5, { type: 'triangle', gain: 0.16, when: i * 0.085, wet: 0.8 })); },
     sticker() { if (on()) [784, 988, 1319, 1568].forEach((f, i) => voice(f, 0.4, { type: 'sine', gain: 0.14, when: i * 0.07, wet: 0.9 })); },
     unlock() { ready(); }, // call on first user gesture
+    // 광고 표시 중 전체 음소거 (포털 규격: 광고 시작 시 음소거, 종료 시 복구)
+    mute() { if (ctx && master) master.gain.value = 0; },
+    unmute() { if (ctx && master) master.gain.value = 0.85; },
   };
 })();
 function haptic(ms) { try { if (progress.settings && progress.settings.sound !== false && navigator.vibrate) navigator.vibrate(ms); } catch (e) {} }
@@ -1095,8 +1098,11 @@ function applyBranding() {
   if (b.accent && b.accent !== '#d98b4a') document.documentElement.style.setProperty('--accent', b.accent);
 }
 
-/* ---------- PWA ---------- */
+/* ---------- PWA (self-host only) ---------- */
 function registerSW() {
+  // 포털(CrazyGames 등)은 게임 번들을 자체 iframe에 재호스팅한다. 서비스워커/오프라인
+  // 캐시는 자체호스팅·gh-pages 전용 기능이므로 포털에서는 등록하지 않는다.
+  if (window.AdsManager && window.AdsManager.isPortal) return;
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
     navigator.serviceWorker.register('sw.js').catch(() => {});
   }
@@ -1186,7 +1192,7 @@ $('#adOfferClose').addEventListener('click', closeAd);
 document.addEventListener('keydown', e => {
   if (e.key === 'z' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); undo(); }
   else if (e.key === 'Enter' && !btnCommit.disabled) commitMove();
-  else if (e.key === 'Escape') { G.selected = []; updatePreview(); }
+  // Escape는 포털(CrazyGames)에서 전체화면 종료용이라 게임 동작에 쓰지 않는다. 선택 해제는 '취소' 버튼 사용.
   else if (e.key === 'r') restart();
 });
 
@@ -1215,8 +1221,11 @@ updateHintButton();
 registerSW();
 // platform ads adapter (local simulation here; portal SDK on portal domains)
 if (window.AdsManager) {
-  AdsManager.init({ onRewardedSimulate: showSimulatedAd })
-    .then(name => logEvent('platform_ready', { platform: name }));
+  AdsManager.init({
+    onRewardedSimulate: showSimulatedAd,
+    onAdStarted: () => { Sound.mute(); },   // 광고 실제 표시 → 음소거
+    onAdEnded: () => { Sound.unmute(); },   // 광고 종료(성공/실패) → 복구
+  }).then(name => logEvent('platform_ready', { platform: name }));
 }
 // start at last played stage
 loadStage(progress.last || 0);
