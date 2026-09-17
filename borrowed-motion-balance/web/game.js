@@ -287,6 +287,7 @@ const G = {
   attemptAdUsed: false, // a rewarded-ad hint was used on this attempt (max 1)
   animating: false,
   daily: null,      // slot 0-2 when playing a daily puzzle, else null
+  clearsSinceAd: 0, // stage clears since the last midgame ad (portal interstitial cadence)
 };
 
 /* ---------- DOM ---------- */
@@ -802,6 +803,12 @@ function onWin() {
   }
   overlay.classList.add('show');
   if (window.AdsManager) { AdsManager.gameplayStop(); AdsManager.happyTime(1); } // portal signals
+  // midgame ad every 3rd clear (portal-gated via config; a no-op off-portal)
+  G.clearsSinceAd = (G.clearsSinceAd || 0) + 1;
+  if (G.clearsSinceAd >= 3) {
+    G.clearsSinceAd = 0;
+    if (window.AdsManager) { logEvent('midgame_ad', { platform: AdsManager.platform }); AdsManager.showInterstitial(); }
+  }
   Sound.win(); haptic([20, 40, 60]); confettiBurst(); screenFlash();
   pieceEls().forEach((el, k) => { setTimeout(() => { el.classList.remove('win-bounce'); void el.offsetWidth; el.classList.add('win-bounce'); }, k * 70); });
   renderProgress();

@@ -115,6 +115,8 @@
     get platform() { return adapter.name; },
     async init(opts) {
       adapter = detect();
+      // CrazyGames expects midgame (interstitial) ads at natural breaks — enable them there.
+      if (adapter.name === 'crazygames') config.interstitialEnabled = true;
       try { await adapter.init(opts); }
       catch (e) {
         console.warn('[AdsManager] "' + adapter.name + '" init failed, falling back to local:', e);
