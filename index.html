@@ -362,6 +362,33 @@
   .daily-card.done { background: color-mix(in srgb, #5aa88c 14%, var(--cell)); border-color: color-mix(in srgb, #5aa88c 45%, var(--line)); }
   .daily-card.done .dc-go { color: #5aa88c; }
 
+  /* weekly reward tracker */
+  .weekly { margin: 4px 0 14px; padding: 12px; border: 1px solid var(--line); border-radius: 14px; background: var(--cell); }
+  .weekly-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+  .weekly-title { font-size: 14px; font-weight: 800; }
+  .weekly-count { font-size: 12px; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
+  .weekly-dots { display: flex; gap: 6px; margin-bottom: 12px; }
+  .weekly-dots .wk-dot { flex: 1; height: 8px; border-radius: 5px; background: var(--line); transition: background .2s; }
+  .weekly-dots .wk-dot.on { background: var(--accent); }
+  .weekly-rewards { display: flex; gap: 8px; }
+  .wk-reward {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+    padding: 9px 4px; border: 1px solid var(--line); border-radius: 12px;
+    background: var(--bg); color: var(--fg); cursor: default; font: inherit;
+  }
+  .wk-reward .wk-goal { font-size: 11px; font-weight: 700; color: var(--muted); }
+  .wk-reward .wk-prize { font-size: 14px; font-weight: 800; }
+  .wk-reward .wk-state { font-size: 12px; font-weight: 700; color: var(--muted); }
+  .wk-reward.ready {
+    cursor: pointer; border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 14%, var(--bg));
+    animation: wkPulse 1.6s ease-in-out infinite;
+  }
+  .wk-reward.ready .wk-state { color: var(--accent); }
+  .wk-reward.claimed { background: color-mix(in srgb, #5aa88c 14%, var(--cell)); border-color: color-mix(in srgb, #5aa88c 45%, var(--line)); }
+  .wk-reward.claimed .wk-state { color: #5aa88c; }
+  @keyframes wkPulse { 0%,100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 40%, transparent); } 50% { box-shadow: 0 0 0 5px transparent; } }
+
   /* sound toggle in drawer */
   .sound-toggle {
     margin-top: auto; padding-top: 12px; border-top: 1px solid var(--line);
@@ -579,6 +606,14 @@
     </div>
     <div class="daily-list" id="dailyList"></div>
     <div class="album-status" id="dailyAllDone" data-i18n="daily_all_done" hidden></div>
+    <div class="weekly">
+      <div class="weekly-head">
+        <span class="weekly-title" data-i18n="weekly_title">Weekly reward</span>
+        <span class="weekly-count" id="weeklyCount"></span>
+      </div>
+      <div class="weekly-dots" id="weeklyDots"></div>
+      <div class="weekly-rewards" id="weeklyRewards"></div>
+    </div>
     <button class="btn" id="dailyClose" data-i18n="album_close" style="width:100%;">Close</button>
   </div>
 </div>

@@ -87,6 +87,8 @@ function loadProgress() {
     premium: false, theme: 'default',
     worldsDone: {}, themeUnlocked: false, // world-clear rewards
     daily: {}, streak: { n: 0, last: '' }, // daily challenge state
+    weekly: { week: '', days: [], claimed: [] }, // weekly daily-challenge reward
+    bonusHints: 0, // reward hints (persist across days, spent after free quota)
     reached: 0, // furthest stage index unlocked via linear main progression
   };
   try {
@@ -98,6 +100,9 @@ function loadProgress() {
   if (!p.worldsDone) p.worldsDone = {};
   if (!p.daily) p.daily = {};
   if (!p.streak) p.streak = { n: 0, last: '' };
+  if (!p.weekly || !Array.isArray(p.weekly.days)) p.weekly = { week: '', days: [], claimed: [] };
+  if (!Array.isArray(p.weekly.claimed)) p.weekly.claimed = [];
+  if (typeof p.bonusHints !== 'number') p.bonusHints = 0;
   if (typeof p.reached !== 'number') p.reached = 0;
   // migrate: existing players keep access up to their furthest completed stage
   return p;
@@ -127,6 +132,27 @@ function resetDailyIfNeeded() {
 const isPremium = () => !!progress.premium;
 const freeHintsLeft = () => { resetDailyIfNeeded(); return Math.max(0, FREE_HINTS_PER_DAY - progress.hints.free); };
 const adHintsLeft = () => { resetDailyIfNeeded(); return Math.max(0, AD_HINTS_PER_DAY - progress.hints.ad); };
+const bonusHintsLeft = () => Math.max(0, progress.bonusHints || 0); // weekly-reward hints (not reset daily)
+const hintsAvailable = () => freeHintsLeft() + bonusHintsLeft(); // free quota + reward pool
+
+/* ---------- weekly reward (Mon–Sun daily-challenge streak) ---------- */
+// day-count milestones within one week -> bonus reward hints
+const WEEKLY_MILESTONES = [{ days: 3, hints: 3 }, { days: 5, hints: 5 }, { days: 7, hints: 10 }];
+function weekKeyOf(dateStr) { // Monday's date of that week, as the week's id
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const dt = new Date(y, m - 1, d);
+  const dow = (dt.getDay() + 6) % 7; // 0 = Monday
+  dt.setDate(dt.getDate() - dow);
+  return `${dt.getFullYear()}-${dt.getMonth() + 1}-${dt.getDate()}`;
+}
+function ensureWeek() { // roll the tracker over when a new week starts
+  const wk = weekKeyOf(todayKey());
+  if (!progress.weekly || progress.weekly.week !== wk) {
+    progress.weekly = { week: wk, days: [], claimed: [] };
+    saveProgress(progress);
+  }
+}
+const weeklyDaysDone = () => { ensureWeek(); return progress.weekly.days.length; };
 // lightweight analytics log (prototype) — separate key so progress stays small
 function logEvent(name, data = {}) {
   try {
@@ -528,6 +554,8 @@ function useHint() {
   }
   if (isPremium()) { applyHint(pair, 'premium'); return; }
   if (freeHintsLeft() > 0) { progress.hints.free++; saveProgress(progress); applyHint(pair, 'free'); return; }
+  // free quota gone → spend a weekly-reward hint before asking for an ad
+  if (bonusHintsLeft() > 0) { progress.bonusHints--; saveProgress(progress); applyHint(pair, 'bonus'); return; }
   // free exhausted → offer a rewarded ad if available for this day/attempt
   if (adHintsLeft() > 0 && !G.attemptAdUsed) { offerAd(pair); return; }
   hintTextEl.textContent = t('hint_none_left');
@@ -537,14 +565,14 @@ function applyHint(pair, src) {
   G.usedHint = true;
   G.selected = pair.slice();
   updatePreview();
-  const left = isPremium() ? t('hint_left_unlimited') : t('hint_left_free', { n: freeHintsLeft() });
+  const left = isPremium() ? t('hint_left_unlimited') : t('hint_left_free', { n: hintsAvailable() });
   hintTextEl.textContent = t('hint_applied', { a: pair[0] + 1, b: pair[1] + 1, left });
   updateHintButton();
   logEvent('hint_used', { src });
 }
 function updateHintButton() {
   if (!btnHint) return;
-  const badge = isPremium() ? '∞' : `(${freeHintsLeft()})`;
+  const badge = isPremium() ? '∞' : `(${hintsAvailable()})`;
   btnHint.innerHTML = `💡 ${t('hint_btn')} <span style="color:var(--muted);font-weight:600">${badge}</span>`;
 }
 
@@ -618,7 +646,8 @@ function renderStore(note) {
   $('#storeNote').hidden = !note;
   $('#storeStatus').textContent = isPremium()
     ? t('store_status_premium')
-    : t('store_status_free', { free: freeHintsLeft(), fmax: FREE_HINTS_PER_DAY, ad: adHintsLeft(), amax: AD_HINTS_PER_DAY });
+    : t('store_status_free', { free: freeHintsLeft(), fmax: FREE_HINTS_PER_DAY, ad: adHintsLeft(), amax: AD_HINTS_PER_DAY })
+      + (bonusHintsLeft() > 0 ? ' · ' + t('store_status_bonus', { n: bonusHintsLeft() }) : '');
   $('#premiumCard').hidden = isPremium();
   $('#premiumOwned').hidden = !isPremium();
   $('#themeRow').hidden = !canDusk(); // theme selectable via premium OR world-1 reward
@@ -750,9 +779,14 @@ function onWin() {
     const dk = todayKey();
     progress.daily[dk] = progress.daily[dk] || [false, false, false];
     progress.daily[dk][G.daily] = true;
-    if (progress.daily[dk].every(Boolean) && progress.streak.last !== dk) {
-      progress.streak.n = (progress.streak.last === shiftDay(dk, -1)) ? (progress.streak.n + 1) : 1;
-      progress.streak.last = dk;
+    if (progress.daily[dk].every(Boolean)) {
+      if (progress.streak.last !== dk) {
+        progress.streak.n = (progress.streak.last === shiftDay(dk, -1)) ? (progress.streak.n + 1) : 1;
+        progress.streak.last = dk;
+      }
+      // credit this day toward the weekly reward tracker
+      ensureWeek();
+      if (!progress.weekly.days.includes(dk)) progress.weekly.days.push(dk);
     }
     saveProgress(progress);
     btnNextEl.style.display = ''; btnNextEl.textContent = t('daily_back');
@@ -974,6 +1008,53 @@ function renderDaily() {
     wrap.appendChild(card);
   });
   $('#dailyAllDone').hidden = !done.every(Boolean);
+  renderWeekly();
+}
+
+/* ---------- weekly reward panel ---------- */
+function renderWeekly() {
+  const n = weeklyDaysDone(); // completed days this week (0–7)
+  const cntEl = $('#weeklyCount'); if (cntEl) cntEl.textContent = t('weekly_progress', { n });
+  // 7 day dots, filled up to n
+  const dots = $('#weeklyDots');
+  if (dots) {
+    dots.innerHTML = '';
+    for (let i = 0; i < 7; i++) {
+      const dot = document.createElement('span');
+      dot.className = 'wk-dot' + (i < n ? ' on' : '');
+      dots.appendChild(dot);
+    }
+  }
+  // milestone reward chips
+  const wrap = $('#weeklyRewards');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  WEEKLY_MILESTONES.forEach((ms, i) => {
+    const claimed = progress.weekly.claimed.includes(i);
+    const ready = n >= ms.days && !claimed;
+    const chip = document.createElement('button');
+    chip.className = 'wk-reward' + (claimed ? ' claimed' : ready ? ' ready' : '');
+    chip.disabled = !ready;
+    chip.innerHTML =
+      `<span class="wk-goal">${t('weekly_days', { d: ms.days })}</span>` +
+      `<span class="wk-prize">💡 +${ms.hints}</span>` +
+      `<span class="wk-state">${claimed ? '✓' : ready ? t('weekly_claim') : '🔒'}</span>`;
+    if (ready) chip.addEventListener('click', () => claimWeekly(i));
+    wrap.appendChild(chip);
+  });
+}
+
+function claimWeekly(i) {
+  ensureWeek();
+  const ms = WEEKLY_MILESTONES[i];
+  if (!ms || progress.weekly.claimed.includes(i) || weeklyDaysDone() < ms.days) return;
+  progress.weekly.claimed.push(i);
+  progress.bonusHints = (progress.bonusHints || 0) + ms.hints;
+  saveProgress(progress);
+  logEvent('weekly_reward', { days: ms.days, hints: ms.hints });
+  Sound.sticker(); haptic([30, 40, 30, 40, 60]); confettiBurst();
+  renderWeekly();
+  updateHintButton();
 }
 
 /* ---------- tutorial ---------- */
