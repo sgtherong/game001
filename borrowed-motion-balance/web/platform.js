@@ -73,10 +73,6 @@
    * 라이선시/추가 도메인은 branding.js의 BM_BRAND.allowedHosts 로 확장한다.
    * (참고: 클라이언트 사이트락은 우회 가능한 "약한 억제책"이다.) */
   function hostAllowed() {
-    let h;
-    try { h = (location.hostname || '').toLowerCase(); } catch (e) { return true; }
-    if (!h) return true; // file:// / 샌드박스 → 개발·미리보기
-    if (h === 'localhost' || h === '127.0.0.1' || h === '0.0.0.0' || h.endsWith('.local')) return true;
     const ALLOW = [
       'crazygames', '1001juegos',                        // CrazyGames
       'poki', 'poki-gdn',                                // Poki
@@ -86,10 +82,21 @@
     ];
     const extra = (window.BM_BRAND && Array.isArray(window.BM_BRAND.allowedHosts))
       ? window.BM_BRAND.allowedHosts.map(String) : [];
-    return ALLOW.concat(extra).some(k => {
-      k = k.toLowerCase();
-      return h === k || h.endsWith('.' + k) || h.includes(k);
-    });
+    const list = ALLOW.concat(extra).map(s => String(s).toLowerCase());
+    const match = v => { v = (v || '').toLowerCase(); return !!v && list.some(k => v.includes(k)); };
+    // 1) 서빙 호스트(게임 파일이 올라간 도메인)
+    let h;
+    try { h = (location.hostname || '').toLowerCase(); } catch (e) { return true; }
+    if (!h) return true; // file:// / 샌드박스 → 개발·미리보기
+    if (h === 'localhost' || h === '127.0.0.1' || h === '0.0.0.0' || h.endsWith('.local')) return true;
+    if (list.some(k => h === k || h.endsWith('.' + k) || h.includes(k))) return true;
+    // 2) 정식 임베더(포털 iframe / Claude Artifact)면 허용 — 허용만 넓히므로 안전
+    try { if (match(document.referrer)) return true; } catch (e) {}
+    try {
+      const ao = location.ancestorOrigins;
+      if (ao) for (let i = 0; i < ao.length; i++) if (match(ao[i])) return true;
+    } catch (e) {}
+    return false;
   }
   window.BM_hostAllowed = hostAllowed;
 
