@@ -122,6 +122,7 @@ function saveProgress(p) {
  */
 const FREE_HINTS_PER_DAY = 3;
 const AD_HINTS_PER_DAY = 3;
+const MOVES_PER_AD = 3; // extra moves granted per rewarded ad when the budget runs out
 const PREMIUM_PRICE = '₩4,900';
 const todayKey = () => { const d = new Date(); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; };
 function resetDailyIfNeeded() {
@@ -470,10 +471,17 @@ function updatePreview() {
     boardEl.classList.remove('previewing');
   }
   refreshPieces(preview);
+  // 예산 소진 + 비프리미엄 → '광고 보고 +이동' 버튼 노출 (프리미엄은 광고 없음, 되돌리기/재시작 사용)
+  const canAdMoves = outOfMoves && !isPremium();
   btnCommit.disabled = G.selected.length !== 2 || outOfMoves; // 예산 소진 시 이동 불가
   btnCancel.disabled = G.selected.length === 0;
-  hintTextEl.textContent = outOfMoves ? t('moves_out')
+  hintTextEl.textContent = outOfMoves ? t(canAdMoves ? 'moves_out' : 'moves_out_noad')
     : t(G.selected.length === 2 ? 'preview_hint' : 'select_two');
+  const mmRow = $('#moreMovesRow'), mmBtn = $('#btnMoreMoves');
+  if (mmRow && mmBtn) {
+    mmRow.hidden = !canAdMoves;
+    if (canAdMoves) mmBtn.textContent = t('more_moves_btn', { n: MOVES_PER_AD });
+  }
 }
 
 function commitMove() {
@@ -589,31 +597,49 @@ function updateHintButton() {
 }
 
 /* ---------- rewarded ad (routed through AdsManager adapter) ---------- */
-let pendingHintPair = null, adTimer = null;
+let pendingHintPair = null, adTimer = null, adReason = 'hint'; // 'hint' | 'moves'
 function offerAd(pair) {
   pendingHintPair = pair;
-  logEvent('ad_offer', { platform: AdsManager.platform });
+  adReason = 'hint';
+  $('#adOfferTitle').textContent = t('ad_offer_title');
+  $('#adOfferDesc').textContent = t('ad_offer_desc');
+  logEvent('ad_offer', { platform: AdsManager.platform, reason: 'hint' });
+  $('#adOffer').classList.add('show');
+}
+// 이동 예산 소진 시 보상형 광고로 +이동 제안
+function offerMoreMoves() {
+  adReason = 'moves';
+  pendingHintPair = null;
+  $('#adOfferTitle').textContent = t('ad_moves_title', { n: MOVES_PER_AD });
+  $('#adOfferDesc').textContent = t('ad_moves_desc', { n: MOVES_PER_AD });
+  logEvent('ad_offer', { platform: AdsManager.platform, reason: 'moves' });
   $('#adOffer').classList.add('show');
 }
 // user accepted the offer -> ask the platform to show a rewarded ad.
 // On 'local' this resolves via the simulated ad UI (showSimulatedAd);
 // on a portal it resolves from that portal's SDK.
 function watchAd() {
+  const reason = adReason;
   $('#adOffer').classList.remove('show');
-  logEvent('ad_impression', { platform: AdsManager.platform });
+  logEvent('ad_impression', { platform: AdsManager.platform, reason });
   AdsManager.showRewarded().then(rewarded => {
     if (rewarded) {
-      resetDailyIfNeeded(); progress.hints.ad++; saveProgress(progress);
-      G.attemptAdUsed = true;
-      logEvent('ad_reward_granted', { platform: AdsManager.platform });
-      if (pendingHintPair) { applyHint(pendingHintPair, 'ad'); pendingHintPair = null; }
+      logEvent('ad_reward_granted', { platform: AdsManager.platform, reason });
+      if (reason === 'moves') {
+        G.budgetBonus = (G.budgetBonus || 0) + MOVES_PER_AD; // 이번 판 이동 예산 +N
+        updateHud(); updatePreview();
+      } else {
+        resetDailyIfNeeded(); progress.hints.ad++; saveProgress(progress);
+        G.attemptAdUsed = true;
+        if (pendingHintPair) { applyHint(pendingHintPair, 'ad'); pendingHintPair = null; }
+      }
     } else {
-      logEvent('ad_no_reward', { platform: AdsManager.platform });
+      logEvent('ad_no_reward', { platform: AdsManager.platform, reason });
       hintTextEl.textContent = t('ad_no_reward');
       pendingHintPair = null;
     }
   }).catch(() => {
-    logEvent('ad_error', { platform: AdsManager.platform });
+    logEvent('ad_error', { platform: AdsManager.platform, reason });
     hintTextEl.textContent = t('ad_error');
     pendingHintPair = null;
   });
@@ -643,10 +669,12 @@ function showSimulatedAd() {
 }
 // close the offer (declined before watching)
 function closeAd() {
+  const reason = adReason;
   $('#adOffer').classList.remove('show');
   pendingHintPair = null;
-  hintTextEl.textContent = t('ad_closed');
-  logEvent('ad_dismissed', { platform: AdsManager.platform });
+  logEvent('ad_dismissed', { platform: AdsManager.platform, reason });
+  if (reason === 'moves') updatePreview(); // 이동 예산 안내(moves_out)로 복귀
+  else hintTextEl.textContent = t('ad_closed');
 }
 
 /* ---------- store / premium ---------- */
@@ -1226,6 +1254,7 @@ $('#themePremium').addEventListener('click', () => setThemePack('dusk'));
 // are wired per-invocation by showSimulatedAd (local adapter)
 $('#adWatch').addEventListener('click', watchAd);
 $('#adOfferClose').addEventListener('click', closeAd);
+$('#btnMoreMoves').addEventListener('click', offerMoreMoves);
 
 document.addEventListener('keydown', e => {
   if (e.key === 'z' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); undo(); }
