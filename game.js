@@ -294,6 +294,7 @@ const G = {
   animating: false,
   daily: null,      // slot 0-2 when playing a daily puzzle, else null
   clearsSinceAd: 0, // stage clears since the last midgame ad (portal interstitial cadence)
+  budgetBonus: 0,   // extra moves added to this attempt's move budget (e.g., rewarded ad)
 };
 
 /* ---------- DOM ---------- */
@@ -460,21 +461,24 @@ function onPieceClick(i) {
 }
 
 function updatePreview() {
+  const outOfMoves = movesLeft() <= 0;
   let preview = null;
-  if (G.selected.length === 2) {
+  if (G.selected.length === 2 && !outOfMoves) {
     preview = outcome(G.state, G.selected, G.stage.n);
     boardEl.classList.add('previewing');
   } else {
     boardEl.classList.remove('previewing');
   }
   refreshPieces(preview);
-  btnCommit.disabled = G.selected.length !== 2;
+  btnCommit.disabled = G.selected.length !== 2 || outOfMoves; // 예산 소진 시 이동 불가
   btnCancel.disabled = G.selected.length === 0;
-  hintTextEl.textContent = t(G.selected.length === 2 ? 'preview_hint' : 'select_two');
+  hintTextEl.textContent = outOfMoves ? t('moves_out')
+    : t(G.selected.length === 2 ? 'preview_hint' : 'select_two');
 }
 
 function commitMove() {
   if (G.selected.length !== 2 || G.animating) return;
+  if (movesLeft() <= 0) return; // 이동 예산 소진 — 되돌리기/재시작 필요
   const tg = G.stage.targets;
   const onTgt = st => st.map((p, i) => p[0] === tg[i][0] && p[1] === tg[i][1]);
   const before = onTgt(G.state);
@@ -544,6 +548,7 @@ function restart() {
   G.selected = [];
   G.usedHint = false;
   G.attemptAdUsed = false;
+  G.budgetBonus = 0; // 재시작 시 예산 원복(전체 이동 복구)
   refreshPieces();
   updateHud();
   updatePreview();
@@ -854,10 +859,16 @@ function showWorldReward(w, themeUnlocked) {
   Sound.sticker(); haptic([30, 40, 30, 40, 60]); confettiBurst();
 }
 
+/* ---------- move budget ---------- */
+// 각 스테이지의 이동 예산 = 최소이동 + 여유(약 +50%, 최소 +2). min 기반 자동 산출.
+function moveBudgetBase() { return G.stage ? G.stage.min + Math.max(2, Math.ceil(G.stage.min * 0.5)) : 0; }
+function moveBudget() { return moveBudgetBase() + (G.budgetBonus || 0); }
+function movesLeft() { return moveBudget() - G.history.length; }
+
 /* ---------- hud / navigation ---------- */
 function updateHud() {
   const min = G.stage ? G.stage.min : 0;
-  btnUndo.innerHTML = `${t('undo')} <span style="color:var(--muted);font-weight:600">${t('undo_meta', { n: G.history.length, min })}</span>`;
+  btnUndo.innerHTML = `${t('undo')} <span style="color:var(--muted);font-weight:600">${t('undo_meta', { n: G.history.length, max: moveBudget(), min })}</span>`;
 }
 
 function loadStage(index, dailySlot = null) {
@@ -868,6 +879,7 @@ function loadStage(index, dailySlot = null) {
   G.selected = [];
   G.usedHint = false;
   G.attemptAdUsed = false;
+  G.budgetBonus = 0;
   G.daily = dailySlot; // non-null => playing today's daily puzzle
   if (dailySlot === null) { progress.last = G.index; saveProgress(progress); } // daily doesn't move main progress
   updateHintButton();
