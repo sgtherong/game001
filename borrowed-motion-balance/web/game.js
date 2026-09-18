@@ -131,6 +131,8 @@ function resetDailyIfNeeded() {
   }
 }
 const isPremium = () => !!progress.premium;
+// 포털(CrazyGames 등)은 표준 IAP가 없어 유료 결제를 노출하지 않는다(광고 기반 수익).
+const onPortal = () => !!(window.AdsManager && window.AdsManager.isPortal);
 const freeHintsLeft = () => { resetDailyIfNeeded(); return Math.max(0, FREE_HINTS_PER_DAY - progress.hints.free); };
 const adHintsLeft = () => { resetDailyIfNeeded(); return Math.max(0, AD_HINTS_PER_DAY - progress.hints.ad); };
 const bonusHintsLeft = () => Math.max(0, progress.bonusHints || 0); // weekly-reward hints (not reset daily)
@@ -564,7 +566,7 @@ function useHint() {
   // free exhausted → offer a rewarded ad if available for this day/attempt
   if (adHintsLeft() > 0 && !G.attemptAdUsed) { offerAd(pair); return; }
   hintTextEl.textContent = t('hint_none_left');
-  openStore(t('store_note_hint'));
+  if (!onPortal()) openStore(t('store_note_hint')); // 포털에선 프리미엄 유도 대신 안내만
 }
 function applyHint(pair, src) {
   G.usedHint = true;
@@ -653,9 +655,13 @@ function renderStore(note) {
     ? t('store_status_premium')
     : t('store_status_free', { free: freeHintsLeft(), fmax: FREE_HINTS_PER_DAY, ad: adHintsLeft(), amax: AD_HINTS_PER_DAY })
       + (bonusHintsLeft() > 0 ? ' · ' + t('store_status_bonus', { n: bonusHintsLeft() }) : '');
-  $('#premiumCard').hidden = isPremium();
-  $('#premiumOwned').hidden = !isPremium();
-  $('#themeRow').hidden = !canDusk(); // theme selectable via premium OR world-1 reward
+  // 포털에선 유료 결제 UI(구매/보유/복원/약관)를 숨긴다 — 힌트는 광고 기반, 테마는 무료.
+  const portal = onPortal();
+  $('#premiumCard').hidden = portal || isPremium();
+  $('#premiumOwned').hidden = portal || !isPremium();
+  $('#restorePurchase').hidden = portal;
+  const legal = document.querySelector('#store .store-legal'); if (legal) legal.hidden = portal;
+  $('#themeRow').hidden = !canDusk(); // theme selectable via premium/world-1 reward (or free on portal)
   $('#premiumPrice').textContent = PREMIUM_PRICE;
   updateThemeButtons();
 }
@@ -678,7 +684,7 @@ function restorePurchase() {
 function themeAllowed(pack) {
   if (pack === 'default') return true;
   if (pack === 'mint') return !!progress.themeUnlocked || isPremium();
-  if (pack === 'dusk') return isPremium();
+  if (pack === 'dusk') return isPremium() || onPortal(); // 포털엔 결제가 없어 무료 개방(코스메틱)
   return false;
 }
 function currentThemePack() {
