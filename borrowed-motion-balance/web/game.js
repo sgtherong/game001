@@ -352,7 +352,7 @@ function buildBoard() {
     tok.className = 'piece';
     tok.dataset.i = i;
     tok.style.setProperty('--c', PIECE_COLORS[i]);
-    tok.innerHTML = `<span class="num">${i + 1}</span><span class="arrow"></span><span class="stop">정지</span>`;
+    tok.innerHTML = `<span class="num">${i + 1}</span><span class="arrow"></span><span class="stop">${t('stop_badge')}</span>`;
     tok.addEventListener('click', () => onPieceClick(i));
     layerEl.appendChild(tok);
   });
@@ -1185,6 +1185,7 @@ function refreshDynamic() {
   if ($('#langSelect')) $('#langSelect').value = window.I18N.lang;
   updateHud(); updateHintButton(); applySoundIcon(); renderProgress();
   if (G.stage) chapterEl.textContent = worldLabel(G.index);
+  document.querySelectorAll('#layer .piece .stop').forEach(el => el.textContent = t('stop_badge')); // 배지 언어 갱신
   updatePreview();
   if (drawer.classList.contains('open')) renderStageList();
   if ($('#store').classList.contains('show')) renderStore('');
