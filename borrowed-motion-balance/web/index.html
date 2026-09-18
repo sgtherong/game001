@@ -496,6 +496,9 @@
   <div class="hint" id="hintText"></div>
 
   <div class="actions">
+    <div class="row" id="moreMovesRow" hidden>
+      <button class="btn primary" id="btnMoreMoves"></button>
+    </div>
     <div class="row">
       <button class="btn" id="btnCancel" data-i18n="btn_cancel" disabled>Cancel</button>
       <button class="btn primary" id="btnCommit" data-i18n="btn_move" disabled>Move ▶</button>
@@ -680,8 +683,8 @@
   <div class="backdrop"></div>
   <div class="sheet">
     <div class="sticker-big">🎬</div>
-    <h3 data-i18n="ad_offer_title">Watch an ad for 1 hint</h3>
-    <div class="album-status" data-i18n="ad_offer_desc"></div>
+    <h3 id="adOfferTitle" data-i18n="ad_offer_title">Watch an ad for 1 hint</h3>
+    <div class="album-status" id="adOfferDesc" data-i18n="ad_offer_desc"></div>
     <!-- 보상형 광고 규격: '안 보고 계속'을 '광고 보기'와 동일 크기·색·폰트로(다크패턴 금지) -->
     <div style="display:flex;gap:10px;">
       <button class="btn" id="adOfferClose" data-i18n="ad_offer_close" style="flex:1;">Close</button>
