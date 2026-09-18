@@ -1,6 +1,6 @@
 {
-  "name": "스왑스텝",
-  "short_name": "스왑스텝",
+  "name": "SwapStep",
+  "short_name": "SwapStep",
   "description": "두 조각의 방향을 맞바꿔 목표에 도착시키는 캐주얼 퍼즐",
   "lang": "ko",
   "start_url": ".",

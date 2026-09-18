@@ -1097,7 +1097,7 @@ function toggleSound() {
 /* ---------- branding (rebranding config) ---------- */
 function applyBranding() {
   const b = window.BM_BRAND || {};
-  const name = b.name || '스왑스텝', tag = b.tagline || '';
+  const name = b.name || 'SwapStep', tag = b.tagline || '';
   const brandEl = document.querySelector('header .brand');
   if (brandEl) brandEl.innerHTML = name + (tag ? `<small>${tag}</small>` : '');
   if (name) document.title = name;
@@ -1107,7 +1107,7 @@ function applyBranding() {
 
 /* ---------- sitelock block screen ---------- */
 function showSiteLock() {
-  const name = (window.BM_BRAND && window.BM_BRAND.name) || '스왑스텝';
+  const name = (window.BM_BRAND && window.BM_BRAND.name) || 'SwapStep';
   const url = (window.BM_BRAND && window.BM_BRAND.officialUrl) || 'https://www.crazygames.com';
   const d = document.createElement('div');
   d.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;'
