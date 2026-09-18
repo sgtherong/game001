@@ -1105,6 +1105,24 @@ function applyBranding() {
   if (b.accent && b.accent !== '#d98b4a') document.documentElement.style.setProperty('--accent', b.accent);
 }
 
+/* ---------- sitelock block screen ---------- */
+function showSiteLock() {
+  const name = (window.BM_BRAND && window.BM_BRAND.name) || '스왑스텝';
+  const url = (window.BM_BRAND && window.BM_BRAND.officialUrl) || 'https://www.crazygames.com';
+  const d = document.createElement('div');
+  d.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;'
+    + 'align-items:center;justify-content:center;gap:16px;padding:24px;text-align:center;'
+    + 'background:#f3ead9;color:#3a3226;font-family:system-ui,-apple-system,sans-serif';
+  d.innerHTML =
+    '<div style="font-size:44px">🔒</div>'
+    + '<div style="font-size:20px;font-weight:800">' + name + '</div>'
+    + '<div style="font-size:14px;max-width:300px;line-height:1.55;color:#8a7f6d">' + t('sitelock_msg') + '</div>'
+    + '<a href="' + url + '" target="_blank" rel="noopener" style="margin-top:4px;padding:12px 22px;'
+    + 'border-radius:14px;background:#d98b4a;color:#fff;font-weight:700;text-decoration:none">'
+    + t('sitelock_play') + '</a>';
+  document.body.appendChild(d);
+}
+
 /* ---------- PWA (self-host only) ---------- */
 function registerSW() {
   // 포털(CrazyGames 등)은 게임 번들을 자체 iframe에 재호스팅한다. 서비스워커/오프라인
@@ -1221,6 +1239,8 @@ document.addEventListener('pointerdown', () => Sound.unlock(), { once: true });
 // then load progress from the correct backend, then render the UI.
 const withTimeout = (p, ms) => Promise.race([p, new Promise(r => setTimeout(() => r('timeout'), ms))]);
 async function boot() {
+  // 사이트락: 허용되지 않은 호스트면 게임 대신 안내 화면을 띄우고 중단(광고/SDK도 로드 안 함)
+  if (window.BM_hostAllowed && !window.BM_hostAllowed()) { showSiteLock(); return; }
   if (window.AdsManager) {
     try {
       const name = await withTimeout(AdsManager.init({
