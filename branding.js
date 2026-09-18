@@ -8,13 +8,13 @@
  * 앱 아이콘(icon-*.png)과 PWA manifest 는 별도 파일이므로 함께 교체하세요.
  */
 window.BM_BRAND = {
-  name: '스왑스텝',
-  tagline: 'SwapStep',
+  name: 'SwapStep',
+  tagline: '',
   accent: '#d98b4a',
   // 사이트락 확장: 자신의 배포 도메인을 추가하면 그 도메인에서도 실행됩니다.
   //   예) allowedHosts: ['mygame.com', 'itch.io']
   allowedHosts: [],
   // 사이트락 차단 화면의 "공식 사이트에서 플레이" 링크 (기본: CrazyGames).
-  // CrazyGames 게임 URL이 정해지면 여기에 넣으세요. 예) 'https://www.crazygames.com/game/스왑스텝'
+  // CrazyGames 게임 URL이 정해지면 여기에 넣으세요. 예) 'https://www.crazygames.com/game/swapstep'
   officialUrl: 'https://www.crazygames.com',
 };

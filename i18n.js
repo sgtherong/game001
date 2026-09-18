@@ -125,7 +125,7 @@
       drawer_title: '스테이지',
       sound_on: '🔊 소리 켜짐', sound_off: '🔇 소리 꺼짐',
       lang_label: '언어',
-      tut_title: '스왑스텝 규칙',
+      tut_title: 'SwapStep 규칙',
       tut_demo_cap: '두 개 탭 → 방향 교환 → 한 칸씩 이동',
       tut_s1: '조각 <b>두 개</b>를 선택하면 두 조각의 <b>화살표가 서로 바뀝니다</b>.',
       tut_s2: '그 두 조각만 <b>새 방향으로 한 칸</b> 움직여요. 미리보기 확인 후 이동하세요.',
