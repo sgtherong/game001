@@ -447,9 +447,36 @@ function refreshPieces(previewState) {
   }
 }
 
+/* ---------- hint demo (non-destructive move preview animation) ---------- */
+// After a hint selects the pair, briefly slide those two pieces to where the
+// move would take them, then slide back — so the player sees HOW they move.
+let hintDemoTimers = [];
+function clearHintDemo() {
+  hintDemoTimers.forEach(clearTimeout);
+  hintDemoTimers = [];
+  pieceEls().forEach(el => { el.style.zIndex = ''; el.classList.remove('demo'); });
+}
+function demoHint(pair) {
+  clearHintDemo();
+  if (!G.stage || G.animating) return;
+  const n = G.stage.n, { center } = geom();
+  const next = outcome(G.state, pair, n, G.wallSet);
+  const toks = pieceEls();
+  const slideOut = () => pair.forEach(i => {
+    const el = toks[i]; if (!el) return;
+    el.style.zIndex = 7; el.classList.add('demo');
+    el.style.left = center(next[i][0]) + 'px';
+    el.style.top = center(next[i][1]) + 'px';
+  });
+  const slideBack = () => { clearHintDemo(); updatePreview(); }; // restore truth (state may be unchanged)
+  hintDemoTimers.push(setTimeout(slideOut, 260));  // let the arrow swap register first
+  hintDemoTimers.push(setTimeout(slideBack, 260 + 640)); // hold at destination, then return
+}
+
 /* ---------- interaction ---------- */
 function onPieceClick(i) {
   if (G.animating) return;
+  clearHintDemo();
   Sound.unlock();
   const pos = G.selected.indexOf(i);
   if (pos !== -1) {
@@ -490,6 +517,7 @@ function updatePreview() {
 function commitMove() {
   if (G.selected.length !== 2 || G.animating) return;
   if (movesLeft() <= 0) return; // 이동 예산 소진 — 되돌리기/재시작 필요
+  clearHintDemo();
   const tg = G.stage.targets;
   const onTgt = st => st.map((p, i) => p[0] === tg[i][0] && p[1] === tg[i][1]);
   const before = onTgt(G.state);
@@ -545,6 +573,7 @@ function screenFlash() {
 
 function undo() {
   if (!G.history.length || G.animating) return;
+  clearHintDemo();
   G.state = G.history.pop();
   G.selected = [];
   refreshPieces();
@@ -554,6 +583,7 @@ function undo() {
 
 function restart() {
   if (G.animating) return;
+  clearHintDemo();
   G.state = clone(G.stage.start);
   G.history = [];
   G.selected = [];
@@ -588,6 +618,7 @@ function applyHint(pair, src) {
   G.usedHint = true;
   G.selected = pair.slice();
   updatePreview();
+  demoHint(pair); // animate the suggested move so the player sees how the two pieces move
   const left = isPremium() ? t('hint_left_unlimited') : t('hint_left_free', { n: hintsAvailable() });
   hintTextEl.textContent = t('hint_applied', { a: pair[0] + 1, b: pair[1] + 1, left });
   updateHintButton();
@@ -903,6 +934,7 @@ function updateHud() {
 }
 
 function loadStage(index, dailySlot = null) {
+  clearHintDemo();
   G.index = Math.max(0, Math.min(STAGES.length - 1, index));
   G.stage = STAGES[G.index];
   G.wallSet = new Set((G.stage.walls || []).map(w => w[0] + ',' + w[1])); // impassable cells
