@@ -1,0 +1,478 @@
+{
+  "created": "2026-09-22",
+  "rules_version": "borrowed-motion-easy-v1",
+  "seed": 20260922,
+  "worlds": 35,
+  "world_size": 30,
+  "delivered": 1050,
+  "unique_pool": 3526,
+  "fallbacks": 0,
+  "minimum_moves_histogram": {
+    "1": 25,
+    "2": 41,
+    "3": 132,
+    "4": 204,
+    "5": 252,
+    "6": 222,
+    "7": 126,
+    "8": 42,
+    "9": 6
+  },
+  "per_world": [
+    {
+      "world": 1,
+      "board": "3x3",
+      "pieces": 2,
+      "walls": 0,
+      "chapter": "규칙 익히기",
+      "minRange": [
+        1,
+        2
+      ],
+      "avgMin": 1.37,
+      "wallStages": 0
+    },
+    {
+      "world": 2,
+      "board": "3x3",
+      "pieces": 3,
+      "walls": 0,
+      "chapter": "규칙 익히기",
+      "minRange": [
+        1,
+        3
+      ],
+      "avgMin": 2,
+      "wallStages": 0
+    },
+    {
+      "world": 3,
+      "board": "3x3",
+      "pieces": 3,
+      "walls": 0,
+      "chapter": "편안한 반복",
+      "minRange": [
+        2,
+        4
+      ],
+      "avgMin": 3,
+      "wallStages": 0
+    },
+    {
+      "world": 4,
+      "board": "3x3",
+      "pieces": 3,
+      "walls": 0,
+      "chapter": "편안한 반복",
+      "minRange": [
+        3,
+        5
+      ],
+      "avgMin": 4,
+      "wallStages": 0
+    },
+    {
+      "world": 5,
+      "board": "3x3",
+      "pieces": 3,
+      "walls": 0,
+      "chapter": "편안한 반복",
+      "minRange": [
+        4,
+        6
+      ],
+      "avgMin": 5,
+      "wallStages": 0
+    },
+    {
+      "world": 6,
+      "board": "3x3",
+      "pieces": 3,
+      "walls": 1,
+      "chapter": "순서 계획",
+      "minRange": [
+        2,
+        4
+      ],
+      "avgMin": 3,
+      "wallStages": 30
+    },
+    {
+      "world": 7,
+      "board": "3x3",
+      "pieces": 3,
+      "walls": 1,
+      "chapter": "순서 계획",
+      "minRange": [
+        3,
+        5
+      ],
+      "avgMin": 4,
+      "wallStages": 30
+    },
+    {
+      "world": 8,
+      "board": "3x3",
+      "pieces": 3,
+      "walls": 1,
+      "chapter": "순서 계획",
+      "minRange": [
+        4,
+        6
+      ],
+      "avgMin": 5,
+      "wallStages": 30
+    },
+    {
+      "world": 9,
+      "board": "3x3",
+      "pieces": 3,
+      "walls": 2,
+      "chapter": "순서 계획",
+      "minRange": [
+        3,
+        5
+      ],
+      "avgMin": 4,
+      "wallStages": 30
+    },
+    {
+      "world": 10,
+      "board": "3x3",
+      "pieces": 3,
+      "walls": 2,
+      "chapter": "순서 계획",
+      "minRange": [
+        4,
+        6
+      ],
+      "avgMin": 5,
+      "wallStages": 30
+    },
+    {
+      "world": 11,
+      "board": "4x4",
+      "pieces": 3,
+      "walls": 0,
+      "chapter": "넓은 보드 적응",
+      "minRange": [
+        3,
+        4
+      ],
+      "avgMin": 3.2,
+      "wallStages": 0
+    },
+    {
+      "world": 12,
+      "board": "4x4",
+      "pieces": 3,
+      "walls": 0,
+      "chapter": "넓은 보드 적응",
+      "minRange": [
+        3,
+        5
+      ],
+      "avgMin": 4,
+      "wallStages": 0
+    },
+    {
+      "world": 13,
+      "board": "4x4",
+      "pieces": 3,
+      "walls": 0,
+      "chapter": "넓은 보드 적응",
+      "minRange": [
+        4,
+        6
+      ],
+      "avgMin": 5,
+      "wallStages": 0
+    },
+    {
+      "world": 14,
+      "board": "4x4",
+      "pieces": 3,
+      "walls": 0,
+      "chapter": "넓은 보드 적응",
+      "minRange": [
+        5,
+        7
+      ],
+      "avgMin": 6,
+      "wallStages": 0
+    },
+    {
+      "world": 15,
+      "board": "4x4",
+      "pieces": 3,
+      "walls": 1,
+      "chapter": "4×4 계획",
+      "minRange": [
+        3,
+        5
+      ],
+      "avgMin": 4,
+      "wallStages": 30
+    },
+    {
+      "world": 16,
+      "board": "4x4",
+      "pieces": 3,
+      "walls": 1,
+      "chapter": "4×4 계획",
+      "minRange": [
+        4,
+        6
+      ],
+      "avgMin": 5,
+      "wallStages": 30
+    },
+    {
+      "world": 17,
+      "board": "4x4",
+      "pieces": 3,
+      "walls": 1,
+      "chapter": "4×4 계획",
+      "minRange": [
+        5,
+        7
+      ],
+      "avgMin": 6,
+      "wallStages": 30
+    },
+    {
+      "world": 18,
+      "board": "4x4",
+      "pieces": 3,
+      "walls": 2,
+      "chapter": "4×4 계획",
+      "minRange": [
+        4,
+        6
+      ],
+      "avgMin": 5,
+      "wallStages": 30
+    },
+    {
+      "world": 19,
+      "board": "4x4",
+      "pieces": 3,
+      "walls": 2,
+      "chapter": "4×4 계획",
+      "minRange": [
+        5,
+        7
+      ],
+      "avgMin": 6,
+      "wallStages": 30
+    },
+    {
+      "world": 20,
+      "board": "4x4",
+      "pieces": 3,
+      "walls": 3,
+      "chapter": "4×4 계획",
+      "minRange": [
+        5,
+        7
+      ],
+      "avgMin": 6,
+      "wallStages": 30
+    },
+    {
+      "world": 21,
+      "board": "4x4",
+      "pieces": 4,
+      "walls": 0,
+      "chapter": "네 조각 입문",
+      "minRange": [
+        3,
+        4
+      ],
+      "avgMin": 3.2,
+      "wallStages": 0
+    },
+    {
+      "world": 22,
+      "board": "4x4",
+      "pieces": 4,
+      "walls": 0,
+      "chapter": "네 조각 입문",
+      "minRange": [
+        3,
+        5
+      ],
+      "avgMin": 4,
+      "wallStages": 0
+    },
+    {
+      "world": 23,
+      "board": "4x4",
+      "pieces": 4,
+      "walls": 0,
+      "chapter": "네 조각 입문",
+      "minRange": [
+        4,
+        6
+      ],
+      "avgMin": 5,
+      "wallStages": 0
+    },
+    {
+      "world": 24,
+      "board": "4x4",
+      "pieces": 4,
+      "walls": 0,
+      "chapter": "네 조각 입문",
+      "minRange": [
+        5,
+        7
+      ],
+      "avgMin": 6,
+      "wallStages": 0
+    },
+    {
+      "world": 25,
+      "board": "4x4",
+      "pieces": 4,
+      "walls": 1,
+      "chapter": "네 조각 계획",
+      "minRange": [
+        3,
+        5
+      ],
+      "avgMin": 4,
+      "wallStages": 30
+    },
+    {
+      "world": 26,
+      "board": "4x4",
+      "pieces": 4,
+      "walls": 1,
+      "chapter": "네 조각 계획",
+      "minRange": [
+        4,
+        6
+      ],
+      "avgMin": 5,
+      "wallStages": 30
+    },
+    {
+      "world": 27,
+      "board": "4x4",
+      "pieces": 4,
+      "walls": 1,
+      "chapter": "네 조각 계획",
+      "minRange": [
+        5,
+        7
+      ],
+      "avgMin": 6,
+      "wallStages": 30
+    },
+    {
+      "world": 28,
+      "board": "4x4",
+      "pieces": 4,
+      "walls": 1,
+      "chapter": "네 조각 계획",
+      "minRange": [
+        6,
+        8
+      ],
+      "avgMin": 7,
+      "wallStages": 30
+    },
+    {
+      "world": 29,
+      "board": "4x4",
+      "pieces": 4,
+      "walls": 2,
+      "chapter": "네 조각 계획",
+      "minRange": [
+        4,
+        6
+      ],
+      "avgMin": 5,
+      "wallStages": 30
+    },
+    {
+      "world": 30,
+      "board": "4x4",
+      "pieces": 4,
+      "walls": 2,
+      "chapter": "네 조각 계획",
+      "minRange": [
+        5,
+        7
+      ],
+      "avgMin": 6,
+      "wallStages": 30
+    },
+    {
+      "world": 31,
+      "board": "4x4",
+      "pieces": 4,
+      "walls": 2,
+      "chapter": "네 조각 계획",
+      "minRange": [
+        6,
+        8
+      ],
+      "avgMin": 7,
+      "wallStages": 30
+    },
+    {
+      "world": 32,
+      "board": "4x4",
+      "pieces": 4,
+      "walls": 3,
+      "chapter": "긴 여정",
+      "minRange": [
+        5,
+        7
+      ],
+      "avgMin": 6,
+      "wallStages": 30
+    },
+    {
+      "world": 33,
+      "board": "4x4",
+      "pieces": 4,
+      "walls": 3,
+      "chapter": "긴 여정",
+      "minRange": [
+        6,
+        8
+      ],
+      "avgMin": 7,
+      "wallStages": 30
+    },
+    {
+      "world": 34,
+      "board": "4x4",
+      "pieces": 4,
+      "walls": 4,
+      "chapter": "긴 여정",
+      "minRange": [
+        6,
+        8
+      ],
+      "avgMin": 7,
+      "wallStages": 30
+    },
+    {
+      "world": 35,
+      "board": "4x4",
+      "pieces": 4,
+      "walls": 4,
+      "chapter": "긴 여정",
+      "minRange": [
+        7,
+        9
+      ],
+      "avgMin": 8,
+      "wallStages": 30
+    }
+  ]
+}

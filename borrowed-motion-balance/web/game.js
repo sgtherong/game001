@@ -16,7 +16,7 @@ const CHAPTER_KEY = {
   '네 조각 계획': 'ch_four_plan', '긴 여정': 'ch_journey',
 };
 const chapterName = ko => (CHAPTER_KEY[ko] ? t(CHAPTER_KEY[ko]) : ko);
-const WORLD_SIZE = 50; // stages per world in the picker
+const WORLD_SIZE = 30; // stages per world in the picker
 const worldOf = index => Math.floor(index / WORLD_SIZE); // 0-based world of a stage index
 const worldLabel = index => t('world', { n: worldOf(index) + 1 });
 
@@ -27,13 +27,14 @@ const PIECE_COLORS = ['#e8743b', '#2f8f83', '#7b6cd9', '#c0497b']; // supports u
 const clone = s => s.map(p => p.slice());
 const key = s => s.flat().join(',');
 
-function outcome(s, pair, n) {
+// walls: optional Set of "x,y" strings marking impassable cells (kept identical to rules.cjs)
+function outcome(s, pair, n, walls) {
   const t = clone(s), [a, b] = pair;
   [t[a][2], t[b][2]] = [t[b][2], t[a][2]];
   const proposed = t.map((p, i) => {
     if (i !== a && i !== b) return p.slice(0, 2);
     const [dx, dy] = VECTORS[p[2]], x = p[0] + dx, y = p[1] + dy;
-    const blocked = x < 0 || x >= n || y < 0 || y >= n || s.some(q => q[0] === x && q[1] === y);
+    const blocked = x < 0 || x >= n || y < 0 || y >= n || s.some(q => q[0] === x && q[1] === y) || (walls && walls.has(x + ',' + y));
     return blocked ? p.slice(0, 2) : [x, y];
   });
   return t.map((p, i) => {
@@ -54,7 +55,7 @@ const isGoal = (state, targets) =>
 
 // Deterministic hint: shortest first move from the CURRENT state to any goal
 // arrangement (computed live from where the player is now, per design spec).
-function solveNext(state, targets, n) {
+function solveNext(state, targets, n, walls) {
   if (isGoal(state, targets)) return null;
   const pairs = pairsFor(state.length);
   const startKey = key(state);
@@ -63,7 +64,7 @@ function solveNext(state, targets, n) {
   for (let i = 0; i < queue.length; i++) {
     const s = queue[i];
     for (const pr of pairs) {
-      const t = outcome(s, pr, n), k = key(t);
+      const t = outcome(s, pr, n, walls), k = key(t);
       if (parent.has(k)) continue;
       parent.set(k, { from: key(s), pair: pr });
       if (isGoal(t, targets)) {
@@ -337,6 +338,8 @@ function buildBoard() {
   for (let i = 0; i < n * n; i++) {
     const cell = document.createElement('div');
     cell.className = 'cell';
+    const x = i % n, y = Math.floor(i / n); // row-major grid → (x,y), origin top-left
+    if (G.wallSet && G.wallSet.has(x + ',' + y)) cell.classList.add('wall');
     gridEl.appendChild(cell);
   }
 
@@ -465,7 +468,7 @@ function updatePreview() {
   const outOfMoves = movesLeft() <= 0;
   let preview = null;
   if (G.selected.length === 2 && !outOfMoves) {
-    preview = outcome(G.state, G.selected, G.stage.n);
+    preview = outcome(G.state, G.selected, G.stage.n, G.wallSet);
     boardEl.classList.add('previewing');
   } else {
     boardEl.classList.remove('previewing');
@@ -490,7 +493,7 @@ function commitMove() {
   const tg = G.stage.targets;
   const onTgt = st => st.map((p, i) => p[0] === tg[i][0] && p[1] === tg[i][1]);
   const before = onTgt(G.state);
-  const next = outcome(G.state, G.selected, G.stage.n);
+  const next = outcome(G.state, G.selected, G.stage.n, G.wallSet);
   const anyBlocked = G.selected.some(i =>
     G.state[i][0] === next[i][0] && G.state[i][1] === next[i][1]);
   const after = onTgt(next);
@@ -565,7 +568,7 @@ function restart() {
 // hint entry point — routes through free quota / rewarded ad / premium
 function useHint() {
   if (G.animating) return;
-  const pair = solveNext(G.state, G.stage.targets, G.stage.n);
+  const pair = solveNext(G.state, G.stage.targets, G.stage.n, G.wallSet);
   if (!pair) {
     // stuck (needs undo): always free, never charged or ad-gated
     hintTextEl.textContent = t('hint_stuck_free');
@@ -902,6 +905,7 @@ function updateHud() {
 function loadStage(index, dailySlot = null) {
   G.index = Math.max(0, Math.min(STAGES.length - 1, index));
   G.stage = STAGES[G.index];
+  G.wallSet = new Set((G.stage.walls || []).map(w => w[0] + ',' + w[1])); // impassable cells
   G.state = clone(G.stage.start);
   G.history = [];
   G.selected = [];
@@ -1269,7 +1273,7 @@ window.addEventListener('resize', () => {
   resizeTimer = setTimeout(() => {
     if (!G.stage) return;
     applyStaticGeometry();
-    const preview = G.selected.length === 2 ? outcome(G.state, G.selected, G.stage.n) : null;
+    const preview = G.selected.length === 2 ? outcome(G.state, G.selected, G.stage.n, G.wallSet) : null;
     refreshPieces(preview);
   }, 120);
 });
