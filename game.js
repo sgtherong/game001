@@ -91,6 +91,7 @@ function loadProgress() {
     weekly: { week: '', days: [], claimed: [] }, // weekly daily-challenge reward
     bonusHints: 0, // reward hints (persist across days, spent after free quota)
     reached: 0, // furthest stage index unlocked via linear main progression
+    cloud: { linked: false, email: '' }, // Google 계정 클라우드 동기화 상태
   };
   try {
     // 저장소는 platform.js의 Store(포털=SDK data / 그 외=localStorage). 미로드 시 localStorage 폴백.
@@ -106,11 +107,13 @@ function loadProgress() {
   if (!Array.isArray(p.weekly.claimed)) p.weekly.claimed = [];
   if (typeof p.bonusHints !== 'number') p.bonusHints = 0;
   if (typeof p.reached !== 'number') p.reached = 0;
+  if (!p.cloud) p.cloud = { linked: false, email: '' };
   // migrate: existing players keep access up to their furthest completed stage
   return p;
 }
 function saveProgress(p) {
   try { if (window.Store) Store.set(SAVE_KEY, JSON.stringify(p)); else localStorage.setItem(SAVE_KEY, JSON.stringify(p)); } catch (e) {}
+  if (p.cloud && p.cloud.linked && window.CloudSync && CloudSync.user) CloudSync.pushDebounced(CloudSync.user.uid, p);
 }
 
 /* ---------- monetization (prototype: ad/payment points are stubbed) ----------
@@ -805,9 +808,93 @@ function openBackup() {
   $('#importCode').value = '';
   $('#backupStatus').textContent = '';
   $('#backup').classList.add('show');
+  const box = $('#cloudSyncBox');
+  if (box) box.style.display = (window.CloudSync && CloudSync.enabled) ? '' : 'none';
+  renderCloudStatus();
   logEvent('backup_open');
 }
 function closeBackup() { $('#backup').classList.remove('show'); }
+
+/* ---------- progress backup / restore (Google account, Firestore) ----------
+ * 병합은 "손해 없음"이 원칙: 두 쪽 중 더 앞선 값을 취하고(진행 단계),
+ * 클리어/기록은 합집합으로 남긴다(어느 쪽이든 이미 딴 것은 절대 사라지지 않음). */
+function mergeProgress(local, cloud) {
+  if (!cloud) return local;
+  const out = Object.assign({}, local);
+  out.reached = Math.max(local.reached || 0, cloud.reached || 0);
+  out.completed = Object.assign({}, cloud.completed, local.completed);
+  out.solo = Object.assign({}, cloud.solo, local.solo);
+  out.best = {};
+  const bestKeys = new Set([...Object.keys(local.best || {}), ...Object.keys(cloud.best || {})]);
+  bestKeys.forEach(k => {
+    const a = (local.best || {})[k], b = (cloud.best || {})[k];
+    out.best[k] = (a == null) ? b : (b == null ? a : Math.min(a, b));
+  });
+  out.worldsDone = Object.assign({}, cloud.worldsDone, local.worldsDone);
+  out.themeUnlocked = !!(local.themeUnlocked || cloud.themeUnlocked);
+  out.premium = !!(local.premium || cloud.premium);
+  out.bonusHints = Math.max(local.bonusHints || 0, cloud.bonusHints || 0);
+  out.tutorialSeen = !!(local.tutorialSeen || cloud.tutorialSeen);
+  return out;
+}
+function renderCloudStatus() {
+  const statusEl = $('#cloudStatus'), btn = $('#btnGoogleSync');
+  if (!statusEl || !btn) return;
+  if (progress.cloud && progress.cloud.linked) {
+    statusEl.textContent = t('cloud_linked', { email: progress.cloud.email || '' });
+    btn.textContent = t('cloud_signout');
+  } else {
+    statusEl.textContent = t('cloud_hint');
+    btn.textContent = t('cloud_signin');
+  }
+}
+async function cloudSignInOrOut() {
+  if (!window.CloudSync) return;
+  if (progress.cloud && progress.cloud.linked) {
+    CloudSync.signOut().catch(() => {});
+    progress.cloud = { linked: false, email: '' };
+    saveProgress(progress);
+    renderCloudStatus();
+    logEvent('cloud_unlink');
+    return;
+  }
+  const statusEl = $('#cloudStatus');
+  try {
+    if (statusEl) statusEl.textContent = t('cloud_syncing');
+    const user = await CloudSync.signIn();
+    const cloudData = await CloudSync.pull(user.uid);
+    const merged = mergeProgress(progress, cloudData);
+    merged.cloud = { linked: true, email: user.email || '' };
+    progress = merged;
+    saveProgress(progress);
+    await CloudSync.push(user.uid, progress);
+    if (statusEl) statusEl.textContent = t('cloud_sync_ok');
+    logEvent('cloud_link_ok');
+    setTimeout(() => location.reload(), 700);
+  } catch (e) {
+    if (statusEl) statusEl.textContent = t('cloud_sync_err');
+    logEvent('cloud_link_err');
+  }
+}
+// 이전에 연결한 적 있는 기기/브라우저라면 조용히 세션을 복원하고 최신 진행도를 병합한다.
+// 변경된 게 없으면(이미 최신) 새로고침하지 않는다 — 매 부팅마다 깜빡이지 않도록.
+async function trySilentCloudRestore() {
+  if (!(progress.cloud && progress.cloud.linked)) return;
+  if (!window.CloudSync || !CloudSync.enabled) return;
+  try {
+    const user = await CloudSync.restoreSession(4000);
+    if (!user) return;
+    const cloudData = await CloudSync.pull(user.uid);
+    if (!cloudData) return;
+    const merged = mergeProgress(progress, cloudData);
+    merged.cloud = { linked: true, email: user.email || progress.cloud.email || '' };
+    if (JSON.stringify(merged) !== JSON.stringify(progress)) {
+      progress = merged;
+      saveProgress(progress);
+      location.reload();
+    }
+  } catch (e) {}
+}
 function copyBackup() {
   const code = $('#backupCode').value;
   const ok = () => { $('#backupStatus').textContent = t('backup_copied'); };
@@ -1286,6 +1373,7 @@ $('#backupClose').addEventListener('click', closeBackup);
 $('#backupBackdrop').addEventListener('click', closeBackup);
 $('#backupCopy').addEventListener('click', copyBackup);
 $('#backupRestore').addEventListener('click', doRestore);
+$('#btnGoogleSync').addEventListener('click', cloudSignInOrOut);
 
 // store / monetization
 $('#btnStore').addEventListener('click', () => openStore());
@@ -1352,5 +1440,6 @@ async function boot() {
   registerSW();
   loadStage(progress.last || 0);        // start at last played stage
   if (!progress.tutorialSeen) openTutorial(); // first-run tutorial
+  trySilentCloudRestore(); // 백그라운드: 이전에 연결한 계정이면 조용히 최신 진행도로 맞춘다
 }
 boot();
