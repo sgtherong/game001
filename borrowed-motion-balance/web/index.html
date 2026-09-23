@@ -188,9 +188,9 @@
   }
   @keyframes pop { from { transform: scale(.9); opacity: 0 } to { transform: scale(1); opacity: 1 } }
   .result .badge { font-size: 42px; margin-bottom: 6px; }
-  .result .badge.star { font-size: 54px; line-height: 1; }
-  .result .badge.star.gold { color: #f5c518; text-shadow: 0 2px 8px rgba(245,197,24,.4); }
-  .result .badge.star.gray { color: #c9c0ad; }
+  .result .badge.stars { display: flex; justify-content: center; gap: 4px; font-size: 40px; line-height: 1; }
+  .result .badge.stars .st { color: #c9c0ad; }
+  .result .badge.stars .st.on { color: #f5c518; text-shadow: 0 2px 8px rgba(245,197,24,.4); }
   .result-title { font-size: 22px; font-weight: 800; margin: 2px 0 6px; }
   .result-sub { font-size: 13px; color: var(--muted); margin-bottom: 18px; }
   .result .btns { display: flex; gap: 10px; }
@@ -238,7 +238,9 @@
   .stage-chip.done { background: linear-gradient(180deg,#7cc0a8,#5aa88c); color: #fff; border-color: transparent; }
   .stage-chip.current { outline: 3px solid var(--accent); outline-offset: 1px; }
   .stage-chip .sc-star { position: absolute; bottom: -3px; right: 1px; font-size: 12px; line-height: 1; color: #cfd8d3; text-shadow: 0 1px 1px rgba(0,0,0,.25); }
-  .stage-chip .sc-star.gold { color: #ffd23f; }
+  .stage-chip .sc-star.t1 { color: #cd8a52; }
+  .stage-chip .sc-star.t2 { color: #dfe6ea; }
+  .stage-chip .sc-star.t3 { color: #ffd23f; }
   .stage-chip .sc-lock { position: absolute; top: 1px; right: 2px; font-size: 9px; }
   .stage-chip.locked { opacity: .55; cursor: default; }
   .stage-chip.locked .sc-num { opacity: .5; }

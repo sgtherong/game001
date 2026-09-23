@@ -842,9 +842,10 @@ function onWin() {
 
   const newSticker = firstClear && stickersEarned() > stickersBefore;
   const optimal = moves === st.min;
+  const tier = starTier(moves, st.min);
   const badgeEl = overlay.querySelector('.badge');
-  badgeEl.textContent = '★';
-  badgeEl.className = 'badge star ' + (optimal ? 'gold' : 'gray');
+  badgeEl.innerHTML = [1, 2, 3].map(n => `<span class="st${n <= tier ? ' on' : ''}">★</span>`).join('');
+  badgeEl.className = 'badge stars';
   overlay.querySelector('.result-title').textContent = t(optimal ? 'win_title_optimal' : 'win_title');
   overlay.querySelector('.result-sub').innerHTML =
     t('result_moves', { moves, min: st.min }) +
@@ -923,9 +924,18 @@ function showWorldReward(w, themeUnlocked) {
 
 /* ---------- move budget ---------- */
 // 각 스테이지의 이동 예산 = 최소이동 + 여유(약 +50%, 최소 +2). min 기반 자동 산출.
-function moveBudgetBase() { return G.stage ? G.stage.min + Math.max(2, Math.ceil(G.stage.min * 0.5)) : 0; }
+function budgetFor(min) { return min + Math.max(2, Math.ceil(min * 0.5)); }
+function moveBudgetBase() { return G.stage ? budgetFor(G.stage.min) : 0; }
 function moveBudget() { return moveBudgetBase() + (G.budgetBonus || 0); }
 function movesLeft() { return moveBudget() - G.history.length; }
+
+// 별 등급(표시 전용): 3=최소이동, 2=예산 여유의 절반 이내, 1=그 외 클리어
+function starTier(moves, min) {
+  if (moves == null) return 0;
+  if (moves <= min) return 3;
+  const half = Math.max(1, Math.ceil((budgetFor(min) - min) / 2));
+  return moves <= min + half ? 2 : 1;
+}
 
 /* ---------- hud / navigation ---------- */
 function updateHud() {
@@ -1009,8 +1019,8 @@ function buildChips(chips, items) {
     b.innerHTML = `<span class="sc-num">${s.seq}</span>`;
     if (done) {
       b.classList.add('done');
-      const gold = progress.best[s.id] === s.min; // optimal (min moves) = yellow star
-      b.insertAdjacentHTML('beforeend', `<span class="sc-star${gold ? ' gold' : ''}">★</span>`);
+      const tier = starTier(progress.best[s.id], s.min); // 1~3단계, 색으로 구분
+      b.insertAdjacentHTML('beforeend', `<span class="sc-star t${tier}">★</span>`);
     } else if (!unlocked) {
       b.classList.add('locked');
       b.insertAdjacentHTML('beforeend', `<span class="sc-lock">🔒</span>`);
