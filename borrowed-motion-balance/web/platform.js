@@ -65,6 +65,80 @@
     });
   }
 
+  /* ---------- 클라우드 저장 (Google 로그인, Firebase) ----------
+   * 자체호스팅/Artifact 전용 — 포털 iframe에서는 팝업 로그인이 막히는 경우가 많아
+   * game.js가 onPortal()로 UI 자체를 숨긴다. Firebase Auth(Google)로 로그인하고
+   * Firestore progress/{uid} 문서에 진행도 JSON을 저장/복원한다.
+   * apiKey 등은 Firebase 웹 설정값으로, 공개 저장소에 커밋해도 되는 값이다
+   * (보안은 Firestore 규칙 + Auth 승인된 도메인으로 건다). */
+  const FIREBASE_CONFIG = {
+    apiKey: 'AIzaSyBhVB-3P9w8m8g-UsAFLLaOaQzm8PkPNSA',
+    authDomain: 'swapstep-e0af4.firebaseapp.com',
+    projectId: 'swapstep-e0af4',
+    storageBucket: 'swapstep-e0af4.firebasestorage.app',
+    messagingSenderId: '393234633662',
+    appId: '1:393234633662:web:bbd0bdce761ea85b891fef',
+  };
+  const FB_VER = '10.14.1';
+  let fbReady = null; // Promise, SDK 로드+init 1회만
+  function ensureFirebase() {
+    if (!fbReady) {
+      fbReady = (async () => {
+        await loadScript(`https://www.gstatic.com/firebasejs/${FB_VER}/firebase-app-compat.js`);
+        await loadScript(`https://www.gstatic.com/firebasejs/${FB_VER}/firebase-auth-compat.js`);
+        await loadScript(`https://www.gstatic.com/firebasejs/${FB_VER}/firebase-firestore-compat.js`);
+        if (!window.firebase.apps.length) window.firebase.initializeApp(FIREBASE_CONFIG);
+      })();
+    }
+    return fbReady;
+  }
+
+  const CloudSync = {
+    get enabled() { return !(window.AdsManager && window.AdsManager.isPortal); },
+    _user: null,
+    get user() { return this._user; },
+    async signIn() {
+      await ensureFirebase();
+      const provider = new window.firebase.auth.GoogleAuthProvider();
+      const cred = await window.firebase.auth().signInWithPopup(provider);
+      this._user = cred.user;
+      return this._user;
+    },
+    async signOut() {
+      try { await ensureFirebase(); await window.firebase.auth().signOut(); } catch (e) {}
+      this._user = null;
+    },
+    // 같은 기기/브라우저에서 이전에 로그인한 적 있으면 자동 복원(세션 유지); 없으면 null.
+    restoreSession(timeoutMs) {
+      return ensureFirebase().then(() => new Promise(resolve => {
+        let done = false;
+        const timer = setTimeout(() => { if (!done) { done = true; resolve(null); } }, timeoutMs || 4000);
+        const unsub = window.firebase.auth().onAuthStateChanged(u => {
+          if (done) return;
+          done = true; clearTimeout(timer); unsub();
+          this._user = u; resolve(u);
+        });
+      })).catch(() => null);
+    },
+    async pull(uid) {
+      await ensureFirebase();
+      const snap = await window.firebase.firestore().collection('progress').doc(uid).get();
+      if (!snap.exists) return null;
+      try { return JSON.parse(snap.data().json); } catch (e) { return null; }
+    },
+    async push(uid, progressObj) {
+      await ensureFirebase();
+      await window.firebase.firestore().collection('progress').doc(uid)
+        .set({ json: JSON.stringify(progressObj), updatedAt: Date.now() });
+    },
+    _pushTimer: null,
+    pushDebounced(uid, progressObj) {
+      clearTimeout(this._pushTimer);
+      this._pushTimer = setTimeout(() => { this.push(uid, progressObj).catch(() => {}); }, 1500);
+    },
+  };
+  window.CloudSync = CloudSync;
+
   /* ---------- sitelock (도난 방지) ----------
    * 번들을 복사해 무단 도메인에 재호스팅하는 걸 막는다. 게임이 실제 서빙되는
    * location.hostname 만 검사하므로 크로스오리진에 안전하다(포털/GD 파트너 사이트는
