@@ -19,6 +19,8 @@ const chapterName = ko => (CHAPTER_KEY[ko] ? t(CHAPTER_KEY[ko]) : ko);
 const WORLD_SIZE = 30; // stages per world in the picker
 const worldOf = index => Math.floor(index / WORLD_SIZE); // 0-based world of a stage index
 const worldLabel = index => t('world', { n: worldOf(index) + 1 });
+const WORLD_TINTS = 7; // 배경 색조 순환 개수(기본 테마에서만 적용; index.html의 data-world-tint 규칙과 짝)
+function applyWorldTint(index) { document.documentElement.dataset.worldTint = String(worldOf(index) % WORLD_TINTS); }
 
 const VECTORS = [[1, 0], [0, 1], [-1, 0], [0, -1]]; // 0=right 1=down 2=left 3=up
 const DIR_LABEL = ['→', '↓', '←', '↑'];
@@ -1047,6 +1049,7 @@ function loadStage(index, dailySlot = null) {
 
   stageTitleEl.textContent = `${G.stage.id} · ${G.index + 1}/${STAGES.length}`;
   chapterEl.textContent = worldLabel(G.index);
+  applyWorldTint(G.index);
   overlay.classList.remove('show');
   buildBoard();
   updateHud();

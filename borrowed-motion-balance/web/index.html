@@ -14,6 +14,7 @@
 <style>
   :root {
     --bg: #f3ead9;
+    --bg-outer: #f8f1e2;
     --card: #fffaf0;
     --ink: #3a3226;
     --muted: #8a7f6d;
@@ -27,7 +28,7 @@
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body {
     margin: 0; height: 100%;
-    background: radial-gradient(120% 120% at 50% 0%, #f8f1e2 0%, var(--bg) 60%);
+    background: radial-gradient(120% 120% at 50% 0%, var(--bg-outer) 0%, var(--bg) 60%);
     color: var(--ink);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Malgun Gothic", "Apple SD Gothic Neo", system-ui, sans-serif;
     -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;
@@ -473,6 +474,16 @@
   }
   :root[data-pack="dusk"] body { background: radial-gradient(120% 120% at 50% 0%, #3a3160 0%, var(--bg) 60%); }
   :root[data-pack="dusk"] .sticker.got { background: radial-gradient(120% 120% at 30% 20%, #4a4170, #322b4d); color: var(--ink); }
+
+  /* 월드별 배경 색조 자동 변화(기본 테마에서만; 민트/황혼을 고른 경우엔 그 테마 색을 그대로 유지) —
+     카드·버튼·글자색(--card/--ink/--accent 등)은 그대로 둬서 가독성·UI 톤은 안 흔든다.
+     실제 일러스트 배경은 추후 클리어 보상으로 별도 추가 예정. */
+  :root[data-pack="default"][data-world-tint="1"] { --bg: #f6ddc9; --bg-outer: #fbe9df; }
+  :root[data-pack="default"][data-world-tint="2"] { --bg: #ddeee2; --bg-outer: #eaf6f0; }
+  :root[data-pack="default"][data-world-tint="3"] { --bg: #d8e8f5; --bg-outer: #e8f2fb; }
+  :root[data-pack="default"][data-world-tint="4"] { --bg: #e6dbf5; --bg-outer: #f2ecfb; }
+  :root[data-pack="default"][data-world-tint="5"] { --bg: #f5d9e3; --bg-outer: #fbe9ef; }
+  :root[data-pack="default"][data-world-tint="6"] { --bg: #e0e8d2; --bg-outer: #eef2e4; }
 
   /* locked theme option */
   .theme-opt.locked { opacity: .5; }
