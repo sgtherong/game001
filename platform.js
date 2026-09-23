@@ -72,7 +72,7 @@
    * apiKey 등은 Firebase 웹 설정값으로, 공개 저장소에 커밋해도 되는 값이다
    * (보안은 Firestore 규칙 + Auth 승인된 도메인으로 건다). */
   const FIREBASE_CONFIG = {
-    apiKey: 'AIzaSyBhVB-3P9w8m8g-UsAFLLaOaQzm8PkPNSA',
+    apiKey: 'AIzaSyBhVB-3P9w8m8g-UsAFLlaOaQzm8PkPNSA',
     authDomain: 'swapstep-e0af4.firebaseapp.com',
     projectId: 'swapstep-e0af4',
     storageBucket: 'swapstep-e0af4.firebasestorage.app',
