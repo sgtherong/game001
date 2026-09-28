@@ -26,6 +26,8 @@
     --radius: 18px;
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  /* hidden 속성이 .actions .row{display:flex} 같은 규칙에 덮여 빈 버튼이 보이던 문제 방지 */
+  [hidden] { display: none !important; }
   html, body {
     margin: 0; height: 100%;
     background: radial-gradient(120% 120% at 50% 0%, var(--bg-outer) 0%, var(--bg) 60%);
