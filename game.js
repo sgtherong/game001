@@ -280,14 +280,20 @@ const STAGE_INDEX = new Map(STAGES.map((s, i) => [s.id, i]));
 let progress = loadProgress();
 // a stage is unlocked if it's within the reached frontier or already completed
 const isUnlocked = i => i <= progress.reached || !!progress.completed[STAGES[i].id];
-// keep the reached frontier consistent with completed stages (migration + safety)
+// 잠금 해제선 = 0번부터 "끊김 없이" 연속 클리어한 개수. 데일리 챌린지는 전체 스테이지에서
+// 아무 번호나 뽑으므로, 그걸로 찍힌 뒤쪽 클리어 하나가 해제선을 끌어올리면 안 된다(과거엔 최댓값 기준이라
+// 데일리로 월드26 문제 하나 풀면 그 앞이 전부 풀렸음). 매 부팅 재계산이라 이미 부풀려진 저장값도 자동 복구.
+function contiguousReached(completed) {
+  let i = 0;
+  while (i < STAGES.length && completed[STAGES[i].id]) i++;
+  return Math.min(STAGES.length - 1, i);
+}
 function reconcileReached() {
-  let maxDone = -1;
-  for (const id in progress.completed) {
-    if (progress.completed[id]) { const ix = STAGE_INDEX.get(id); if (ix != null && ix > maxDone) maxDone = ix; }
-  }
-  const target = Math.min(STAGES.length - 1, maxDone + 1);
-  if (target > progress.reached) { progress.reached = target; saveProgress(progress); }
+  const target = contiguousReached(progress.completed);
+  let changed = false;
+  if (target !== progress.reached) { progress.reached = target; changed = true; }
+  if (progress.last > progress.reached) { progress.last = progress.reached; changed = true; }
+  if (changed) saveProgress(progress);
 }
 
 const G = {
@@ -823,8 +829,10 @@ function closeBackup() { $('#backup').classList.remove('show'); }
 function mergeProgress(local, cloud) {
   if (!cloud) return local;
   const out = Object.assign({}, local);
-  out.reached = Math.max(local.reached || 0, cloud.reached || 0);
   out.completed = Object.assign({}, cloud.completed, local.completed);
+  // max를 쓰면 예전 버그로 부풀려진 클라우드 값이 되살아나고, 부팅 시 재계산과 충돌해 새로고침이 반복될 수 있다
+  out.reached = contiguousReached(out.completed);
+  if (out.last > out.reached) out.last = out.reached;
   out.solo = Object.assign({}, cloud.solo, local.solo);
   out.best = {};
   const bestKeys = new Set([...Object.keys(local.best || {}), ...Object.keys(cloud.best || {})]);
@@ -893,6 +901,7 @@ async function trySilentCloudRestore() {
     if (JSON.stringify(merged) !== JSON.stringify(progress)) {
       progress = merged;
       saveProgress(progress);
+      await CloudSync.push(user.uid, progress).catch(() => {});
       location.reload();
     }
   } catch (e) {}
