@@ -244,11 +244,15 @@ function albumEarned() {
 /* ---------- sound (WebAudio synth, no asset files) + haptics ---------- */
 const Sound = (() => {
   let ctx = null, master = null, echo = null;
+  // 광고 중 음소거와 포털 사이트 음소거는 따로 기억 — 광고가 끝나도 사이트가 음소거면 계속 조용히
+  let adMuted = false, siteMuted = false;
+  const level = () => (adMuted || siteMuted ? 0 : 0.85);
+  const applyLevel = () => { if (master) master.gain.value = level(); };
   const ready = () => {
     if (!ctx) {
       try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { ctx = false; }
       if (ctx) {
-        master = ctx.createGain(); master.gain.value = 0.85; master.connect(ctx.destination);
+        master = ctx.createGain(); master.gain.value = level(); master.connect(ctx.destination);
         // gentle feedback delay for warmth/space
         const d = ctx.createDelay(); d.delayTime.value = 0.13;
         const fb = ctx.createGain(); fb.gain.value = 0.24;
@@ -289,8 +293,10 @@ const Sound = (() => {
     sticker() { if (on()) [784, 988, 1319, 1568].forEach((f, i) => voice(f, 0.4, { type: 'sine', gain: 0.14, when: i * 0.07, wet: 0.9 })); },
     unlock() { ready(); }, // call on first user gesture
     // 광고 표시 중 전체 음소거 (포털 규격: 광고 시작 시 음소거, 종료 시 복구)
-    mute() { if (ctx && master) master.gain.value = 0; },
-    unmute() { if (ctx && master) master.gain.value = 0.85; },
+    mute() { adMuted = true; applyLevel(); },
+    unmute() { adMuted = false; applyLevel(); },
+    // 포털 사이트의 음소거 설정(CrazyGames muteAudio) — 게임 안 소리 설정보다 우선
+    setSiteMuted(m) { siteMuted = !!m; applyLevel(); },
   };
 })();
 function haptic(ms) { try { if (progress.settings && progress.settings.sound !== false && navigator.vibrate) navigator.vibrate(ms); } catch (e) {} }
@@ -1045,7 +1051,8 @@ function onWin() {
     overlay.dataset.mode = 'normal';
   }
   overlay.classList.add('show');
-  if (window.AdsManager) { AdsManager.gameplayStop(); AdsManager.happyTime(1); } // portal signals
+  // portal signal. happytime(사이트 축하 효과)은 문서상 매 클리어가 아닌 큰 순간에만 → 월드 완주·골드 스티커에서 호출
+  if (window.AdsManager) AdsManager.gameplayStop();
   // midgame ad every 3rd clear (portal-gated via config; a no-op off-portal)
   G.clearsSinceAd = (G.clearsSinceAd || 0) + 1;
   if (G.clearsSinceAd >= 3) {
@@ -1097,6 +1104,7 @@ function showWorldReward(w, themeUnlocked) {
   $('#worldSub').textContent = themeUnlocked ? t('world_done_theme') : t('world_done_go');
   $('#worldOverlay').classList.add('show');
   Sound.sticker(); haptic([30, 40, 30, 40, 60]); confettiBurst();
+  if (window.AdsManager) AdsManager.happyTime(1);
 }
 
 /* ---------- move budget ---------- */
@@ -1262,6 +1270,7 @@ function showStickerReward(w, k) {
   $('#stickerSub').textContent = t('sticker_sub', { n: albumEarned(), total: albumTotal() });
   so.classList.add('show');
   Sound.sticker(); haptic([30, 40, 30, 40, 60]); confettiBurst();
+  if (isGold && window.AdsManager) AdsManager.happyTime(1);
 }
 
 /* ---------- daily challenge (date-seeded 3 puzzles) ---------- */
@@ -1536,6 +1545,7 @@ async function boot() {
         onRewardedSimulate: showSimulatedAd,
         onAdStarted: () => { Sound.mute(); },   // 광고 실제 표시 → 음소거
         onAdEnded: () => { Sound.unmute(); },   // 광고 종료(성공/실패) → 복구
+        onMuteChange: m => { Sound.setSiteMuted(m); }, // 포털 사이트 음소거 설정 따르기
       }), 6000); // SDK가 멈춰도 게임은 항상 뜨도록 타임아웃 후 진행
       logEvent('platform_ready', { platform: name });
     } catch (e) {}
@@ -1551,6 +1561,7 @@ async function boot() {
   applyThemePack();
   updateHintButton();
   registerSW();
+  if (window.AdsManager) AdsManager.loadingStop(); // 로딩 끝 → 이어서 loadStage가 gameplayStart
   loadStage(progress.last || 0);        // start at last played stage
   if (!progress.tutorialSeen) openTutorial(); // first-run tutorial
   trySilentCloudRestore(); // 백그라운드: 이전에 연결한 계정이면 조용히 최신 진행도로 맞춘다

@@ -20,7 +20,8 @@
 
   // 광고 표시 중 오디오/게임 훅. 게임이 init()에서 onAdStarted/onAdEnded를 넘긴다.
   // 포털 규격: 광고가 "실제로 표시될 때"만 음소거하고, 종료(성공/실패) 시 복구한다.
-  const hooks = { adStarted() {}, adEnded() {} };
+  // muteChange(muted): 포털 사이트의 음소거 설정(CrazyGames settings.muteAudio) — 게임 설정보다 우선
+  const hooks = { adStarted() {}, adEnded() {}, muteChange() {} };
 
   /* ---------- 진행도 저장소 (Store) ----------
    * 포털 iframe에서는 브라우저가 서드파티 localStorage를 파티셔닝/차단할 수 있어
@@ -218,20 +219,32 @@
     name: 'crazygames',
     async init() {
       await loadScript('https://sdk.crazygames.com/crazygames-sdk-v3.js');
-      await window.CrazyGames.SDK.init();
+      const SDK = window.CrazyGames.SDK;
+      await SDK.init();
+      try { SDK.game.loadingStart(); } catch (e) {} // 끝은 게임이 첫 화면을 그린 뒤 AdsManager.loadingStop()
+      // 사이트 음소거 설정(정식 출시 필수): 시작 값 반영 + 바뀔 때마다 반영
+      try {
+        hooks.muteChange(!!(SDK.game.settings && SDK.game.settings.muteAudio));
+        SDK.game.addSettingsChangeListener(s => {
+          const cur = s && s.muteAudio != null ? s.muteAudio : SDK.game.settings && SDK.game.settings.muteAudio;
+          hooks.muteChange(!!cur);
+        });
+      } catch (e) {}
     },
+    loadingStop() { try { window.CrazyGames.SDK.game.loadingStop(); } catch (e) {} },
     gameplayStart() { try { window.CrazyGames.SDK.game.gameplayStart(); } catch (e) {} },
     gameplayStop() { try { window.CrazyGames.SDK.game.gameplayStop(); } catch (e) {} },
     happyTime() { try { window.CrazyGames.SDK.game.happytime(); } catch (e) {} },
     showRewarded() {
-      return new Promise(res => {
+      return new Promise((res, rej) => {
         try {
           window.CrazyGames.SDK.ad.requestAd('rewarded', {
             adStarted: () => hooks.adStarted(),                 // 실제 표시 시 음소거
             adFinished: () => { hooks.adEnded(); res(true); },  // 완주 → 보상 지급
-            adError: () => { hooks.adEnded(); res(false); },    // 실패/미충전 → 보상 없음
+            // 미충전/광고차단 등 → 게임이 "광고를 불러오지 못했어요"를 띄우도록 reject
+            adError: e => { hooks.adEnded(); rej(e || new Error('ad error')); },
           });
-        } catch (e) { hooks.adEnded(); res(false); }
+        } catch (e) { hooks.adEnded(); rej(e); }
       });
     },
     showInterstitial() {
@@ -271,6 +284,16 @@
     },
   };
 
+  // 포털인데 SDK를 못 불러왔을 때(광고 차단 등): 연습용 가짜 광고 화면(local) 대신
+  // 광고 요청을 실패로 돌려 게임이 "광고를 불러오지 못했어요"를 보여주게 한다.
+  const unavailable = {
+    name: 'unavailable',
+    async init() {},
+    gameplayStart() {}, gameplayStop() {}, happyTime() {},
+    showRewarded() { return Promise.reject(new Error('ads unavailable')); },
+    showInterstitial() { return Promise.resolve(); },
+  };
+
   function detect() {
     const h = location.hostname;
     if (/(^|\.)poki\.com$/.test(h) || /poki/.test(h)) return poki;
@@ -280,6 +303,7 @@
   }
 
   let adapter = local;
+  let adapterReady = false, gameLoaded = false, loadingStopSent = false;
   // 로드 시점에 포털 여부를 확정(동기). SW/PWA 게이팅 등에서 init() 완료 전에 참조 가능.
   const IS_PORTAL = detect() !== local;
 
@@ -292,17 +316,29 @@
       if (opts) {
         if (typeof opts.onAdStarted === 'function') hooks.adStarted = opts.onAdStarted;
         if (typeof opts.onAdEnded === 'function') hooks.adEnded = opts.onAdEnded;
+        if (typeof opts.onMuteChange === 'function') hooks.muteChange = opts.onMuteChange;
       }
       adapter = detect();
       // CrazyGames expects midgame (interstitial) ads at natural breaks — enable them there.
       if (adapter.name === 'crazygames') config.interstitialEnabled = true;
       try { await adapter.init(opts); }
       catch (e) {
-        console.warn('[AdsManager] "' + adapter.name + '" init failed, falling back to local:', e);
-        adapter = local; await local.init(opts);
+        const fb = IS_PORTAL ? unavailable : local;
+        console.warn('[AdsManager] "' + adapter.name + '" init failed, falling back to ' + fb.name + ':', e);
+        adapter = fb; await fb.init(opts);
       }
       Store.initFor(adapter.name); // SDK 로드 후 저장소 백엔드 확정
+      adapterReady = true;
+      // 게임이 6초 타임아웃으로 먼저 떠서 loadingStop을 이미 요청했다면, init 안의 loadingStart와 짝을 맞춘다
+      if (gameLoaded) this.loadingStop();
       return adapter.name;
+    },
+    // 게임이 첫 화면을 다 그렸을 때 1회 (CrazyGames loadingStop; 다른 곳은 할 일 없음)
+    loadingStop() {
+      gameLoaded = true;
+      if (!adapterReady || loadingStopSent) return;
+      loadingStopSent = true;
+      try { if (adapter.loadingStop) adapter.loadingStop(); } catch (e) {}
     },
     gameplayStart() { try { adapter.gameplayStart(); } catch (e) {} },
     gameplayStop() { try { adapter.gameplayStop(); } catch (e) {} },
