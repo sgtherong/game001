@@ -359,6 +359,21 @@
   }
   .sticker.got .emoji { opacity: 1; }
   .album-status { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
+  .album-nav { display: flex; align-items: center; gap: 8px; margin: -4px 0 10px; }
+  .album-nav .icon-btn { flex: none; width: 36px; height: 36px; font-size: 20px; box-shadow: none; }
+  .album-nav .icon-btn:disabled { opacity: .3; cursor: default; }
+  .album-page-name { flex: 1; font-size: 14px; font-weight: 800; }
+  /* 골드 스티커: 월드 30문제 전부 3★ 달성 보상 — 가로로 긴 한 칸 */
+  .sticker.gold-slot { aspect-ratio: auto; flex-direction: row; gap: 8px; padding: 10px; margin: -4px 0 14px; }
+  .sticker.gold-slot .emoji { font-size: 22px; color: #d9b44a; opacity: .6; }
+  .sticker.gold-slot .nm { font-size: 11.5px; }
+  .sticker.gold-slot.got {
+    background: linear-gradient(135deg, #fff3c4, #f5cf5c 55%, #fff0b8); color: #6b4d05;
+    box-shadow: 0 6px 16px rgba(214,165,40,.4), inset 0 0 0 2px rgba(255,255,255,.6);
+  }
+  .sticker.gold-slot.got .emoji { font-size: 26px; opacity: 1; }
+  .album-total { font-size: 11px; font-weight: 700; color: var(--accent); margin: -8px 0 14px; }
+  #stickerOverlay.gold .sticker-big { filter: drop-shadow(0 0 14px rgba(245,197,24,.75)); }
 
   /* sticker reward */
   .sticker-big { font-size: 76px; animation: pop .5s cubic-bezier(.2,1.4,.4,1); margin-bottom: 6px; }
@@ -610,8 +625,15 @@
   <div class="backdrop" id="albumBackdrop"></div>
   <div class="sheet">
     <h3 data-i18n="album_title">📖 Travel Album</h3>
+    <div class="album-nav">
+      <button class="icon-btn" id="albumPrev" aria-label="prev">‹</button>
+      <div class="album-page-name" id="albumPageName"></div>
+      <button class="icon-btn" id="albumNext" aria-label="next">›</button>
+    </div>
     <div class="album-grid" id="albumGrid"></div>
+    <div class="sticker gold-slot" id="albumGold"></div>
     <div class="album-status" id="albumStatus"></div>
+    <div class="album-total" id="albumTotal"></div>
     <button class="btn" id="albumClose" data-i18n="album_close" style="width:100%;">Close</button>
   </div>
 </div>

@@ -176,17 +176,70 @@ function logEvent(name, data = {}) {
 
 /* ---------- album (travel stickers) ---------- */
 // One sticker per 5 first-clears; 6 stickers complete page one (at 30 clears).
-const STICKERS = [
-  { emoji: '🧭', key: 'st_compass' },
-  { emoji: '🗺️', key: 'st_map' },
-  { emoji: '🎒', key: 'st_backpack' },
-  { emoji: '📸', key: 'st_photo' },
-  { emoji: '✈️', key: 'st_plane' },
-  { emoji: '🏝️', key: 'st_island' },
+/* ---------- travel album: one page per world ----------
+ * 월드마다 여행지 1곳. 그 월드에서 5문제 클리어마다 스티커 1장(6장), 30문제를 모두 3★로
+ * 깨면 골드 스티커. 1페이지(여행 준비)는 예전 6장 그대로(이름 키 유지). 이름은 i18n.js 대신
+ * 여기 5개 언어를 함께 둔다(35곳×5언어를 키로 쪼개면 관리가 더 어려움). */
+const ALBUM = [
+  { icon: '🧳', name: { en: 'Getting Ready', ko: '여행 준비', es: 'Preparativos', pt: 'Preparativos', ru: 'Сборы' },
+    st: ['🧭', '🗺️', '🎒', '📸', '✈️', '🏝️'], keys: ['st_compass', 'st_map', 'st_backpack', 'st_photo', 'st_plane', 'st_island'] },
+  { icon: '🗼', name: { en: 'Paris', ko: '파리', es: 'París', pt: 'Paris', ru: 'Париж' }, st: ['🥐', '🗼', '🎨', '🍷', '🧀', '🚲'] },
+  { icon: '🎡', name: { en: 'London', ko: '런던', es: 'Londres', pt: 'Londres', ru: 'Лондон' }, st: ['💂', '☕', '🚌', '🎡', '☂️', '👑'] },
+  { icon: '🌷', name: { en: 'Amsterdam', ko: '암스테르담', es: 'Ámsterdam', pt: 'Amsterdã', ru: 'Амстердам' }, st: ['🌷', '🛶', '🏘️', '🌬️', '🥞', '🚤'] },
+  { icon: '🎻', name: { en: 'Vienna', ko: '빈', es: 'Viena', pt: 'Viena', ru: 'Вена' }, st: ['🎻', '🎹', '🍰', '🎼', '🏰', '🦢'] },
+  { icon: '🏔️', name: { en: 'Swiss Alps', ko: '스위스 알프스', es: 'Alpes suizos', pt: 'Alpes suíços', ru: 'Швейцарские Альпы' }, st: ['🏔️', '🍫', '⛷️', '🐄', '🔔', '🚠'] },
+  { icon: '🎭', name: { en: 'Venice', ko: '베네치아', es: 'Venecia', pt: 'Veneza', ru: 'Венеция' }, st: ['🎭', '🚣', '🍨', '🕊️', '🧵', '🌉'] },
+  { icon: '🏛️', name: { en: 'Rome', ko: '로마', es: 'Roma', pt: 'Roma', ru: 'Рим' }, st: ['🏛️', '🍝', '🍦', '⛲', '🛵', '🏺'] },
+  { icon: '💃', name: { en: 'Barcelona', ko: '바르셀로나', es: 'Barcelona', pt: 'Barcelona', ru: 'Барселона' }, st: ['💃', '⚽', '🥘', '🎸', '⛪', '🌞'] },
+  { icon: '⛵', name: { en: 'Santorini', ko: '산토리니', es: 'Santorini', pt: 'Santorini', ru: 'Санторини' }, st: ['🌊', '⛵', '🐙', '🍋', '☀️', '🐚'] },
+  { icon: '🌋', name: { en: 'Iceland', ko: '아이슬란드', es: 'Islandia', pt: 'Islândia', ru: 'Исландия' }, st: ['🌋', '🧊', '🐋', '♨️', '🌌', '🐑'] },
+  { icon: '🕌', name: { en: 'Istanbul', ko: '이스탄불', es: 'Estambul', pt: 'Istambul', ru: 'Стамбул' }, st: ['🕌', '🧿', '🍢', '🐈', '🛍️', '🎠'] },
+  { icon: '🐪', name: { en: 'Cairo', ko: '카이로', es: 'El Cairo', pt: 'Cairo', ru: 'Каир' }, st: ['🐪', '🏜️', '🔺', '📜', '🌴', '🪲'] },
+  { icon: '🦁', name: { en: 'Kenya Safari', ko: '케냐 사파리', es: 'Safari en Kenia', pt: 'Safári no Quênia', ru: 'Сафари в Кении' }, st: ['🦁', '🦒', '🐘', '🦓', '🐆', '🥾'] },
+  { icon: '🏙️', name: { en: 'Dubai', ko: '두바이', es: 'Dubái', pt: 'Dubai', ru: 'Дубай' }, st: ['🏙️', '🐫', '🌇', '💎', '🚁', '🛥️'] },
+  { icon: '🐅', name: { en: 'India', ko: '인도', es: 'India', pt: 'Índia', ru: 'Индия' }, st: ['🍛', '🐅', '🪔', '🎆', '🧣', '🐒'] },
+  { icon: '🛕', name: { en: 'Bangkok', ko: '방콕', es: 'Bangkok', pt: 'Bangkok', ru: 'Бангкок' }, st: ['🛺', '🥭', '🛕', '🌶️', '🥥', '🐓'] },
+  { icon: '🌾', name: { en: 'Bali', ko: '발리', es: 'Bali', pt: 'Bali', ru: 'Бали' }, st: ['🏄', '🌾', '🦎', '🎋', '🍹', '🙏'] },
+  { icon: '🐼', name: { en: 'Beijing', ko: '베이징', es: 'Pekín', pt: 'Pequim', ru: 'Пекин' }, st: ['🐼', '🥟', '🏮', '🐉', '🧧', '🍵'] },
+  { icon: '🏯', name: { en: 'Seoul', ko: '서울', es: 'Seúl', pt: 'Seul', ru: 'Сеул' }, st: ['🏯', '🍚', '🎤', '🍗', '🥢', '🎮'] },
+  { icon: '🗻', name: { en: 'Tokyo', ko: '도쿄', es: 'Tokio', pt: 'Tóquio', ru: 'Токио' }, st: ['🍣', '🗻', '🎎', '🍜', '🌸', '🚄'] },
+  { icon: '🦘', name: { en: 'Sydney', ko: '시드니', es: 'Sídney', pt: 'Sydney', ru: 'Сидней' }, st: ['🦘', '🐨', '🦈', '🏏', '🌞', '🏖️'] },
+  { icon: '🥝', name: { en: 'New Zealand', ko: '뉴질랜드', es: 'Nueva Zelanda', pt: 'Nova Zelândia', ru: 'Новая Зеландия' }, st: ['🥝', '🏞️', '🧗', '🌿', '🚣', '🐏'] },
+  { icon: '🌺', name: { en: 'Hawaii', ko: '하와이', es: 'Hawái', pt: 'Havaí', ru: 'Гавайи' }, st: ['🌺', '🍍', '🐢', '🌈', '🤙', '🌅'] },
+  { icon: '🌉', name: { en: 'San Francisco', ko: '샌프란시스코', es: 'San Francisco', pt: 'São Francisco', ru: 'Сан-Франциско' }, st: ['🌉', '🚋', '🌁', '🍞', '🦀', '🚴'] },
+  { icon: '🗽', name: { en: 'New York', ko: '뉴욕', es: 'Nueva York', pt: 'Nova York', ru: 'Нью-Йорк' }, st: ['🗽', '🍕', '🚕', '🥯', '🎭', '🌃'] },
+  { icon: '🍁', name: { en: 'Canada', ko: '캐나다', es: 'Canadá', pt: 'Canadá', ru: 'Канада' }, st: ['🍁', '🐻', '🏒', '🦌', '❄️', '🍯'] },
+  { icon: '🌮', name: { en: 'Mexico', ko: '멕시코', es: 'México', pt: 'México', ru: 'Мексика' }, st: ['🌮', '🌵', '🎺', '🥑', '🎊', '🦅'] },
+  { icon: '🦜', name: { en: 'Caribbean', ko: '카리브해', es: 'Caribe', pt: 'Caribe', ru: 'Карибы' }, st: ['🏴‍☠️', '🦜', '🐠', '💰', '⚓', '🐬'] },
+  { icon: '🦋', name: { en: 'Amazon', ko: '아마존', es: 'Amazonas', pt: 'Amazônia', ru: 'Амазония' }, st: ['🐸', '🦋', '🐊', '🌳', '🍃', '🐍'] },
+  { icon: '🦙', name: { en: 'Peru', ko: '페루', es: 'Perú', pt: 'Peru', ru: 'Перу' }, st: ['🦙', '🌽', '🧶', '🌄', '🥔', '🎶'] },
+  { icon: '🥁', name: { en: 'Rio de Janeiro', ko: '리우데자네이루', es: 'Río de Janeiro', pt: 'Rio de Janeiro', ru: 'Рио-де-Жанейро' }, st: ['🎉', '🥁', '🦩', '🌊', '⛰️', '🍌'] },
+  { icon: '🐧', name: { en: 'Antarctica', ko: '남극', es: 'Antártida', pt: 'Antártida', ru: 'Антарктида' }, st: ['🐧', '🛷', '🌨️', '⛸️', '🧤', '🔭'] },
+  { icon: '🦌', name: { en: 'Lapland', ko: '라플란드', es: 'Laponia', pt: 'Lapônia', ru: 'Лапландия' }, st: ['🎅', '🦌', '🌌', '🛷', '❄️', '🧣'] },
+  { icon: '🚀', name: { en: 'Space', ko: '우주', es: 'El espacio', pt: 'Espaço', ru: 'Космос' }, st: ['🚀', '🌙', '🪐', '🛰️', '☄️', '🌟'] },
 ];
 const CLEARS_PER_STICKER = 5;
-const firstClearCount = () => Object.values(progress.completed).filter(Boolean).length;
-const stickersEarned = () => Math.min(STICKERS.length, Math.floor(firstClearCount() / CLEARS_PER_STICKER));
+const STICKERS_PER_PAGE = 6;
+const placeName = w => { const n = ALBUM[w].name; return n[window.I18N.lang] || n.en; };
+const stickerName = (w, k) => (ALBUM[w].keys ? t(ALBUM[w].keys[k]) : placeName(w));
+const worldRange = w => [w * WORLD_SIZE, Math.min(STAGES.length, (w + 1) * WORLD_SIZE)];
+function worldClears(w) {
+  const [a, b] = worldRange(w); let n = 0;
+  for (let i = a; i < b; i++) if (progress.completed[STAGES[i].id]) n++;
+  return n;
+}
+const worldStickers = w => Math.min(STICKERS_PER_PAGE, Math.floor(worldClears(w) / CLEARS_PER_STICKER));
+function worldGold(w) {
+  const [a, b] = worldRange(w);
+  for (let i = a; i < b; i++) { const s = STAGES[i]; if (starTier(progress.best[s.id], s.min) !== 3) return false; }
+  return true;
+}
+const albumTotal = () => ALBUM.length * (STICKERS_PER_PAGE + 1);
+function albumEarned() {
+  let n = 0;
+  for (let w = 0; w < ALBUM.length; w++) n += worldStickers(w) + (worldGold(w) ? 1 : 0);
+  return n;
+}
 
 /* ---------- sound (WebAudio synth, no asset files) + haptics ---------- */
 const Sound = (() => {
@@ -931,14 +984,16 @@ function onWin() {
   const moves = G.history.length;
   const st = G.stage;
   const firstClear = !progress.completed[st.id];
-  const stickersBefore = stickersEarned();
+  const sw = worldOf(G.index);
+  const stickersBefore = worldStickers(sw), goldBefore = worldGold(sw);
   progress.completed[st.id] = true;
   if (!progress.best[st.id] || moves < progress.best[st.id]) progress.best[st.id] = moves;
   if (!G.usedHint && (!progress.solo[st.id] || moves < progress.solo[st.id]))
     progress.solo[st.id] = moves;
   saveProgress(progress);
 
-  const newSticker = firstClear && stickersEarned() > stickersBefore;
+  const newSticker = worldStickers(sw) > stickersBefore;
+  const newGold = !goldBefore && worldGold(sw); // 다시 풀어 3★로 올려도 달성될 수 있음
   const optimal = moves === st.min;
   const tier = starTier(moves, st.min);
   const badgeEl = overlay.querySelector('.badge');
@@ -1003,12 +1058,24 @@ function onWin() {
         if (!progress.themeUnlocked) { progress.themeUnlocked = true; themeJustUnlocked = true; }
         saveProgress(progress);
         worldDone = true;
-        setTimeout(() => showWorldReward(w, themeJustUnlocked), 900);
       }
     }
   }
-  // one reward popup at a time: world milestone takes priority over a sticker
-  if (!daily && !worldDone && newSticker) setTimeout(() => showStickerReward(stickersEarned() - 1), 900);
+  // 보상 팝업은 한 번에 하나씩: 월드 완주 → 골드 → 일반 스티커 순으로 이어서 보여준다.
+  // 데일리에서 딴 스티커는 앨범에만 조용히 붙는다(데일리 흐름을 끊지 않도록).
+  if (!daily) {
+    const q = [];
+    if (worldDone) q.push(() => showWorldReward(sw, themeJustUnlocked));
+    if (newGold) q.push(() => showStickerReward(sw, 'gold'));
+    if (newSticker) q.push(() => showStickerReward(sw, worldStickers(sw) - 1));
+    G.rewardQueue = q;
+    if (q.length) setTimeout(nextReward, 900);
+  }
+}
+function nextReward() {
+  const fn = G.rewardQueue && G.rewardQueue.shift();
+  if (fn) { fn(); return true; }
+  return false;
 }
 
 // world completion celebration (keeps the win overlay behind, like sticker reward)
@@ -1135,35 +1202,52 @@ function buildChips(chips, items) {
 
 /* ---------- album ---------- */
 const albumOverlay = $('#albumOverlay');
+let albumPage = 0;
 function renderAlbum() {
-  const earned = stickersEarned();
+  const w = albumPage, page = ALBUM[w];
+  const reached = w * WORLD_SIZE <= progress.reached || worldClears(w) > 0;
+  const earned = worldStickers(w), gold = worldGold(w);
+  $('#albumPageName').textContent = (reached ? '' : '🔒 ') + t('album_page', { n: w + 1, place: placeName(w) });
+  $('#albumPrev').disabled = w === 0;
+  $('#albumNext').disabled = w === ALBUM.length - 1;
   const grid = $('#albumGrid');
   grid.innerHTML = '';
-  STICKERS.forEach((s, i) => {
+  page.st.forEach((emoji, k) => {
+    const got = k < earned;
     const cell = document.createElement('div');
-    cell.className = 'sticker' + (i < earned ? ' got' : '');
-    cell.innerHTML = i < earned
-      ? `<span class="emoji">${s.emoji}</span><span class="nm">${t(s.key)}</span>`
+    cell.className = 'sticker' + (got ? ' got' : '');
+    cell.innerHTML = got
+      ? `<span class="emoji">${emoji}</span>` + (page.keys ? `<span class="nm">${stickerName(w, k)}</span>` : '')
       : `<span class="emoji">?</span>`;
     grid.appendChild(cell);
   });
-  const clears = firstClearCount();
-  const next = earned < STICKERS.length ? (earned + 1) * CLEARS_PER_STICKER - clears : 0;
-  $('#albumStatus').textContent = earned >= STICKERS.length
-    ? t('album_status_done')
-    : t('album_status', { n: earned, total: STICKERS.length, k: next });
+  const goldEl = $('#albumGold');
+  goldEl.className = 'sticker gold-slot' + (gold ? ' got' : '');
+  goldEl.innerHTML = `<span class="emoji">${gold ? page.icon : '★'}</span><span class="nm">${t(gold ? 'album_gold_name' : 'album_gold_hint')}</span>`;
+  const next = (earned + 1) * CLEARS_PER_STICKER - worldClears(w);
+  $('#albumStatus').textContent = gold ? t('album_gold_done')
+    : earned >= STICKERS_PER_PAGE ? t('album_page_full')
+      : t('album_page_status', { n: earned, total: STICKERS_PER_PAGE, k: next });
+  $('#albumTotal').textContent = t('album_total', { n: albumEarned(), total: albumTotal() });
 }
-function openAlbum() { renderAlbum(); albumOverlay.classList.add('show'); }
+function openAlbum(page) {
+  albumPage = page != null ? page : worldOf(G.index || 0);
+  renderAlbum(); albumOverlay.classList.add('show');
+}
 function closeAlbum() { albumOverlay.classList.remove('show'); }
+function flipAlbum(d) { albumPage = Math.max(0, Math.min(ALBUM.length - 1, albumPage + d)); renderAlbum(); }
 
-function showStickerReward(index) {
-  const s = STICKERS[index];
+// k: 페이지 안 스티커 번호(0~5) 또는 'gold'
+function showStickerReward(w, k) {
+  const isGold = k === 'gold';
   // keep the win overlay (with the "다음 문제" button) behind this modal so it
   // returns after the sticker/album is closed
   const so = $('#stickerOverlay');
-  $('#stickerEmoji').textContent = s.emoji;
-  $('#stickerName').textContent = t('sticker_got', { name: t(s.key) });
-  $('#stickerSub').textContent = t('sticker_sub', { n: stickersEarned(), total: STICKERS.length });
+  so.dataset.page = w;
+  so.classList.toggle('gold', isGold);
+  $('#stickerEmoji').textContent = isGold ? ALBUM[w].icon : ALBUM[w].st[k];
+  $('#stickerName').textContent = t(isGold ? 'sticker_gold_got' : 'sticker_got', { name: isGold ? placeName(w) : stickerName(w, k) });
+  $('#stickerSub').textContent = t('sticker_sub', { n: albumEarned(), total: albumTotal() });
   so.classList.add('show');
   Sound.sticker(); haptic([30, 40, 30, 40, 60]); confettiBurst();
 }
@@ -1343,11 +1427,16 @@ $('#drawerClose').addEventListener('click', closeDrawer);
 $('#drawerBackdrop').addEventListener('click', closeDrawer);
 
 // album
-$('#btnAlbum').addEventListener('click', openAlbum);
+$('#btnAlbum').addEventListener('click', () => openAlbum());
+$('#albumPrev').addEventListener('click', () => flipAlbum(-1));
+$('#albumNext').addEventListener('click', () => flipAlbum(1));
 $('#albumClose').addEventListener('click', closeAlbum);
 $('#albumBackdrop').addEventListener('click', closeAlbum);
-$('#stickerOk').addEventListener('click', () => { $('#stickerOverlay').classList.remove('show'); openAlbum(); });
-$('#worldOk').addEventListener('click', () => { $('#worldOverlay').classList.remove('show'); });
+$('#stickerOk').addEventListener('click', () => {
+  const so = $('#stickerOverlay'); so.classList.remove('show');
+  if (!nextReward()) openAlbum(Number(so.dataset.page));
+});
+$('#worldOk').addEventListener('click', () => { $('#worldOverlay').classList.remove('show'); nextReward(); });
 
 // tutorial / help
 $('#btnHelp').addEventListener('click', openTutorial);
