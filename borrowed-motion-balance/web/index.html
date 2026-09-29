@@ -251,6 +251,44 @@
 
   .foot { text-align:center; font-size: 11px; color: var(--muted); margin-top: 14px; line-height:1.5; }
 
+  /* 가로로 넓은 화면(포털의 16:9 게임 창, 가로로 돌린 폰): 상단 바 아래로 보드는 왼쪽, 조작부는 오른쪽.
+     보드 크기(--bs)는 창 높이와 남는 너비 중 작은 쪽에 맞춰 스크롤 없이 한 화면에 들어오게 한다.
+     조각 위치는 JS가 #layer 실제 너비로 다시 계산하므로 CSS만 바꾸면 된다. 세로 화면은 기존 배치 그대로. */
+  @media (min-aspect-ratio: 1/1) {
+    .app {
+      --side: clamp(250px, 32vw, 340px);
+      --bs: min(calc(100vh - 92px), calc(100vw - var(--side) - 56px));
+      max-width: none; height: 100vh; min-height: 0; padding: 12px 16px;
+      display: grid; justify-content: center; column-gap: 24px;
+      grid-template-columns: var(--bs) var(--side);
+      grid-template-rows: auto auto auto auto auto minmax(0, 1fr);
+      grid-template-areas:
+        "header header"
+        "board progress"
+        "board meta"
+        "board hint"
+        "board actions"
+        "board foot";
+    }
+    header { grid-area: header; margin-bottom: 12px; }
+    .progress { grid-area: progress; margin-top: 0; }
+    .meta { grid-area: meta; }
+    .board-wrap { grid-area: board; width: var(--bs); align-self: start; }
+    .hint { grid-area: hint; margin-top: 4px; }
+    .actions { grid-area: actions; }
+    .foot { grid-area: foot; }
+  }
+  /* 높이가 낮은 가로 화면(가로 모드 폰 등): 설명 문구를 빼서 조작부가 보드 높이 안에 들어오게 */
+  @media (min-aspect-ratio: 1/1) and (max-height: 560px) {
+    .app { --bs: min(calc(100vh - 76px), calc(100vw - var(--side) - 56px)); padding: 8px 16px; }
+    header { margin-bottom: 8px; }
+    .foot { display: none; }
+    .progress { margin-bottom: 6px; }
+    .hint { min-height: 0; margin: 2px 2px 8px; }
+    .actions { gap: 8px; }
+    button.btn { padding: 10px 8px; }
+  }
+
   /* confetti */
   #confetti { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 60; opacity: 0; transition: opacity .3s; }
 
