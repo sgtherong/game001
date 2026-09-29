@@ -512,29 +512,41 @@ function refreshPieces(previewState) {
 }
 
 /* ---------- hint demo (non-destructive move preview animation) ---------- */
-// After a hint selects the pair, briefly slide those two pieces to where the
-// move would take them, then slide back — so the player sees HOW they move.
+// After a hint selects the pair, slide those two pieces to where the move would
+// take them and back — so the player sees HOW they move. Repeats until the player
+// acts (piece tap / move / cancel / undo / restart / stage change → clearHintDemo).
 let hintDemoTimers = [];
+function resetDemoPieces() { pieceEls().forEach(el => { el.style.zIndex = ''; el.classList.remove('demo'); }); }
 function clearHintDemo() {
   hintDemoTimers.forEach(clearTimeout);
   hintDemoTimers = [];
-  pieceEls().forEach(el => { el.style.zIndex = ''; el.classList.remove('demo'); });
+  resetDemoPieces();
 }
 function demoHint(pair) {
   clearHintDemo();
   if (!G.stage || G.animating) return;
   const n = G.stage.n, { center } = geom();
   const next = outcome(G.state, pair, n, G.wallSet);
-  const toks = pieceEls();
-  const slideOut = () => pair.forEach(i => {
-    const el = toks[i]; if (!el) return;
-    el.style.zIndex = 7; el.classList.add('demo');
-    el.style.left = center(next[i][0]) + 'px';
-    el.style.top = center(next[i][1]) + 'px';
-  });
-  const slideBack = () => { clearHintDemo(); updatePreview(); }; // restore truth (state may be unchanged)
-  hintDemoTimers.push(setTimeout(slideOut, 260));  // let the arrow swap register first
-  hintDemoTimers.push(setTimeout(slideBack, 260 + 640)); // hold at destination, then return
+  const later = (fn, ms) => hintDemoTimers.push(setTimeout(fn, ms));
+  const stillSelected = () => G.selected.length === 2 && G.selected[0] === pair[0] && G.selected[1] === pair[1];
+  const slideOut = () => {
+    if (G.animating || !stillSelected()) { clearHintDemo(); return; }
+    const toks = pieceEls();
+    pair.forEach(i => {
+      const el = toks[i]; if (!el) return;
+      el.style.zIndex = 7; el.classList.add('demo');
+      el.style.left = center(next[i][0]) + 'px';
+      el.style.top = center(next[i][1]) + 'px';
+    });
+    later(slideBack, 640); // hold at destination, then return
+  };
+  // updatePreview() would overwrite the "hint: pieces a & b" message each loop, so only reposition
+  const slideBack = () => {
+    resetDemoPieces();
+    refreshPieces(movesLeft() > 0 ? outcome(G.state, G.selected, n, G.wallSet) : null);
+    later(slideOut, 1100); // pause at the start before the next loop
+  };
+  later(slideOut, 260); // let the arrow swap register first
 }
 
 /* ---------- interaction ---------- */
@@ -1412,7 +1424,7 @@ btnUndo.addEventListener('click', undo);
 btnRestart.addEventListener('click', restart);
 btnHint.addEventListener('click', useHint);
 btnCommit.addEventListener('click', commitMove);
-btnCancel.addEventListener('click', () => { G.selected = []; updatePreview(); });
+btnCancel.addEventListener('click', () => { clearHintDemo(); G.selected = []; updatePreview(); });
 $('#btnNext').addEventListener('click', () => {
   if (overlay.dataset.mode === 'daily') { overlay.classList.remove('show'); openDaily(); }
   else loadStage(G.index + 1);
