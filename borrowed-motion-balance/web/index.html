@@ -251,6 +251,26 @@
 
   .foot { text-align:center; font-size: 11px; color: var(--muted); margin-top: 14px; line-height:1.5; }
 
+  /* 세로 화면: 보드를 너비뿐 아니라 남는 높이에도 맞춘다 — 아이폰 사파리처럼 주소창·포털 상단 바로
+     게임 창이 낮아져도 스크롤 없이 한 화면에 들어오게. 보드 영역(.board-wrap)이 남는 공간을 차지하고
+     보드는 그 안에서 가로·세로 중 작은 쪽에 맞춘 정사각형(컨테이너 단위 cqw/cqh, 미지원 브라우저는 기존처럼 너비 기준). */
+  @media (max-aspect-ratio: 999/1000) {
+    .app { height: 100vh; height: 100dvh; min-height: 0; }
+    .board-wrap { flex: 1 1 auto; min-height: 120px; container-type: size; display: flex; align-items: center; justify-content: center; }
+    #board { flex: none; width: 100%; width: min(100cqw, 100cqh); }
+    .hint { min-height: 37px; } /* 안내문이 1줄↔2줄로 바뀔 때 보드 크기가 흔들리지 않게 2줄 높이 확보 */
+  }
+  @media (max-aspect-ratio: 999/1000) and (max-height: 740px) {
+    .app { padding: 10px 14px 12px; }
+    header { margin-bottom: 2px; }
+    .progress { margin: 6px 0 8px; }
+    .meta { margin-bottom: 8px; }
+    .hint { margin: 8px 2px 4px; }
+    .actions, .actions .row { gap: 8px; }
+    button.btn { padding: 10px 8px; }
+    .foot { display: none; }
+  }
+
   /* 가로로 넓은 화면(포털의 16:9 게임 창, 가로로 돌린 폰): 상단 바 아래로 보드는 왼쪽, 조작부는 오른쪽.
      보드 크기(--bs)는 창 높이와 남는 너비 중 작은 쪽에 맞춰 스크롤 없이 한 화면에 들어오게 한다.
      조각 위치는 JS가 #layer 실제 너비로 다시 계산하므로 CSS만 바꾸면 된다. 세로 화면은 기존 배치 그대로. */
