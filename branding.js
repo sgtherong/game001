@@ -17,4 +17,7 @@ window.BM_BRAND = {
   // 사이트락 차단 화면의 "공식 사이트에서 플레이" 링크 (기본: CrazyGames).
   // CrazyGames 게임 URL이 정해지면 여기에 넣으세요. 예) 'https://www.crazygames.com/game/swapstep'
   officialUrl: 'https://www.crazygames.com',
+  // CrazyGames 광고 사용 여부. Basic 단계는 광고 금지(QA 도구: "Ads are not allowed in basic launch")라
+  // false면 광고 보기 버튼·중간 광고를 모두 숨긴다. Full 단계로 초대받으면 true로 바꿔 다시 업로드하세요.
+  crazygamesAds: false,
 };

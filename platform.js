@@ -304,6 +304,7 @@
 
   let adapter = local;
   let adapterReady = false, gameLoaded = false, loadingStopSent = false;
+  const crazygamesAdsAllowed = () => !!(window.BM_BRAND && window.BM_BRAND.crazygamesAds);
   // 로드 시점에 포털 여부를 확정(동기). SW/PWA 게이팅 등에서 init() 완료 전에 참조 가능.
   const IS_PORTAL = detect() !== local;
 
@@ -311,6 +312,12 @@
     config,
     isPortal: IS_PORTAL, // true면 포털 iframe(자체호스팅 전용 기능은 끈다)
     get platform() { return adapter.name; },
+    // false면 게임이 광고 제안(보상형) 버튼 자체를 숨긴다: SDK를 못 불러왔거나, CrazyGames Basic 단계
+    get adsEnabled() {
+      if (adapter === unavailable) return false;
+      if (adapter.name === 'crazygames') return crazygamesAdsAllowed();
+      return true;
+    },
     async init(opts) {
       // 광고 표시 중 오디오 훅 등록(게임이 mute/unmute 제공)
       if (opts) {
@@ -319,8 +326,8 @@
         if (typeof opts.onMuteChange === 'function') hooks.muteChange = opts.onMuteChange;
       }
       adapter = detect();
-      // CrazyGames expects midgame (interstitial) ads at natural breaks — enable them there.
-      if (adapter.name === 'crazygames') config.interstitialEnabled = true;
+      // CrazyGames expects midgame (interstitial) ads at natural breaks — enable them there (Full 단계만).
+      if (adapter.name === 'crazygames') config.interstitialEnabled = crazygamesAdsAllowed();
       try { await adapter.init(opts); }
       catch (e) {
         const fb = IS_PORTAL ? unavailable : local;
