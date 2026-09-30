@@ -140,6 +140,8 @@ function resetDailyIfNeeded() {
 const isPremium = () => !!progress.premium;
 // 포털(CrazyGames 등)은 표준 IAP가 없어 유료 결제를 노출하지 않는다(광고 기반 수익).
 const onPortal = () => !!(window.AdsManager && window.AdsManager.isPortal);
+// 광고 제안을 보여줘도 되는지(CrazyGames Basic 단계·SDK 로드 실패면 false → 광고 버튼 숨김)
+const adsOn = () => !window.AdsManager || window.AdsManager.adsEnabled !== false;
 const freeHintsLeft = () => { resetDailyIfNeeded(); return Math.max(0, FREE_HINTS_PER_DAY - progress.hints.free); };
 const adHintsLeft = () => { resetDailyIfNeeded(); return Math.max(0, AD_HINTS_PER_DAY - progress.hints.ad); };
 const bonusHintsLeft = () => Math.max(0, progress.bonusHints || 0); // weekly-reward hints (not reset daily)
@@ -584,7 +586,7 @@ function updatePreview() {
   }
   refreshPieces(preview);
   // 예산 소진 + 비프리미엄 → '광고 보고 +이동' 버튼 노출 (프리미엄은 광고 없음, 되돌리기/재시작 사용)
-  const canAdMoves = outOfMoves && !isPremium();
+  const canAdMoves = outOfMoves && !isPremium() && adsOn();
   btnCommit.disabled = G.selected.length !== 2 || outOfMoves; // 예산 소진 시 이동 불가
   btnCancel.disabled = G.selected.length === 0;
   hintTextEl.textContent = outOfMoves ? t(canAdMoves ? 'moves_out' : 'moves_out_noad')
@@ -692,8 +694,8 @@ function useHint() {
   // free quota gone → spend a weekly-reward hint before asking for an ad
   if (bonusHintsLeft() > 0) { progress.bonusHints--; saveProgress(progress); applyHint(pair, 'bonus'); return; }
   // free exhausted → offer a rewarded ad if available for this day/attempt
-  if (adHintsLeft() > 0 && !G.attemptAdUsed) { offerAd(pair); return; }
-  hintTextEl.textContent = t('hint_none_left');
+  if (adsOn() && adHintsLeft() > 0 && !G.attemptAdUsed) { offerAd(pair); return; }
+  hintTextEl.textContent = t(adsOn() ? 'hint_none_left' : 'hint_none_left_noad');
   if (!onPortal()) openStore(t('store_note_hint')); // 포털에선 프리미엄 유도 대신 안내만
 }
 function applyHint(pair, src) {
@@ -802,7 +804,7 @@ function renderStore(note) {
   $('#storeNote').hidden = !note;
   $('#storeStatus').textContent = isPremium()
     ? t('store_status_premium')
-    : t('store_status_free', { free: freeHintsLeft(), fmax: FREE_HINTS_PER_DAY, ad: adHintsLeft(), amax: AD_HINTS_PER_DAY })
+    : t(adsOn() ? 'store_status_free' : 'store_status_free_noad', { free: freeHintsLeft(), fmax: FREE_HINTS_PER_DAY, ad: adHintsLeft(), amax: AD_HINTS_PER_DAY })
       + (bonusHintsLeft() > 0 ? ' · ' + t('store_status_bonus', { n: bonusHintsLeft() }) : '');
   // 포털에선 유료 결제 UI(구매/보유/복원/약관)를 숨긴다 — 힌트는 광고 기반, 테마는 무료.
   const portal = onPortal();
