@@ -1522,7 +1522,7 @@ document.addEventListener('keydown', e => {
 });
 
 let resizeTimer;
-window.addEventListener('resize', () => {
+const relayoutBoard = () => {
   clearTimeout(resizeTimer);
   resizeTimer = setTimeout(() => {
     if (!G.stage) return;
@@ -1530,7 +1530,10 @@ window.addEventListener('resize', () => {
     const preview = G.selected.length === 2 ? outcome(G.state, G.selected, G.stage.n, G.wallSet) : null;
     refreshPieces(preview);
   }, 120);
-});
+};
+window.addEventListener('resize', relayoutBoard);
+// 세로 화면에선 보드가 남는 높이에 맞춰지므로 창 크기가 그대로여도(안내문 줄 수, '+이동' 줄 등) 크기가 바뀐다
+if (window.ResizeObserver) new ResizeObserver(relayoutBoard).observe(layerEl);
 
 // unlock audio on the first user gesture (autoplay policies)
 document.addEventListener('pointerdown', () => Sound.unlock(), { once: true });
