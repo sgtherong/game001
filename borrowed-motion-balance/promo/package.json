@@ -1,0 +1,13 @@
+{
+  "name": "swapstep-promo",
+  "private": true,
+  "description": "CrazyGames store covers and preview videos for SwapStep (not shipped with the game)",
+  "scripts": {
+    "covers": "node render-covers.cjs",
+    "videos": "node render-videos.cjs"
+  },
+  "dependencies": {
+    "mp4-muxer": "^5.2.2",
+    "puppeteer-core": "^25.0.0"
+  }
+}

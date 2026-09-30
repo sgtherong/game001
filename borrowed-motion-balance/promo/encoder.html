@@ -1,0 +1,51 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>encoder</title></head>
+<body>
+<script src="node_modules/mp4-muxer/build/mp4-muxer.js"></script>
+<script>
+  // render-videos.cjs가 호출: 표지(정지) → 표지→게임 교차 페이드 → 게임 프레임, H.264 MP4(무음)로 인코딩.
+  // frames: 출력 프레임마다 쓸 캡처 JPEG의 URL(같은 이미지를 연달아 써서 30fps 타임라인을 맞춘다).
+  window.encodeVideo = async ({ width, height, fps, bitrate, coverUrl, coverFrames, fadeFrames, frames }) => {
+    const target = new Mp4Muxer.ArrayBufferTarget();
+    const muxer = new Mp4Muxer.Muxer({ target, video: { codec: 'avc', width, height, frameRate: fps }, fastStart: 'in-memory' });
+    let failed = null;
+    const enc = new VideoEncoder({ output: (chunk, meta) => muxer.addVideoChunk(chunk, meta), error: e => { failed = e; } });
+    enc.configure({ codec: 'avc1.640028', width, height, bitrate, framerate: fps, avc: { format: 'avc' } });
+
+    const load = async url => createImageBitmap(await (await fetch(url)).blob());
+    const cover = await load(coverUrl);
+    const canvas = new OffscreenCanvas(width, height);
+    const ctx = canvas.getContext('2d');
+    const cache = new Map(); // 연속 중복 프레임이 많아 직전 이미지만 재사용
+    const game = async url => {
+      if (!cache.has(url)) { cache.forEach(b => b.close()); cache.clear(); cache.set(url, await load(url)); }
+      return cache.get(url);
+    };
+
+    const total = coverFrames + frames.length;
+    for (let i = 0; i < total; i++) {
+      if (failed) throw failed;
+      if (i < coverFrames) ctx.drawImage(cover, 0, 0, width, height);
+      else {
+        const g = i - coverFrames;
+        ctx.globalAlpha = 1; ctx.drawImage(await game(frames[g]), 0, 0, width, height);
+        if (g < fadeFrames) { ctx.globalAlpha = 1 - (g + 1) / (fadeFrames + 1); ctx.drawImage(cover, 0, 0, width, height); ctx.globalAlpha = 1; }
+      }
+      const vf = new VideoFrame(canvas, { timestamp: Math.round(i * 1e6 / fps), duration: Math.round(1e6 / fps) });
+      enc.encode(vf, { keyFrame: i % (fps * 2) === 0 });
+      vf.close();
+      while (enc.encodeQueueSize > 8) await new Promise(r => enc.addEventListener('dequeue', r, { once: true }));
+    }
+    await enc.flush();
+    if (failed) throw failed;
+    muxer.finalize();
+    const bytes = new Uint8Array(target.buffer);
+    let bin = '';
+    for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+    return { base64: btoa(bin), frames: total, seconds: total / fps };
+  };
+  window.encoderReady = true;
+</script>
+</body>
+</html>
