@@ -375,6 +375,19 @@
     .actions { gap: 8px; }
   }
 
+  /* loading splash */
+  #splash { position: fixed; inset: 0; z-index: 90; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px;
+    background: radial-gradient(120% 120% at 50% 0%, var(--bg-outer) 0%, var(--bg) 60%); transition: opacity .35s ease; }
+  #splash.gone { opacity: 0; pointer-events: none; }
+  #splash .sp-brand { font-weight: 900; font-size: 44px; letter-spacing: -.02em; }
+  #splash .sp-brand .a { color: #e8743b; } #splash .sp-brand .b { color: #2f8f83; }
+  #splash .sp-dots { display: flex; gap: 10px; }
+  #splash .sp-dots i { width: 16px; height: 16px; border-radius: 5px; animation: spDot 1s ease-in-out infinite; }
+  #splash .sp-dots i:nth-child(1) { background: #e8743b; } #splash .sp-dots i:nth-child(2) { background: #2f8f83; animation-delay: .12s; }
+  #splash .sp-dots i:nth-child(3) { background: #7b6cd9; animation-delay: .24s; } #splash .sp-dots i:nth-child(4) { background: #c0497b; animation-delay: .36s; }
+  @keyframes spDot { 0%, 100% { transform: translateY(0); } 40% { transform: translateY(-10px); } }
+  @media (prefers-reduced-motion: reduce) { #splash .sp-dots i { animation: none; } }
+
   /* confetti */
   #confetti { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 60; opacity: 0; transition: opacity .3s; }
 
@@ -549,12 +562,14 @@
   .sound-toggle {
     margin-top: auto; padding-top: 12px; border-top: 1px solid var(--line);
   }
-  #btnSound, #btnBackup {
+  .snd-row { display: flex; gap: 8px; }
+  #btnSound, #btnMusic, #btnBackup {
     width: 100%; border: 1px solid var(--line); background: var(--cell); color: var(--ink);
     padding: 12px; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer;
   }
   #btnBackup { margin-top: 8px; }
-  #btnSound.off { color: var(--muted); }
+  #btnSound.off, #btnMusic.off { color: var(--muted); }
+  .snd-row button { flex: 1; min-width: 0; font-size: 13px !important; padding: 12px 6px !important; }
   /* world theme flavor in the picker header */
   .chapter-head .nm em { font-style: normal; color: var(--muted); font-weight: 600; font-size: 11px; }
   /* backup modal */
@@ -637,6 +652,11 @@
 </style>
 </head>
 <body>
+<!-- 로딩 화면: 포털 광고 도구를 기다리는 동안(최대 6초) 빈 판 대신. boot()가 끝나면 사라진다 -->
+<div id="splash" aria-hidden="true">
+  <div class="sp-brand"><span class="a">Swap</span><span class="b">Step</span></div>
+  <div class="sp-dots"><i></i><i></i><i></i><i></i></div>
+</div>
 <div class="bg-deco" aria-hidden="true">
   <i style="left:6%;top:12%;--s:14px;--c:#f5c518"></i><i style="left:91%;top:20%;--s:10px;--c:#2f8f83"></i>
   <i style="left:12%;top:86%;--s:11px;--c:#e8743b"></i><i style="left:88%;top:80%;--s:15px;--c:#f5c518"></i>
@@ -708,7 +728,7 @@
     <div class="stage-list" id="stageList"></div>
     <div class="sound-toggle">
       <div class="lang-row"><span class="lang-lbl" data-i18n="lang_label">Language</span><select id="langSelect"></select></div>
-      <button id="btnSound">🔊 Sound on</button>
+      <div class="snd-row"><button id="btnSound">🔊 Sound on</button><button id="btnMusic">🎵 Music on</button></div>
       <button id="btnBackup" data-i18n="backup_open">Backup / Restore</button>
       <div class="legal-links" id="drawerLegal"><a class="link-btn" href="privacy.html" target="_blank" rel="noopener" data-i18n="privacy_link">Privacy Policy</a></div>
     </div>
@@ -774,7 +794,7 @@
   <div class="sheet">
     <div class="sticker-big" id="stickerEmoji">🧭</div>
     <h3 id="stickerName"></h3>
-    <div class="album-status" id="stickerSub"></div>
+    <div class="album-status" id="stickerSub" style="white-space:pre-line"></div>
     <button class="btn primary" id="stickerOk" data-i18n="sticker_ok" style="width:100%;">View album</button>
   </div>
 </div>
@@ -810,7 +830,7 @@
   <div class="sheet">
     <div class="sticker-big" id="worldEmoji">🏅</div>
     <h3 id="worldTitle"></h3>
-    <div class="album-status" id="worldSub"></div>
+    <div class="album-status" id="worldSub" style="white-space:pre-line"></div>
     <button class="btn primary" id="worldOk" data-i18n="world_ok" style="width:100%;">Continue</button>
   </div>
 </div>

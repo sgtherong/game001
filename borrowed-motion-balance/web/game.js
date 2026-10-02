@@ -143,6 +143,8 @@ const FREE_HINTS_PER_DAY = 3;
 const AD_HINTS_PER_DAY = 3;
 const MOVES_PER_AD = 3; // extra moves granted per rewarded ad when the budget runs out
 const WIN_REVEAL_MS = 650; // 마지막 이동 후 결과 창이 뜨기까지(판 위 축하 동작을 먼저 보여줌)
+// 플레이로 얻는 보너스 힌트(매일 초기화 안 됨): 광고가 없는 곳(포털 Basic 단계 등)에서도 막히면 쓸 수 있게
+const HINTS_PER_STICKER = 1, HINTS_PER_GOLD = 2, HINTS_PER_WORLD = 3;
 const AD_GRACE_CLEARS = 10; // 첫 10판은 중간 광고 없음
 const ADS_EVERY_CLEARS = 3; // 그 뒤 3판마다 레벨 전환 때 중간 광고(포털 SDK가 3분 간격도 따로 지킴)
 const PREMIUM_PRICE = '₩4,900';
@@ -198,6 +200,14 @@ function logEvent(name, data = {}) {
  * 게임이 다 뜨기 전에 오류가 나면 빈 화면 대신 '새로고침' 안내를 띄운다. 오류는 이용 기록(logEvent)에 남긴다.
  * 광고 SDK 등 다른 사이트 스크립트의 오류("Script error.", 파일 정보 없음)는 게임 오류로 보지 않는다. */
 let booted = false;
+{ // 라이선스로 이름을 바꾼 빌드면 로딩 화면 이름도 바꾼다
+  const nm = window.BM_BRAND && window.BM_BRAND.name, el = document.querySelector('#splash .sp-brand');
+  if (el && nm && nm !== 'SwapStep') el.textContent = nm;
+}
+function hideSplash() {
+  const sp = document.getElementById('splash'); if (!sp) return;
+  sp.classList.add('gone'); setTimeout(() => sp.remove(), 400);
+}
 function showCrash() {
   if (document.getElementById('crash')) return;
   const tr = (k, en) => { try { const v = t(k); return v && v !== k ? v : en; } catch (e) { return en; } };
@@ -212,6 +222,7 @@ function showCrash() {
     + tr('crash_reload', 'Reload') + '</button>';
   d.querySelector('button').addEventListener('click', () => location.reload());
   document.body.appendChild(d);
+  hideSplash();
 }
 const ownScript = f => { try { return !!f && new URL(f, location.href).origin === location.origin; } catch (e) { return false; } };
 window.addEventListener('error', e => {
@@ -269,7 +280,15 @@ const ALBUM = [
 ];
 const CLEARS_PER_STICKER = 5;
 const STICKERS_PER_PAGE = 6;
-const placeName = w => { const n = ALBUM[w].name; return n[window.I18N.lang] || n.en; };
+// 나중에 추가한 언어의 여행지 이름(ALBUM 순서 그대로). 표에 없으면 영어로
+const ALBUM_EXTRA = {
+  de: ['Reisevorbereitung', 'Paris', 'London', 'Amsterdam', 'Wien', 'Schweizer Alpen', 'Venedig', 'Rom', 'Barcelona', 'Santorin', 'Island', 'Istanbul', 'Kairo', 'Kenia-Safari', 'Dubai', 'Indien', 'Bangkok', 'Bali', 'Peking', 'Seoul', 'Tokio', 'Sydney', 'Neuseeland', 'Hawaii', 'San Francisco', 'New York', 'Kanada', 'Mexiko', 'Karibik', 'Amazonas', 'Peru', 'Rio de Janeiro', 'Antarktis', 'Lappland', 'Weltall'],
+  fr: ['Préparatifs', 'Paris', 'Londres', 'Amsterdam', 'Vienne', 'Alpes suisses', 'Venise', 'Rome', 'Barcelone', 'Santorin', 'Islande', 'Istanbul', 'Le Caire', 'Safari au Kenya', 'Dubaï', 'Inde', 'Bangkok', 'Bali', 'Pékin', 'Séoul', 'Tokyo', 'Sydney', 'Nouvelle-Zélande', 'Hawaï', 'San Francisco', 'New York', 'Canada', 'Mexique', 'Caraïbes', 'Amazonie', 'Pérou', 'Rio de Janeiro', 'Antarctique', 'Laponie', 'L’espace'],
+};
+const placeName = w => {
+  const n = ALBUM[w].name, l = window.I18N.lang;
+  return n[l] || (ALBUM_EXTRA[l] && ALBUM_EXTRA[l][w]) || n.en;
+};
 const stickerName = (w, k) => (ALBUM[w].keys ? t(ALBUM[w].keys[k]) : placeName(w));
 const worldRange = w => [w * WORLD_SIZE, Math.min(STAGES.length, (w + 1) * WORLD_SIZE)];
 function worldClears(w) {
@@ -316,7 +335,7 @@ const Sound = (() => {
   // one enveloped oscillator voice, optional pitch glide + echo send
   function voice(freq, dur, o = {}) {
     const c = ready(); if (!c) return;
-    const { type = 'sine', gain = 0.15, when = 0, attack = 0.008, glide = 0, wet = 0.4 } = o;
+    const { type = 'sine', gain = 0.15, when = 0, attack = 0.008, glide = 0, wet = 0.4, dest = master } = o;
     const t = c.currentTime + when;
     const osc = c.createOscillator(), g = c.createGain();
     osc.type = type; osc.frequency.setValueAtTime(freq, t);
@@ -324,11 +343,38 @@ const Sound = (() => {
     g.gain.setValueAtTime(0.0001, t);
     g.gain.exponentialRampToValueAtTime(gain, t + attack);
     g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    osc.connect(g); g.connect(master);
+    osc.connect(g); g.connect(dest);
     if (echo && wet) { const s = c.createGain(); s.gain.value = gain * wet; g.connect(s); s.connect(echo); }
     osc.start(t); osc.stop(t + dur + 0.05);
   }
   const on = () => progress.settings && progress.settings.sound !== false;
+  /* 배경 음악: 음원 없이 즉석 합성(용량 0). 잔잔한 화음(C–Am–F–G) + 가끔 마림바 멜로디.
+   * master를 거치므로 광고 중·사이트 음소거가 그대로 적용된다. 탭을 벗어나면 오디오 전체를 멈춘다. */
+  const BEAT = 60 / 76;
+  const CHORDS = [[261.63, 329.63, 392.0], [220.0, 261.63, 329.63], [174.61, 220.0, 261.63], [196.0, 246.94, 293.66]];
+  const MEL = [[523.25, 659.25, 783.99, 1046.5], [440.0, 523.25, 659.25, 880.0], [349.23, 440.0, 523.25, 698.46], [392.0, 493.88, 587.33, 783.99]];
+  let music = null;
+  const musicOn = () => progress.settings && progress.settings.music !== false;
+  const rnd = n => { let x = Math.imul(n ^ 0x5bd1e995, 2654435761) >>> 0; x = (x ^ (x >>> 15)) >>> 0; return (x % 1000) / 1000; }; // 같은 박자엔 같은 음
+  function beat(step, at) {
+    const c = ctx, w = Math.max(0, at - c.currentTime), bar = Math.floor(step / 4) % 4, d = music.g;
+    if (step % 4 === 0) {
+      CHORDS[bar].forEach(f => voice(f, BEAT * 4.2, { type: 'sine', gain: 0.018, attack: 0.9, when: w, wet: 0.5, dest: d }));
+      voice(CHORDS[bar][0] / 2, BEAT * 3.5, { type: 'triangle', gain: 0.026, attack: 0.05, when: w, wet: 0.2, dest: d });
+    }
+    if (rnd(step) < 0.55) {
+      const f = MEL[bar][Math.floor(rnd(step + 977) * 4)];
+      voice(f, 0.55, { type: 'sine', gain: 0.03, attack: 0.004, when: w, wet: 0.7, dest: d });
+      voice(f * 2, 0.2, { type: 'sine', gain: 0.007, attack: 0.004, when: w, wet: 0.4, dest: d });
+    }
+    if (step % 8 === 6 && rnd(step + 31) < 0.6) { // 반 박자 뒤 꾸밈음
+      voice(MEL[bar][2], 0.4, { type: 'sine', gain: 0.02, attack: 0.004, when: w + BEAT / 2, wet: 0.7, dest: d });
+    }
+  }
+  function schedule() {
+    if (!music || !ctx) return;
+    while (music.next < ctx.currentTime + 0.5) { beat(music.step, music.next); music.next += BEAT; music.step++; }
+  }
   const SEL = [523.25, 587.33, 659.25, 783.99];               // C5 D5 E5 G5 by piece
   const LOCK = [523.25, 659.25, 783.99, 987.77, 1174.66];      // rising as pieces land
   return {
@@ -344,7 +390,28 @@ const Sound = (() => {
     lock(step) { if (on()) { const f = LOCK[Math.min(step, LOCK.length - 1)]; voice(f, 0.55, { type: 'sine', gain: 0.18, attack: 0.003, wet: 0.9 }); voice(f * 2, 0.35, { type: 'triangle', gain: 0.05, when: 0.004, wet: 0.6 }); } },
     win() { if (on()) [523.25, 659.25, 783.99, 1046.5, 1318.5].forEach((f, i) => voice(f, 0.5, { type: 'triangle', gain: 0.16, when: i * 0.085, wet: 0.8 })); },
     sticker() { if (on()) [784, 988, 1319, 1568].forEach((f, i) => voice(f, 0.4, { type: 'sine', gain: 0.14, when: i * 0.07, wet: 0.9 })); },
-    unlock() { ready(); }, // call on first user gesture
+    unlock() { ready(); this.startMusic(); }, // call on first user gesture
+    startMusic() {
+      if (music || !musicOn()) return;
+      const c = ready(); if (!c) return;
+      const g = c.createGain(); g.gain.setValueAtTime(0.0001, c.currentTime);
+      g.gain.exponentialRampToValueAtTime(1, c.currentTime + 2.5); // 서서히 들어오게
+      g.connect(master);
+      music = { g, next: c.currentTime + 0.15, step: 0, timer: setInterval(schedule, 150) };
+      schedule();
+    },
+    stopMusic() {
+      if (!music) return;
+      const m = music; music = null; clearInterval(m.timer);
+      try { m.g.gain.cancelScheduledValues(ctx.currentTime); m.g.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.15); } catch (e) {}
+      setTimeout(() => { try { m.g.disconnect(); } catch (e) {} }, 900);
+    },
+    // 탭/앱을 벗어나면 소리 전체 정지, 돌아오면 재개(광고·사이트 음소거 상태는 그대로)
+    setHidden(h) {
+      if (!ctx) return;
+      try { if (h) ctx.suspend(); else ctx.resume(); } catch (e) {}
+      if (!h && music) music.next = Math.max(music.next, ctx.currentTime + 0.1);
+    },
     // 광고 표시 중 전체 음소거 (포털 규격: 광고 시작 시 음소거, 종료 시 복구)
     mute() { adMuted = true; applyLevel(); },
     unmute() { adMuted = false; applyLevel(); },
@@ -1251,6 +1318,8 @@ function onWin() {
       }
     }
   }
+  const earned = (newSticker ? HINTS_PER_STICKER : 0) + (newGold ? HINTS_PER_GOLD : 0) + (worldDone ? HINTS_PER_WORLD : 0);
+  if (earned) { progress.bonusHints = (progress.bonusHints || 0) + earned; saveProgress(progress); updateHintButton(); logEvent('hints_earned', { n: earned }); }
   // 보상 팝업은 한 번에 하나씩: 월드 완주 → 골드 → 일반 스티커 순으로 이어서 보여준다.
   // 데일리에서 딴 스티커는 앨범에만 조용히 붙는다(데일리 흐름을 끊지 않도록).
   if (!daily) {
@@ -1272,7 +1341,7 @@ function nextReward() {
 function showWorldReward(w, themeUnlocked) {
   $('#worldEmoji').textContent = themeUnlocked ? '🎨' : '🏅';
   $('#worldTitle').textContent = t('world_done_title', { n: w + 1 });
-  $('#worldSub').textContent = themeUnlocked ? t('world_done_theme') : t('world_done_go');
+  $('#worldSub').textContent = (themeUnlocked ? t('world_done_theme') : t('world_done_go')) + '\n' + t('reward_hints', { n: HINTS_PER_WORLD });
   $('#worldOverlay').classList.add('show');
   Sound.sticker(); haptic([30, 40, 30, 40, 60]); confettiBurst();
   if (window.AdsManager) AdsManager.happyTime(1);
@@ -1473,7 +1542,8 @@ function showStickerReward(w, k) {
   so.classList.toggle('gold', isGold);
   $('#stickerEmoji').textContent = isGold ? ALBUM[w].icon : ALBUM[w].st[k];
   $('#stickerName').textContent = t(isGold ? 'sticker_gold_got' : 'sticker_got', { name: isGold ? placeName(w) : stickerName(w, k) });
-  $('#stickerSub').textContent = t('sticker_sub', { n: albumEarned(), total: albumTotal() });
+  $('#stickerSub').textContent = t('sticker_sub', { n: albumEarned(), total: albumTotal() })
+    + '\n' + t('reward_hints', { n: isGold ? HINTS_PER_GOLD : HINTS_PER_STICKER });
   so.classList.add('show');
   Sound.sticker(); haptic([30, 40, 30, 40, 60]); confettiBurst();
   if (isGold && window.AdsManager) AdsManager.happyTime(1);
@@ -1505,6 +1575,7 @@ function renderDaily() {
   const dk = todayKey();
   const idxs = dailyIndices(dk);
   const done = progress.daily[dk] || [false, false, false];
+  const ds = progress.dailyStars && progress.dailyStars.d === dk ? progress.dailyStars.s : [0, 0, 0]; // 오늘 딴 별
   $('#dailyDate').textContent = dk;
   $('#dailyStreak').textContent = t('daily_streak', { n: progress.streak.n || 0 });
   const labels = [t('daily_easy'), t('daily_medium'), t('daily_hard')];
@@ -1515,7 +1586,7 @@ function renderDaily() {
     card.className = 'daily-card' + (done[slot] ? ' done' : '');
     card.innerHTML =
       `<span class="dc-lv">${labels[slot]}</span>` +
-      `<span class="dc-meta">${s.n}×${s.n} · ${s.pieces}p · min ${s.min}</span>` +
+      `<span class="dc-meta">${s.n}×${s.n} · ${done[slot] && ds[slot] ? '★'.repeat(ds[slot]) + '☆'.repeat(3 - ds[slot]) : t('goal_info', { min: s.min })}</span>` +
       `<span class="dc-go">${done[slot] ? '✓' : '▶'}</span>`;
     card.addEventListener('click', () => { closeDaily(); loadStage(idx, slot); });
     wrap.appendChild(card);
@@ -1606,11 +1677,18 @@ function applySoundIcon() {
   const on = progress.settings.sound !== false;
   const b = $('#btnSound');
   if (b) { b.textContent = on ? t('sound_on') : t('sound_off'); b.classList.toggle('off', !on); }
+  const mOn = progress.settings.music !== false, mb = $('#btnMusic');
+  if (mb) { mb.textContent = mOn ? t('music_on') : t('music_off'); mb.classList.toggle('off', !mOn); }
 }
 function toggleSound() {
   progress.settings.sound = progress.settings.sound === false;
   saveProgress(progress); applySoundIcon();
   if (progress.settings.sound) { Sound.unlock(); Sound.select(); }
+}
+function toggleMusic() {
+  progress.settings.music = progress.settings.music === false;
+  saveProgress(progress); applySoundIcon();
+  if (progress.settings.music) Sound.startMusic(); else Sound.stopMusic();
 }
 
 /* ---------- branding (rebranding config) ---------- */
@@ -1704,6 +1782,8 @@ $('#tutorialStart').addEventListener('click', closeTutorial);
 
 // settings
 $('#btnSound').addEventListener('click', toggleSound);
+$('#btnMusic').addEventListener('click', toggleMusic);
+document.addEventListener('visibilitychange', () => Sound.setHidden(document.hidden));
 
 // language selector
 const langSelect = $('#langSelect');
@@ -1798,7 +1878,7 @@ document.addEventListener('pointerdown', () => Sound.unlock(), { once: true });
 const withTimeout = (p, ms) => Promise.race([p, new Promise(r => setTimeout(() => r('timeout'), ms))]);
 async function boot() {
   // 사이트락: 허용되지 않은 호스트면 게임 대신 안내 화면을 띄우고 중단(광고/SDK도 로드 안 함)
-  if (window.BM_hostAllowed && !window.BM_hostAllowed()) { showSiteLock(); return; }
+  if (window.BM_hostAllowed && !window.BM_hostAllowed()) { hideSplash(); showSiteLock(); return; }
   if (window.AdsManager) {
     try {
       const name = await withTimeout(AdsManager.init({
@@ -1829,5 +1909,6 @@ async function boot() {
   // 첫 플레이 안내는 규칙 창 대신 1레벨 화면 안에서 손가락으로(startCoach, loadStage에서 호출)
   trySilentCloudRestore(); // 백그라운드: 이전에 연결한 계정이면 조용히 최신 진행도로 맞춘다
   booted = true;
+  hideSplash();
 }
 boot().catch(e => { logEvent('js_error', { msg: String((e && e.message) || e).slice(0, 200), kind: 'boot' }); showCrash(); });
