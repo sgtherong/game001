@@ -1795,7 +1795,12 @@ window.I18N.langs.forEach(code => {
 langSelect.value = window.I18N.lang;
 langSelect.addEventListener('change', () => window.I18N.setLang(langSelect.value));
 // re-render dynamic strings when language changes (static handled by I18N.apply)
+// 개인정보처리방침 링크: 영어가 먼저인 페이지라, 한국어로 하던 사람은 한국어 부분(#ko)으로 바로 연다
+function updatePrivacyLinks() {
+  document.querySelectorAll('a[href^="privacy.html"]').forEach(a => { a.setAttribute('href', 'privacy.html' + (window.I18N.lang === 'ko' ? '#ko' : '')); });
+}
 function refreshDynamic() {
+  updatePrivacyLinks();
   if ($('#langSelect')) $('#langSelect').value = window.I18N.lang;
   updateHud(); updateHintButton(); applySoundIcon(); renderProgress(); renderStageLabels();
   if (G.hintPair) G.hintMsg = t('hint_applied', { a: G.hintPair[0] + 1, b: G.hintPair[1] + 1,
@@ -1899,6 +1904,7 @@ async function boot() {
   applyBranding();           // apply rebranding config (name/tagline/accent)
   if (onPortal()) { const dl = $('#drawerLegal'); if (dl) dl.hidden = true; } // 포털: 외부 링크 숨김
   window.I18N.apply();       // fill static data-i18n strings
+  updatePrivacyLinks();
   applySoundIcon();
   resetDailyIfNeeded();
   applyThemePack();
