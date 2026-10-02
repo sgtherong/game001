@@ -464,6 +464,7 @@ function applyStaticGeometry() {
     el.style.width = pieceSize + 'px';
     el.style.height = pieceSize + 'px';
     el.querySelector('.num').style.fontSize = Math.round(cell * 0.32) + 'px'; // 큰 화살표와 겹치지 않는 크기
+    el.style.setProperty('--badge', Math.round(cell * 0.34) + 'px'); // 도착 체크 배지 크기
   });
 }
 

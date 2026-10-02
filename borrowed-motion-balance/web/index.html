@@ -146,11 +146,18 @@
     transform: translate(-50%, -56%) scale(1.07); z-index: 5;
     box-shadow: 0 0 0 4px #fff, 0 0 0 7px var(--c), 0 16px 22px color-mix(in srgb, var(--c) 45%, transparent);
   }
-  .piece.on-target::after {
-    content: "✓"; position: absolute; top: -10%; right: -10%; width: 34%; height: 34%; border-radius: 50%;
-    display: grid; place-items: center; font-size: 60%; font-weight: 900; line-height: 1;
-    background: #fff; color: var(--c); box-shadow: 0 2px 4px rgba(0,0,0,.2);
+  /* 목표 도착 배지: 흰 원(::before) + 조각 색 굵은 체크(::after, SVG 마스크). 크기는 JS가 칸 크기로 --badge 지정 */
+  .piece.on-target::before, .piece.on-target::after {
+    content: ""; position: absolute; top: -12%; right: -12%; width: var(--badge, 26px); height: var(--badge, 26px);
+    animation: badgePop .38s cubic-bezier(.2,1.6,.4,1); z-index: 2;
   }
+  .piece.on-target::before { border-radius: 50%; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,.25), 0 0 0 2px color-mix(in srgb, var(--c) 35%, #fff); }
+  .piece.on-target::after {
+    background: var(--c); z-index: 3;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M5.5 12.5l4.2 4.2L18.5 7.8' fill='none' stroke='%23000' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 70% no-repeat;
+            mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M5.5 12.5l4.2 4.2L18.5 7.8' fill='none' stroke='%23000' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 70% no-repeat;
+  }
+  @keyframes badgePop { 0% { transform: scale(0); } 100% { transform: scale(1); } }
   /* 힌트로 추천된 두 조각: 숨 쉬듯 빛나는 테두리 */
   .piece.hinted { animation: hintGlow 1.2s ease-in-out infinite; }
   @keyframes hintGlow {
