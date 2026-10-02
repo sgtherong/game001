@@ -48,6 +48,8 @@
       more_moves_btn: '+{n} moves (ad)', ad_moves_title: 'Watch an ad for +{n} moves', ad_moves_desc: 'Watch a short ad to get {n} more moves this round.',
       win_title: 'Solved!', win_title_optimal: 'Optimal solve!',
       win_replay: 'Replay', win_next: 'Next ▶',
+      privacy_link: 'Privacy Policy', daily_share: 'Share result', share_copied: 'Copied! Paste it anywhere to share.', crash_msg: 'Something went wrong while loading the game.', crash_reload: 'Reload', tip_dir_tile: "New tile! A piece that steps onto an arrow tile turns to face the tile's arrow.", tip_turn_tile: 'New tile! A piece that steps onto a spin tile turns its arrow 90° clockwise.', cloud_delete: 'Delete my cloud data', cloud_delete_confirm: 'Delete the progress saved in your Google account? Progress on this device stays.', cloud_deleted: 'Cloud data deleted.',
+      all_done: '<br>🎉 You have cleared every level! Keep playing with the Daily Challenge.',
       result_moves: '{moves} moves · min {min}',
       result_used_hint: ' · hint used', result_perfect: ' · perfect', result_recleared: ' · cleared again',
       drawer_title: 'Stages',
@@ -103,7 +105,7 @@
       header_help: 'Rules', header_album: 'Travel album', header_store: 'Store', header_stages: 'Stages',
       ch_learn: 'Learn the Rules', ch_relax: 'Easy Practice', ch_plan: 'Plan the Order',
       ch_board: 'Bigger Board', ch_plan4: '4×4 Planning', ch_four_intro: 'Four Pieces',
-      ch_four_plan: 'Four-Piece Plans', ch_journey: 'Long Journey',
+      ch_four_plan: 'Four-Piece Plans', ch_journey: 'Long Journey', ch_dir: 'Arrow Tiles', ch_turn: 'Spin Tiles', ch_mix: 'Tile Mix', tut_s5: 'Special tiles: an <b>arrow tile</b> points a piece that steps on it in its direction; a <b>spin tile</b> turns it 90° clockwise.',
     },
     ko: {
       lang_name: '한국어',
@@ -144,6 +146,8 @@
       more_moves_btn: '이동 +{n} (광고)', ad_moves_title: '광고 보고 이동 +{n}', ad_moves_desc: '짧은 광고를 보면 이번 판에 이동 {n}회를 더 드려요.',
       win_title: '성공!', win_title_optimal: '최단으로 성공!',
       win_replay: '다시 풀기', win_next: '다음 문제 ▶',
+      privacy_link: '개인정보처리방침', daily_share: '결과 공유하기', share_copied: '복사했어요! 원하는 곳에 붙여넣어 공유하세요.', crash_msg: '게임을 불러오다 문제가 생겼어요.', crash_reload: '새로고침', tip_dir_tile: '새 칸! 방향 칸에 들어선 조각은 화살표가 칸의 방향으로 바뀌어요.', tip_turn_tile: '새 칸! 회전 칸에 들어선 조각은 화살표가 시계 방향으로 한 번 돌아요.', cloud_delete: '클라우드 기록 삭제', cloud_delete_confirm: '구글 계정에 저장된 진행 기록을 지울까요? 이 기기의 기록은 그대로 남아요.', cloud_deleted: '클라우드 기록을 지웠어요.',
+      all_done: '<br>🎉 모든 레벨을 깼어요! 오늘의 도전으로 계속 즐겨보세요.',
       result_moves: '{moves}번 이동 · 최소 {min}번',
       result_used_hint: ' · 힌트 사용', result_perfect: ' · 완벽해요', result_recleared: ' · 다시 완료',
       drawer_title: '스테이지',
@@ -199,7 +203,7 @@
       header_help: '규칙 보기', header_album: '여행 앨범', header_store: '상점', header_stages: '스테이지 선택',
       ch_learn: '규칙 익히기', ch_relax: '편안한 반복', ch_plan: '순서 계획',
       ch_board: '넓은 보드 적응', ch_plan4: '4×4 계획', ch_four_intro: '네 조각 입문',
-      ch_four_plan: '네 조각 계획', ch_journey: '긴 여정',
+      ch_four_plan: '네 조각 계획', ch_journey: '긴 여정', ch_dir: '방향 칸', ch_turn: '회전 칸', ch_mix: '칸 섞기', tut_s5: '특별한 칸: <b>방향 칸</b>에 들어선 조각은 칸의 방향을 보고, <b>회전 칸</b>에 들어선 조각은 시계 방향으로 한 번 돌아요.',
     },
     es: {
       lang_name: 'Español',
@@ -236,6 +240,8 @@
       more_moves_btn: '+{n} movs (anuncio)', ad_moves_title: 'Ver un anuncio por +{n} movimientos', ad_moves_desc: 'Ve un anuncio corto para conseguir {n} movimientos más en esta ronda.',
       win_title: '¡Resuelto!', win_title_optimal: '¡Solución óptima!',
       win_replay: 'Repetir', win_next: 'Siguiente ▶',
+      privacy_link: 'Política de privacidad', daily_share: 'Compartir resultado', share_copied: '¡Copiado! Pégalo donde quieras para compartir.', crash_msg: 'Algo salió mal al cargar el juego.', crash_reload: 'Recargar', tip_dir_tile: '¡Casilla nueva! Una pieza que entra en una casilla de flecha pasa a apuntar hacia esa flecha.', tip_turn_tile: '¡Casilla nueva! Una pieza que entra en una casilla de giro gira su flecha 90° a la derecha.', cloud_delete: 'Borrar mis datos en la nube', cloud_delete_confirm: '¿Borrar el progreso guardado en tu cuenta de Google? El progreso de este dispositivo se conserva.', cloud_deleted: 'Datos en la nube borrados.',
+      all_done: '<br>🎉 ¡Has superado todos los niveles! Sigue jugando con el Reto diario.',
       result_moves: '{moves} movs · mín {min}',
       result_used_hint: ' · con pista', result_perfect: ' · perfecto', result_recleared: ' · repetido',
       drawer_title: 'Niveles',
@@ -291,7 +297,7 @@
       header_help: 'Reglas', header_album: 'Álbum de viaje', header_store: 'Tienda', header_stages: 'Niveles',
       ch_learn: 'Aprende las reglas', ch_relax: 'Práctica fácil', ch_plan: 'Planea el orden',
       ch_board: 'Tablero más grande', ch_plan4: 'Planificación 4×4', ch_four_intro: 'Cuatro piezas',
-      ch_four_plan: 'Planes de 4 piezas', ch_journey: 'Viaje largo',
+      ch_four_plan: 'Planes de 4 piezas', ch_journey: 'Viaje largo', ch_dir: 'Casillas de flecha', ch_turn: 'Casillas de giro', ch_mix: 'Mezcla de casillas', tut_s5: 'Casillas especiales: la <b>casilla de flecha</b> hace que la pieza que entra apunte en su dirección; la <b>casilla de giro</b> la gira 90° a la derecha.',
     },
     pt: {
       lang_name: 'Português',
@@ -328,6 +334,8 @@
       more_moves_btn: '+{n} mov (anúncio)', ad_moves_title: 'Assista a um anúncio por +{n} movimentos', ad_moves_desc: 'Assista a um anúncio curto para ganhar mais {n} movimentos nesta rodada.',
       win_title: 'Resolvido!', win_title_optimal: 'Solução ótima!',
       win_replay: 'Repetir', win_next: 'Próximo ▶',
+      privacy_link: 'Política de privacidade', daily_share: 'Compartilhar resultado', share_copied: 'Copiado! Cole onde quiser para compartilhar.', crash_msg: 'Algo deu errado ao carregar o jogo.', crash_reload: 'Recarregar', tip_dir_tile: 'Casa nova! A peça que entra numa casa de seta passa a apontar para a seta dela.', tip_turn_tile: 'Casa nova! A peça que entra numa casa de giro gira a seta 90° no sentido horário.', cloud_delete: 'Apagar meus dados na nuvem', cloud_delete_confirm: 'Apagar o progresso salvo na sua conta Google? O progresso deste dispositivo continua.', cloud_deleted: 'Dados na nuvem apagados.',
+      all_done: '<br>🎉 Você passou de todos os níveis! Continue jogando com o Desafio diário.',
       result_moves: '{moves} mov · mín {min}',
       result_used_hint: ' · com dica', result_perfect: ' · perfeito', result_recleared: ' · refeito',
       drawer_title: 'Fases',
@@ -383,7 +391,7 @@
       header_help: 'Regras', header_album: 'Álbum de viagem', header_store: 'Loja', header_stages: 'Fases',
       ch_learn: 'Aprenda as regras', ch_relax: 'Prática tranquila', ch_plan: 'Planeje a ordem',
       ch_board: 'Tabuleiro maior', ch_plan4: 'Planejamento 4×4', ch_four_intro: 'Quatro peças',
-      ch_four_plan: 'Planos de 4 peças', ch_journey: 'Jornada longa',
+      ch_four_plan: 'Planos de 4 peças', ch_journey: 'Jornada longa', ch_dir: 'Casas de seta', ch_turn: 'Casas de giro', ch_mix: 'Mistura de casas', tut_s5: 'Casas especiais: a <b>casa de seta</b> faz a peça que entra apontar na direção dela; a <b>casa de giro</b> gira a peça 90° no sentido horário.',
     },
     ru: {
       lang_name: 'Русский',
@@ -420,6 +428,8 @@
       more_moves_btn: '+{n} ход. (реклама)', ad_moves_title: 'Смотреть рекламу за +{n} ходов', ad_moves_desc: 'Посмотрите короткую рекламу, чтобы получить ещё {n} ходов в этом раунде.',
       win_title: 'Решено!', win_title_optimal: 'Идеальное решение!',
       win_replay: 'Заново', win_next: 'Далее ▶',
+      privacy_link: 'Политика конфиденциальности', daily_share: 'Поделиться результатом', share_copied: 'Скопировано! Вставьте, чтобы поделиться.', crash_msg: 'При загрузке игры что-то пошло не так.', crash_reload: 'Перезагрузить', tip_dir_tile: 'Новая клетка! Фишка, вставшая на клетку-стрелку, поворачивается по её стрелке.', tip_turn_tile: 'Новая клетка! Фишка, вставшая на клетку поворота, поворачивает стрелку на 90° по часовой.', cloud_delete: 'Удалить данные в облаке', cloud_delete_confirm: 'Удалить прогресс, сохранённый в аккаунте Google? Прогресс на этом устройстве останется.', cloud_deleted: 'Данные в облаке удалены.',
+      all_done: '<br>🎉 Вы прошли все уровни! Продолжайте с ежедневным вызовом.',
       result_moves: '{moves} ход. · мин {min}',
       result_used_hint: ' · с подсказкой', result_perfect: ' · идеально', result_recleared: ' · снова пройдено',
       drawer_title: 'Уровни',
@@ -475,7 +485,7 @@
       header_help: 'Правила', header_album: 'Альбом', header_store: 'Магазин', header_stages: 'Уровни',
       ch_learn: 'Изучаем правила', ch_relax: 'Лёгкая практика', ch_plan: 'Планируй порядок',
       ch_board: 'Поле побольше', ch_plan4: 'Планы на 4×4', ch_four_intro: 'Четыре фишки',
-      ch_four_plan: 'Планы с 4 фишками', ch_journey: 'Долгий путь',
+      ch_four_plan: 'Планы с 4 фишками', ch_journey: 'Долгий путь', ch_dir: 'Клетки-стрелки', ch_turn: 'Клетки поворота', ch_mix: 'Смесь клеток', tut_s5: 'Особые клетки: <b>клетка-стрелка</b> разворачивает вставшую на неё фишку по своей стрелке, а <b>клетка поворота</b> поворачивает её на 90° по часовой.',
     },
   };
 
@@ -510,6 +520,12 @@
     get lang() { return lang; },
     name(code) { return (S[code] && S[code].lang_name) || code; },
     setLang(code) { if (S[code]) { lang = code; try { localStorage.setItem(LS_KEY, code); } catch (e) {} apply(); if (window.onLangChange) window.onLangChange(); } },
+    // 포털 사용자 언어(예: "pt-BR")로 맞춘다 — 플레이어가 직접 고른 언어가 있으면 그것을 우선(저장하지 않음)
+    adoptLocale(locale) {
+      try { if (localStorage.getItem(LS_KEY)) return; } catch (e) {}
+      const code = String(locale || '').slice(0, 2).toLowerCase();
+      if (S[code]) lang = code;
+    },
     t, apply,
   };
   lang = pickInitial();

@@ -132,6 +132,12 @@
       await window.firebase.firestore().collection('progress').doc(uid)
         .set({ json: JSON.stringify(progressObj), updatedAt: Date.now() });
     },
+    // 이용자 요청 시 계정에 저장된 진행 기록 삭제(개인정보 삭제 요청 대응)
+    async remove(uid) {
+      await ensureFirebase();
+      clearTimeout(this._pushTimer);
+      await window.firebase.firestore().collection('progress').doc(uid).delete();
+    },
     _pushTimer: null,
     pushDebounced(uid, progressObj) {
       clearTimeout(this._pushTimer);
@@ -235,6 +241,8 @@
     gameplayStart() { try { window.CrazyGames.SDK.game.gameplayStart(); } catch (e) {} },
     gameplayStop() { try { window.CrazyGames.SDK.game.gameplayStop(); } catch (e) {} },
     happyTime() { try { window.CrazyGames.SDK.game.happytime(); } catch (e) {} },
+    // 사용자 언어(예: "en-US") — 문서 권장: 브라우저 언어보다 이 값으로 게임 언어를 정한다
+    locale() { try { return window.CrazyGames.SDK.user.systemInfo.locale || ''; } catch (e) { return ''; } },
     showRewarded() {
       return new Promise((res, rej) => {
         try {
@@ -307,17 +315,29 @@
   const crazygamesAdsAllowed = () => !!(window.BM_BRAND && window.BM_BRAND.crazygamesAds);
   // 로드 시점에 포털 여부를 확정(동기). SW/PWA 게이팅 등에서 init() 완료 전에 참조 가능.
   const IS_PORTAL = detect() !== local;
+  // 개발 환경(내 PC·파일로 열기)에서만 연습용 광고 화면·테스트 결제를 보여준다.
+  // 공개 사이트(gh-pages·Artifact)에선 진짜 광고·결제가 붙기 전까지 둘 다 숨긴다 —
+  // 실제 가격을 보여주며 돈을 받지 않는 화면은 이용자를 오해하게 만든다.
+  const IS_DEV = (() => {
+    try { const h = location.hostname || ''; return !h || h === 'localhost' || h === '127.0.0.1' || h === '0.0.0.0' || h.endsWith('.local'); }
+    catch (e) { return false; }
+  })();
 
   const AdsManager = {
     config,
     isPortal: IS_PORTAL, // true면 포털 iframe(자체호스팅 전용 기능은 끈다)
     get platform() { return adapter.name; },
+    // 포털이 알려주는 사용자 언어(없으면 빈 문자열 → 브라우저 언어 유지)
+    get locale() { try { return adapter.locale ? adapter.locale() : ''; } catch (e) { return ''; } },
     // false면 게임이 광고 제안(보상형) 버튼 자체를 숨긴다: SDK를 못 불러왔거나, CrazyGames Basic 단계
     get adsEnabled() {
       if (adapter === unavailable) return false;
       if (adapter.name === 'crazygames') return crazygamesAdsAllowed();
+      if (adapter === local) return IS_DEV; // 광고 네트워크가 없는 공개 사이트엔 광고 제안 안 함
       return true;
     },
+    // 유료 결제(프리미엄) 화면을 보여도 되는지: 네이티브 앱 결제(window.BM_IAP)가 붙었거나 개발 환경일 때만
+    get paymentsEnabled() { return !IS_PORTAL && (!!window.BM_IAP || IS_DEV); },
     async init(opts) {
       // 광고 표시 중 오디오 훅 등록(게임이 mute/unmute 제공)
       if (opts) {

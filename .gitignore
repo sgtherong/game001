@@ -23,3 +23,7 @@ node_modules/
 
 # 홍보용 표지/영상 산출물 (promo/render-*.cjs로 재생성)
 borrowed-motion-balance/promo/out/
+
+# CrazyGames 업로드용 압축 전 폴더
+swapstep-crazygames/
+borrowed-motion-balance/tiles-out/
