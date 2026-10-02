@@ -19,8 +19,8 @@ const PORT = 8130;
 const RATE = 0.25;         // 게임 시간이 실제의 1/4 속도로 흐르게 해서 프레임을 촘촘히 찍는다
 const FPS = 30;
 const COVER_SEC = 1.0, FADE_SEC = 0.5;
-const STAGE = 479;         // SS-0480: 월드 16, 4x4·조각 3·벽 1·최소 4수(조각이 제자리인 수가 가장 적은 판)
-const WORLD_START = 450;   // 월드 16 첫 스테이지. 앞의 9문제를 깬 상태로 시작 → 이 판이 10번째 = 스티커 2장째(🐅)
+const STAGE = 181;         // SS-0182: 월드 7, 4x4·조각 3·벽 1·최소 4수(조각이 제자리인 수가 0인 판) — 2026-10-02 초반 곡선 재생성 후 다시 고름
+const WORLD_START = 180;   // 월드 7 첫 스테이지. 이 월드에서 이 판을 뺀 9문제를 깬 상태로 시작 → 이 판이 10번째 = 스티커 2장째(🚣)
 
 const VIDEOS = [
   { name: 'preview-landscape-1920x1080.mp4', vw: 960, vh: 540, dsf: 2, W: 1920, H: 1080, cover: 'cover-landscape-1920x1080.png', bitrate: 10e6 },
@@ -61,7 +61,8 @@ const timeScaleScript = rate => `(() => {
 
 function seedProgress(stages) {
   const completed = {}, best = {};
-  for (let i = 0; i < WORLD_START + 9; i++) { completed[stages[i].id] = true; best[stages[i].id] = stages[i].min; }
+  // 앞 월드 전부 + 이 월드에서 이 판을 뺀 9문제
+  for (let i = 0, got = 0; i < WORLD_START + 10 && got < WORLD_START + 9; i++) { if (i === STAGE) continue; completed[stages[i].id] = true; best[stages[i].id] = stages[i].min; got++; }
   return { completed, best, solo: {}, last: STAGE, reached: STAGE, tutorialSeen: true, settings: { sound: false }, theme: 'default' };
 }
 

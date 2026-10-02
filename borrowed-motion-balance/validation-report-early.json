@@ -1,0 +1,286 @@
+{
+  "created": "2026-10-02",
+  "delivered": 1050,
+  "per_world": [
+    {
+      "world": 1,
+      "chapter": "규칙 익히기",
+      "board": 3,
+      "pieces": 3,
+      "avgMin": 2.93,
+      "avgRandom": 0.25
+    },
+    {
+      "world": 2,
+      "chapter": "편안한 반복",
+      "board": 3,
+      "pieces": 3,
+      "avgMin": 3.97,
+      "avgRandom": 0.09
+    },
+    {
+      "world": 3,
+      "chapter": "순서 계획",
+      "board": 3,
+      "pieces": 3,
+      "avgMin": 4.07,
+      "avgRandom": 0.12
+    },
+    {
+      "world": 4,
+      "chapter": "순서 계획",
+      "board": 3,
+      "pieces": 3,
+      "avgMin": 5,
+      "avgRandom": 0.07
+    },
+    {
+      "world": 5,
+      "chapter": "넓은 보드 적응",
+      "board": 4,
+      "pieces": 3,
+      "avgMin": 4.03,
+      "avgRandom": 0.1
+    },
+    {
+      "world": 6,
+      "chapter": "넓은 보드 적응",
+      "board": 4,
+      "pieces": 3,
+      "avgMin": 4.93,
+      "avgRandom": 0.05
+    },
+    {
+      "world": 7,
+      "chapter": "4×4 계획",
+      "board": 4,
+      "pieces": 3,
+      "avgMin": 4.97,
+      "avgRandom": 0.07
+    },
+    {
+      "world": 8,
+      "chapter": "4×4 계획",
+      "board": 4,
+      "pieces": 3,
+      "avgMin": 6.07,
+      "avgRandom": 0.03
+    },
+    {
+      "world": 9,
+      "chapter": "4×4 계획",
+      "board": 4,
+      "pieces": 3,
+      "avgMin": 6.07,
+      "avgRandom": 0.02
+    },
+    {
+      "world": 10,
+      "chapter": "네 조각 입문",
+      "board": 4,
+      "pieces": 4,
+      "avgMin": 3.97,
+      "avgRandom": 0.03
+    },
+    {
+      "world": 11,
+      "chapter": "네 조각 입문",
+      "board": 4,
+      "pieces": 4,
+      "avgMin": 5.1,
+      "avgRandom": 0.01
+    },
+    {
+      "world": 12,
+      "chapter": "순서 계획",
+      "board": 3,
+      "pieces": 3,
+      "avgMin": 5.57,
+      "avgRandom": 0.05
+    },
+    {
+      "world": 13,
+      "chapter": "네 조각 계획",
+      "board": 4,
+      "pieces": 4,
+      "avgMin": 4.93,
+      "avgRandom": 0.02
+    },
+    {
+      "world": 14,
+      "chapter": "네 조각 계획",
+      "board": 4,
+      "pieces": 4,
+      "avgMin": 6,
+      "avgRandom": 0.01
+    },
+    {
+      "world": 15,
+      "chapter": "4×4 계획",
+      "board": 4,
+      "pieces": 3,
+      "avgMin": 7.07,
+      "avgRandom": 0.02
+    },
+    {
+      "world": 16,
+      "chapter": "네 조각 계획",
+      "board": 4,
+      "pieces": 4,
+      "avgMin": 6.03,
+      "avgRandom": 0
+    },
+    {
+      "world": 17,
+      "chapter": "네 조각 계획",
+      "board": 4,
+      "pieces": 4,
+      "avgMin": 7.1,
+      "avgRandom": 0
+    },
+    {
+      "world": 18,
+      "chapter": "방향 칸",
+      "board": 4,
+      "pieces": 3,
+      "avgMin": 3.87,
+      "avgRandom": 0
+    },
+    {
+      "world": 19,
+      "chapter": "방향 칸",
+      "board": 4,
+      "pieces": 3,
+      "avgMin": 4.87,
+      "avgRandom": 0
+    },
+    {
+      "world": 20,
+      "chapter": "방향 칸",
+      "board": 4,
+      "pieces": 3,
+      "avgMin": 5.87,
+      "avgRandom": 0
+    },
+    {
+      "world": 21,
+      "chapter": "네 조각 계획",
+      "board": 4,
+      "pieces": 4,
+      "avgMin": 6.03,
+      "avgRandom": 0.01
+    },
+    {
+      "world": 22,
+      "chapter": "네 조각 계획",
+      "board": 4,
+      "pieces": 4,
+      "avgMin": 6.07,
+      "avgRandom": 0.01
+    },
+    {
+      "world": 23,
+      "chapter": "4×4 계획",
+      "board": 4,
+      "pieces": 3,
+      "avgMin": 7.03,
+      "avgRandom": 0.01
+    },
+    {
+      "world": 24,
+      "chapter": "네 조각 계획",
+      "board": 4,
+      "pieces": 4,
+      "avgMin": 7.07,
+      "avgRandom": 0
+    },
+    {
+      "world": 25,
+      "chapter": "네 조각 계획",
+      "board": 4,
+      "pieces": 4,
+      "avgMin": 7,
+      "avgRandom": 0
+    },
+    {
+      "world": 26,
+      "chapter": "긴 여정",
+      "board": 4,
+      "pieces": 4,
+      "avgMin": 7.57,
+      "avgRandom": 0
+    },
+    {
+      "world": 27,
+      "chapter": "회전 칸",
+      "board": 4,
+      "pieces": 4,
+      "avgMin": 3.87,
+      "avgRandom": 0
+    },
+    {
+      "world": 28,
+      "chapter": "회전 칸",
+      "board": 4,
+      "pieces": 4,
+      "avgMin": 4.87,
+      "avgRandom": 0
+    },
+    {
+      "world": 29,
+      "chapter": "회전 칸",
+      "board": 4,
+      "pieces": 4,
+      "avgMin": 5.87,
+      "avgRandom": 0
+    },
+    {
+      "world": 30,
+      "chapter": "긴 여정",
+      "board": 4,
+      "pieces": 4,
+      "avgMin": 7.57,
+      "avgRandom": 0
+    },
+    {
+      "world": 31,
+      "chapter": "긴 여정",
+      "board": 4,
+      "pieces": 4,
+      "avgMin": 8,
+      "avgRandom": 0
+    },
+    {
+      "world": 32,
+      "chapter": "칸 섞기",
+      "board": 4,
+      "pieces": 4,
+      "avgMin": 4.87,
+      "avgRandom": 0
+    },
+    {
+      "world": 33,
+      "chapter": "칸 섞기",
+      "board": 4,
+      "pieces": 4,
+      "avgMin": 5.87,
+      "avgRandom": 0
+    },
+    {
+      "world": 34,
+      "chapter": "칸 섞기",
+      "board": 4,
+      "pieces": 4,
+      "avgMin": 6.87,
+      "avgRandom": 0
+    },
+    {
+      "world": 35,
+      "chapter": "칸 섞기",
+      "board": 4,
+      "pieces": 4,
+      "avgMin": 7.87,
+      "avgRandom": 0
+    }
+  ]
+}
