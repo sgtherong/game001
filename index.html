@@ -12,6 +12,16 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="icon" type="image/png" href="icon-192.png">
 <title>SwapStep</title>
+<!-- 링크 공유 미리보기(메신저·SNS). 이미지 주소는 절대경로여야 해서 공개 사이트 주소를 쓴다 -->
+<meta name="description" content="Swap two arrows, step once. A cozy puzzle with 1050 levels, daily challenges and a travel sticker album.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="SwapStep — swap the arrows, step to the goal">
+<meta property="og:description" content="A cozy puzzle with 1050 levels, daily challenges and a travel sticker album.">
+<meta property="og:image" content="https://sgtherong.github.io/game001/og-image.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:url" content="https://sgtherong.github.io/game001/">
+<meta name="twitter:card" content="summary_large_image">
 <style>
   :root {
     --bg: #f3ead9;
@@ -98,6 +108,17 @@
     border-color: color-mix(in srgb, var(--ink) 30%, var(--cell-line));
     box-shadow: inset 0 2px 5px rgba(0,0,0,.18);
   }
+  /* 방향 칸·회전 칸: 지나갈 수 있는 칸. 들어선 조각의 화살표를 바꾼다(무늬가 조각 아래로 비쳐 보이도록 칸 중앙에 크게) */
+  .cell.tile { display: grid; place-items: center; position: relative; color: color-mix(in srgb, var(--ink) 58%, var(--cell));
+    background: color-mix(in srgb, var(--ink) 7%, var(--cell)); border-color: color-mix(in srgb, var(--ink) 22%, var(--cell-line)); }
+  .cell.tile > span { display: block; width: 58%; height: 58%; }
+  .cell.tile svg { display: block; width: 100%; height: 100%; }
+  /* 목표 칸과 겹치면 무늬를 왼쪽 위 모서리에 작게(목표 번호를 가리지 않게) */
+  .cell.tile.under-target { place-items: start; }
+  .cell.tile.under-target > span { width: 30%; height: 30%; margin: 7%; }
+  .cell.tile.fire { animation: tileFire .55s ease-out; }
+  @keyframes tileFire { 0% { box-shadow: 0 0 0 0 currentColor; filter: brightness(1.25); } 100% { box-shadow: 0 0 0 10px transparent; filter: none; } }
+  @media (prefers-reduced-motion: reduce) { .cell.tile.fire { animation: none; } }
   #layer { position: absolute; inset: 10px; }
 
   /* tokens: JS sets left/top/width/height/font-size in px against #layer */
@@ -538,6 +559,11 @@
   .chapter-head .nm em { font-style: normal; color: var(--muted); font-weight: 600; font-size: 11px; }
   /* backup modal */
   .backup-sheet { text-align: left; }
+  /* 개인정보처리방침·클라우드 삭제: 작은 글자 링크 (포털에선 숨김) */
+  .legal-links { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; margin: 4px 0 10px; }
+  .sound-toggle .legal-links { margin: 10px 0 0; }
+  .link-btn { background: none; border: 0; padding: 2px; font: inherit; font-size: 12px; font-weight: 600; color: var(--muted); text-decoration: underline; cursor: pointer; }
+  .link-btn[hidden], .legal-links[hidden], .tut-step[hidden], #dailyShare[hidden] { display: none; }
   .backup-sheet h3 { text-align: center; }
   .bk-label { font-size: 12px; font-weight: 700; color: var(--muted); margin: 4px 2px 6px; }
   .bk-area {
@@ -684,6 +710,7 @@
       <div class="lang-row"><span class="lang-lbl" data-i18n="lang_label">Language</span><select id="langSelect"></select></div>
       <button id="btnSound">🔊 Sound on</button>
       <button id="btnBackup" data-i18n="backup_open">Backup / Restore</button>
+      <div class="legal-links" id="drawerLegal"><a class="link-btn" href="privacy.html" target="_blank" rel="noopener" data-i18n="privacy_link">Privacy Policy</a></div>
     </div>
   </div>
 </div>
@@ -718,6 +745,7 @@
     <div class="tut-step"><div class="ic">👣</div><div class="tx" data-i18n-html="tut_s2"></div></div>
     <div class="tut-step"><div class="ic">⛔</div><div class="tx" data-i18n-html="tut_s3"></div></div>
     <div class="tut-step"><div class="ic">🎯</div><div class="tx" data-i18n-html="tut_s4"></div></div>
+    <div class="tut-step" id="tutTiles" hidden><div class="ic">🧭</div><div class="tx" data-i18n-html="tut_s5"></div></div>
     <button class="btn primary" id="tutorialStart" data-i18n="tut_start" style="width:100%;margin-top:8px;">Start</button>
   </div>
 </div>
@@ -762,6 +790,8 @@
     </div>
     <div class="daily-list" id="dailyList"></div>
     <div class="album-status" id="dailyAllDone" data-i18n="daily_all_done" hidden></div>
+    <button class="btn primary" id="dailyShare" data-i18n="daily_share" hidden style="width:100%;margin-top:8px;">Share result</button>
+    <div class="bk-status" id="dailyShareMsg" style="white-space:pre-line"></div>
     <div class="weekly">
       <div class="weekly-head">
         <span class="weekly-title" data-i18n="weekly_title">Weekly reward</span>
@@ -864,7 +894,8 @@
     <h3 data-i18n="backup_title">Backup &amp; Restore</h3>
     <div id="cloudSyncBox">
       <div class="bk-status" id="cloudStatus"></div>
-      <button class="btn primary" id="btnGoogleSync" style="width:100%;margin-bottom:14px;"></button>
+      <button class="btn primary" id="btnGoogleSync" style="width:100%;margin-bottom:6px;"></button>
+      <div class="legal-links"><button class="link-btn" id="btnCloudDelete" data-i18n="cloud_delete" hidden>Delete my cloud data</button><a class="link-btn" href="privacy.html" target="_blank" rel="noopener" data-i18n="privacy_link">Privacy Policy</a></div>
       <div class="bk-divider"></div>
     </div>
     <div class="bk-label" data-i18n="backup_export_label"></div>

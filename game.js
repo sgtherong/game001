@@ -14,6 +14,7 @@ const CHAPTER_KEY = {
   '규칙 익히기': 'ch_learn', '편안한 반복': 'ch_relax', '순서 계획': 'ch_plan',
   '넓은 보드 적응': 'ch_board', '4×4 계획': 'ch_plan4', '네 조각 입문': 'ch_four_intro',
   '네 조각 계획': 'ch_four_plan', '긴 여정': 'ch_journey',
+  '방향 칸': 'ch_dir', '회전 칸': 'ch_turn', '칸 섞기': 'ch_mix',
 };
 const chapterName = ko => (CHAPTER_KEY[ko] ? t(CHAPTER_KEY[ko]) : ko);
 const WORLD_SIZE = 30; // stages per world in the picker
@@ -29,7 +30,20 @@ const clone = s => s.map(p => p.slice());
 const key = s => s.flat().join(',');
 
 // walls: optional Set of "x,y" strings marking impassable cells (kept identical to rules.cjs)
-function outcome(s, pair, n, walls) {
+// tiles: optional Map "x,y" -> kind. 0~3 = 방향 칸(들어선 조각의 화살표가 그 방향이 됨),
+//        TILE_TURN(4) = 회전 칸(들어선 조각의 화살표가 시계 방향으로 90°). 칸은 막지 않는다.
+const TILE_TURN = 4;
+function applyTiles(s, out, pair, tiles) {
+  if (!tiles || !tiles.size) return out;
+  for (const i of pair) {
+    const p = out[i];
+    if (p[0] === s[i][0] && p[1] === s[i][1]) continue; // 실제로 들어선 조각만
+    const k = tiles.get(p[0] + ',' + p[1]);
+    if (k != null) p[2] = k === TILE_TURN ? (p[2] + 1) % 4 : k;
+  }
+  return out;
+}
+function outcome(s, pair, n, walls, tiles) {
   const t = clone(s), [a, b] = pair;
   [t[a][2], t[b][2]] = [t[b][2], t[a][2]];
   const proposed = t.map((p, i) => {
@@ -38,11 +52,11 @@ function outcome(s, pair, n, walls) {
     const blocked = x < 0 || x >= n || y < 0 || y >= n || s.some(q => q[0] === x && q[1] === y) || (walls && walls.has(x + ',' + y));
     return blocked ? p.slice(0, 2) : [x, y];
   });
-  return t.map((p, i) => {
+  return applyTiles(s, t.map((p, i) => {
     const q = proposed[i];
     const collision = proposed.filter(r => r[0] === q[0] && r[1] === q[1]).length > 1;
     return [collision ? p[0] : q[0], collision ? p[1] : q[1], p[2]];
-  });
+  }), pair, tiles);
 }
 
 function pairsFor(n) {
@@ -56,7 +70,7 @@ const isGoal = (state, targets) =>
 
 // Deterministic hint: shortest first move from the CURRENT state to any goal
 // arrangement (computed live from where the player is now, per design spec).
-function solveNext(state, targets, n, walls) {
+function solveNext(state, targets, n, walls, tiles) {
   if (isGoal(state, targets)) return null;
   const pairs = pairsFor(state.length);
   const startKey = key(state);
@@ -65,7 +79,7 @@ function solveNext(state, targets, n, walls) {
   for (let i = 0; i < queue.length; i++) {
     const s = queue[i];
     for (const pr of pairs) {
-      const t = outcome(s, pr, n, walls), k = key(t);
+      const t = outcome(s, pr, n, walls, tiles), k = key(t);
       if (parent.has(k)) continue;
       parent.set(k, { from: key(s), pair: pr });
       if (isGoal(t, targets)) {
@@ -128,6 +142,9 @@ function saveProgress(p) {
 const FREE_HINTS_PER_DAY = 3;
 const AD_HINTS_PER_DAY = 3;
 const MOVES_PER_AD = 3; // extra moves granted per rewarded ad when the budget runs out
+const WIN_REVEAL_MS = 650; // 마지막 이동 후 결과 창이 뜨기까지(판 위 축하 동작을 먼저 보여줌)
+const AD_GRACE_CLEARS = 10; // 첫 10판은 중간 광고 없음
+const ADS_EVERY_CLEARS = 3; // 그 뒤 3판마다 레벨 전환 때 중간 광고(포털 SDK가 3분 간격도 따로 지킴)
 const PREMIUM_PRICE = '₩4,900';
 const todayKey = () => { const d = new Date(); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; };
 function resetDailyIfNeeded() {
@@ -140,6 +157,8 @@ const isPremium = () => !!progress.premium;
 // 포털(CrazyGames 등)은 표준 IAP가 없어 유료 결제를 노출하지 않는다(광고 기반 수익).
 const onPortal = () => !!(window.AdsManager && window.AdsManager.isPortal);
 // 광고 제안을 보여줘도 되는지(CrazyGames Basic 단계·SDK 로드 실패면 false → 광고 버튼 숨김)
+// 유료 결제를 보여줄 수 있는지(포털·공개 사이트=false → 프리미엄 구매/복원/약관 숨김, 황혼 테마 무료)
+const paymentsOn = () => !!(window.AdsManager && window.AdsManager.paymentsEnabled);
 const adsOn = () => !window.AdsManager || window.AdsManager.adsEnabled !== false;
 const freeHintsLeft = () => { resetDailyIfNeeded(); return Math.max(0, FREE_HINTS_PER_DAY - progress.hints.free); };
 const adHintsLeft = () => { resetDailyIfNeeded(); return Math.max(0, AD_HINTS_PER_DAY - progress.hints.ad); };
@@ -174,6 +193,35 @@ function logEvent(name, data = {}) {
     localStorage.setItem(k, JSON.stringify(arr));
   } catch (e) {}
 }
+
+/* ---------- 오류 대비 ----------
+ * 게임이 다 뜨기 전에 오류가 나면 빈 화면 대신 '새로고침' 안내를 띄운다. 오류는 이용 기록(logEvent)에 남긴다.
+ * 광고 SDK 등 다른 사이트 스크립트의 오류("Script error.", 파일 정보 없음)는 게임 오류로 보지 않는다. */
+let booted = false;
+function showCrash() {
+  if (document.getElementById('crash')) return;
+  const tr = (k, en) => { try { const v = t(k); return v && v !== k ? v : en; } catch (e) { return en; } };
+  const d = document.createElement('div');
+  d.id = 'crash';
+  d.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;'
+    + 'justify-content:center;gap:16px;padding:24px;text-align:center;background:#f3ead9;color:#3a3226;'
+    + 'font-family:system-ui,-apple-system,sans-serif';
+  d.innerHTML = '<div style="font-size:44px">🧩</div>'
+    + '<div style="font-size:15px;max-width:300px;line-height:1.55">' + tr('crash_msg', 'Something went wrong while loading the game.') + '</div>'
+    + '<button style="padding:12px 22px;border:0;border-radius:14px;background:#d98b4a;color:#fff;font-weight:700;font-size:15px;cursor:pointer">'
+    + tr('crash_reload', 'Reload') + '</button>';
+  d.querySelector('button').addEventListener('click', () => location.reload());
+  document.body.appendChild(d);
+}
+const ownScript = f => { try { return !!f && new URL(f, location.href).origin === location.origin; } catch (e) { return false; } };
+window.addEventListener('error', e => {
+  if (!ownScript(e.filename)) return;
+  logEvent('js_error', { msg: String(e.message).slice(0, 200), src: String(e.filename).split('/').pop(), line: e.lineno });
+  if (!booted) showCrash();
+});
+window.addEventListener('unhandledrejection', e => {
+  const r = e.reason; logEvent('js_error', { msg: String((r && r.message) || r).slice(0, 200), kind: 'promise' });
+});
 
 /* ---------- album (travel stickers) ---------- */
 // One sticker per 5 first-clears; 6 stickers complete page one (at 30 clears).
@@ -290,6 +338,8 @@ const Sound = (() => {
     swap() { if (on()) { voice(587.33, 0.09, { type: 'sine', gain: 0.08, glide: 784, wet: 0.35 }); voice(784, 0.1, { type: 'sine', gain: 0.07, when: 0.05, glide: 587.33, wet: 0.35 }); } },
     move() { if (on()) { voice(392, 0.16, { type: 'sine', gain: 0.12, glide: 523.25, wet: 0.45 }); voice(784, 0.09, { type: 'triangle', gain: 0.03, when: 0.03, wet: 0.3 }); } },
     // 막힘: 나무 블록을 '톡' 두드린 소리 — 틀렸다는 경고음이 아니라 부딪힘 느낌
+    // 방향/회전 칸: 짧게 '휙' 올라가는 소리
+    tile() { if (on()) { voice(660, 0.12, { type: 'sine', gain: 0.09, glide: 990, wet: 0.5 }); voice(1320, 0.07, { type: 'sine', gain: 0.025, when: 0.04, wet: 0.4 }); } },
     blocked() { if (on()) { voice(240, 0.09, { type: 'sine', gain: 0.12, attack: 0.002, glide: 170, wet: 0.15 }); voice(480, 0.04, { type: 'triangle', gain: 0.03, attack: 0.002, wet: 0.05 }); } },
     lock(step) { if (on()) { const f = LOCK[Math.min(step, LOCK.length - 1)]; voice(f, 0.55, { type: 'sine', gain: 0.18, attack: 0.003, wet: 0.9 }); voice(f * 2, 0.35, { type: 'triangle', gain: 0.05, when: 0.004, wet: 0.6 }); } },
     win() { if (on()) [523.25, 659.25, 783.99, 1046.5, 1318.5].forEach((f, i) => voice(f, 0.5, { type: 'triangle', gain: 0.16, when: i * 0.085, wet: 0.8 })); },
@@ -413,6 +463,10 @@ function buildBoard() {
     cell.className = 'cell';
     const x = i % n, y = Math.floor(i / n); // row-major grid → (x,y), origin top-left
     if (G.wallSet && G.wallSet.has(x + ',' + y)) cell.classList.add('wall');
+    const tk = G.tileMap && G.tileMap.get(x + ',' + y);
+    if (tk === TILE_TURN) { cell.classList.add('tile', 'tile-turn'); cell.innerHTML = TURN_SVG; }
+    else if (tk != null) { cell.classList.add('tile', 'tile-dir'); cell.innerHTML = `<span style="transform:rotate(${tk * 90}deg)">${TILE_ARROW_SVG}</span>`; }
+    if (tk != null && G.stage.targets.some(t => t[0] === x && t[1] === y)) cell.classList.add('under-target');
     gridEl.appendChild(cell);
   }
 
@@ -442,6 +496,20 @@ function buildBoard() {
 
 // 오른쪽을 가리키는 굵은 화살표(회전으로 방향 표시) — 이 게임의 핵심 정보라 크게
 const ARROW_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h13M12 5.5 18.5 12 12 18.5" fill="none" stroke="#fff" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+// 칸 무늬: 방향 칸(속이 빈 화살표) / 회전 칸(시계 방향 고리 화살표)
+const TILE_ARROW_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 9.5h9V5l8 7-8 7v-4.5h-9z" fill="currentColor" fill-opacity=".22" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>';
+const TURN_SVG = '<span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12a7 7 0 1 1-2.05-4.95" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M18.6 3.2v4.6H14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>';
+
+// 화살표 회전 각도: 이전 각도에서 가장 가까운 쪽으로 돌린다(→에서 ↑로 갈 때 270° 역회전하지 않게).
+// 회전 칸은 항상 시계 방향 +90°.
+function arrowAngle(el, d, cw) {
+  const prev = el._ang == null ? d * 90 : el._ang;
+  let delta = ((d * 90 - prev) % 360 + 540) % 360 - 180; // -180..180
+  if (cw && delta <= 0) delta += 360;
+  el._ang = prev + delta;
+  return el._ang;
+}
 
 function pieceEls() { return [...layerEl.querySelectorAll('.piece')]; }
 function targetEls() { return [...layerEl.querySelectorAll('.target')]; }
@@ -479,6 +547,7 @@ function refreshPieces() {
     const [a, b] = G.selected;
     [shown[a][2], shown[b][2]] = [shown[b][2], shown[a][2]];
   }
+  if (G.dirShown) G.dirShown.forEach((d, i) => { shown[i][2] = d; }); // 칸 효과 전 방향(연출용)
 
   G.state.forEach((p, i) => {
     const tok = toks[i];
@@ -486,7 +555,7 @@ function refreshPieces() {
     tok.style.top = center(p[1]) + 'px';
     const arrow = tok.querySelector('.arrow');
     const d = shown[i][2];
-    arrow.style.transform = `rotate(${d * 90}deg)`;
+    arrow.style.transform = `rotate(${arrowAngle(arrow, d, G.turnCW && G.turnCW.has(i))}deg)`;
     tok.querySelector('.num').style.transform = `translate(${-VECTORS[d][0] * off}px, ${-VECTORS[d][1] * off}px)`;
     tok.classList.toggle('selected', G.selected.includes(i));
     tok.classList.toggle('hinted', !!(G.hintPair && G.hintPair.includes(i)) && !G.selected.includes(i));
@@ -511,7 +580,7 @@ function demoHint(pair) {
   clearHintDemo();
   if (!G.stage || G.animating) return;
   const n = G.stage.n, { center } = geom();
-  const next = outcome(G.state, pair, n, G.wallSet);
+  const next = outcome(G.state, pair, n, G.wallSet, G.tileMap);
   const later = (fn, ms) => hintDemoTimers.push(setTimeout(fn, ms));
   const same = () => !G.selected.length && G.hintPair && G.hintPair[0] === pair[0] && G.hintPair[1] === pair[1];
   const slideOut = () => {
@@ -520,7 +589,7 @@ function demoHint(pair) {
     pair.forEach((i, k) => {
       const el = toks[i]; if (!el) return;
       const d = next[i][2], off = geom().cell * 0.09; // 맞바꾼 방향 + 숫자는 반대쪽으로
-      el.querySelector('.arrow').style.transform = `rotate(${d * 90}deg)`;
+      const ar = el.querySelector('.arrow'); ar.style.transform = `rotate(${arrowAngle(ar, d)}deg)`;
       el.querySelector('.num').style.transform = `translate(${-VECTORS[d][0] * off}px, ${-VECTORS[d][1] * off}px)`;
       if (next[i][0] === G.state[i][0] && next[i][1] === G.state[i][1]) { bumpPiece(i, next[i][2]); return; }
       el.style.zIndex = 7; el.classList.add('demo');
@@ -573,6 +642,7 @@ function updatePreview() {
   if (outOfMoves) msg = t(canAdMoves ? 'moves_out' : 'moves_out_noad');
   else if (G.hintPair && G.hintMsg) msg = G.hintMsg;
   else if (G.tipMsg) msg = G.tipMsg;
+  else if (G.introMsg) msg = G.introMsg;
   else if (G.daily == null && G.index < WORLD_SIZE && !G.history.length && !G.selected.length && !coachOn) msg = t('select_two');
   hintTextEl.textContent = msg;
   btnUndo.classList.toggle('attn', outOfMoves);
@@ -592,20 +662,34 @@ function commitMove() {
   const tg = G.stage.targets;
   const onTgt = st => st.map((p, i) => p[0] === tg[i][0] && p[1] === tg[i][1]);
   const before = onTgt(G.state);
-  const next = outcome(G.state, G.selected, G.stage.n, G.wallSet);
+  const next = outcome(G.state, G.selected, G.stage.n, G.wallSet, G.tileMap);
   const blocked = G.selected.filter(i => G.state[i][0] === next[i][0] && G.state[i][1] === next[i][1]);
   const after = onTgt(next);
   const arrivals = next.map((_, i) => i).filter(i => after[i] && !before[i]);
   const placedAfter = after.filter(Boolean).length;
   const willWin = after.every(Boolean);
 
+  // 칸 효과: 조각이 칸에 도착한 '뒤에' 화살표가 바뀌는 걸 보이도록, 잠깐 바뀌기 전 방향으로 그린다
+  const raw = outcome(G.state, G.selected, G.stage.n, G.wallSet); // 칸 효과 없는 결과
+  const tiled = G.selected.filter(i => raw[i][2] !== next[i][2]);
+
   G.history.push(clone(G.state));
   G.state = next;
   G.selected = [];
   G.hintPair = null; G.hintMsg = '';
   G.animating = true;
+  if (tiled.length) G.dirShown = new Map(tiled.map(i => [i, raw[i][2]]));
   refreshPieces();
   updateHud();
+  if (tiled.length) setTimeout(() => {
+    G.dirShown = null;
+    G.turnCW = new Set(tiled.filter(i => G.tileMap.get(next[i][0] + ',' + next[i][1]) === TILE_TURN));
+    refreshPieces();
+    G.turnCW = null;
+    tiled.forEach(i => flashTile(next[i][0], next[i][1]));
+    Sound.tile();
+    G.introMsg = ''; // 새 칸 소개 문구는 칸이 처음 작동하면 내린다
+  }, 200);
 
   blocked.forEach(i => bumpPiece(i, next[i][2]));
   if (blocked.length) {
@@ -672,7 +756,7 @@ function endCoach() {
 }
 function coachUpdate() {
   if (!coachOn || !G.stage) { coachEl.hidden = true; return; }
-  const pair = solveNext(G.state, G.stage.targets, G.stage.n, G.wallSet);
+  const pair = solveNext(G.state, G.stage.targets, G.stage.n, G.wallSet, G.tileMap);
   const target = pair && (G.selected.length ? pair.find(i => !G.selected.includes(i)) : pair[0]);
   if (target == null) { coachEl.hidden = true; return; }
   coachEl.hidden = false;
@@ -682,6 +766,12 @@ function coachUpdate() {
   const f = $('#coachFinger');
   f.style.left = (lay.left - wrap.left + center(p[0])) + 'px';
   f.style.top = (lay.top - wrap.top + center(p[1])) + 'px';
+}
+
+// 방향/회전 칸이 작동한 순간 그 칸을 반짝
+function flashTile(x, y) {
+  const el = gridEl.children[y * G.stage.n + x]; if (!el) return;
+  el.classList.remove('fire'); void el.offsetWidth; el.classList.add('fire');
 }
 
 // ring pulse on a target + brief glow on the piece that just landed there
@@ -732,7 +822,7 @@ function useHint() {
   if (G.animating) return;
   if (G.selected.length) { G.selected = []; refreshPieces(); }
   if (G.hintPair) { demoHint(G.hintPair); return; } // 이미 보여준 힌트는 다시 써도 차감 없이 시연만 반복
-  const pair = solveNext(G.state, G.stage.targets, G.stage.n, G.wallSet);
+  const pair = solveNext(G.state, G.stage.targets, G.stage.n, G.wallSet, G.tileMap);
   if (!pair) {
     // stuck (needs undo): always free, never charged or ad-gated
     hintTextEl.textContent = t('hint_stuck_free');
@@ -746,7 +836,7 @@ function useHint() {
   // free exhausted → offer a rewarded ad if available for this day/attempt
   if (adsOn() && adHintsLeft() > 0 && !G.attemptAdUsed) { offerAd(pair); return; }
   hintTextEl.textContent = t(adsOn() ? 'hint_none_left' : 'hint_none_left_noad');
-  if (!onPortal()) openStore(t('store_note_hint')); // 포털에선 프리미엄 유도 대신 안내만
+  if (paymentsOn()) openStore(t('store_note_hint')); // 결제가 없는 곳(포털·공개 사이트)에선 프리미엄 유도 대신 안내만
 }
 // 추천된 두 조각을 빛나게 표시하고 이동 모습을 시연 — 실제로 누르는 건 플레이어
 function applyHint(pair, src) {
@@ -857,8 +947,8 @@ function renderStore(note) {
     ? t('store_status_premium')
     : t(adsOn() ? 'store_status_free' : 'store_status_free_noad', { free: freeHintsLeft(), fmax: FREE_HINTS_PER_DAY, ad: adHintsLeft(), amax: AD_HINTS_PER_DAY })
       + (bonusHintsLeft() > 0 ? ' · ' + t('store_status_bonus', { n: bonusHintsLeft() }) : '');
-  // 포털에선 유료 결제 UI(구매/보유/복원/약관)를 숨긴다 — 힌트는 광고 기반, 테마는 무료.
-  const portal = onPortal();
+  // 결제가 없는 곳(포털·공개 사이트)에선 유료 결제 UI(구매/보유/복원/약관)를 숨긴다 — 테마는 무료.
+  const portal = !paymentsOn();
   $('#premiumCard').hidden = portal || isPremium();
   $('#premiumOwned').hidden = portal || !isPremium();
   $('#restorePurchase').hidden = portal;
@@ -886,7 +976,7 @@ function restorePurchase() {
 function themeAllowed(pack) {
   if (pack === 'default') return true;
   if (pack === 'mint') return !!progress.themeUnlocked || isPremium();
-  if (pack === 'dusk') return isPremium() || onPortal(); // 포털엔 결제가 없어 무료 개방(코스메틱)
+  if (pack === 'dusk') return isPremium() || !paymentsOn(); // 결제가 없는 곳엔 무료 개방(코스메틱)
   return false;
 }
 function currentThemePack() {
@@ -974,12 +1064,33 @@ function mergeProgress(local, cloud) {
 function renderCloudStatus() {
   const statusEl = $('#cloudStatus'), btn = $('#btnGoogleSync');
   if (!statusEl || !btn) return;
+  const del = $('#btnCloudDelete');
+  if (del) del.hidden = !(progress.cloud && progress.cloud.linked);
   if (progress.cloud && progress.cloud.linked) {
     statusEl.textContent = t('cloud_linked', { email: progress.cloud.email || '' });
     btn.textContent = t('cloud_signout');
   } else {
     statusEl.textContent = t('cloud_hint');
     btn.textContent = t('cloud_signin');
+  }
+}
+// 이용자 요청: 계정(클라우드)에 저장된 진행 기록 삭제 → 연결도 해제(다시 올라가지 않게). 이 기기 기록은 유지.
+async function cloudDelete() {
+  if (!window.CloudSync || !(progress.cloud && progress.cloud.linked)) return;
+  if (!confirm(t('cloud_delete_confirm'))) return;
+  const statusEl = $('#cloudStatus');
+  try {
+    if (statusEl) statusEl.textContent = t('cloud_syncing');
+    const user = CloudSync.user || await CloudSync.restoreSession(4000) || await CloudSync.signIn();
+    await CloudSync.remove(user.uid);
+    await CloudSync.signOut();
+    progress.cloud = { linked: false, email: '' };
+    saveProgress(progress);
+    renderCloudStatus();
+    if (statusEl) statusEl.textContent = t('cloud_deleted');
+    logEvent('cloud_delete');
+  } catch (e) {
+    if (statusEl) statusEl.textContent = t('cloud_sync_err');
   }
 }
 async function cloudSignInOrOut() {
@@ -1082,6 +1193,9 @@ function onWin() {
     const dk = todayKey();
     progress.daily[dk] = progress.daily[dk] || [false, false, false];
     progress.daily[dk][G.daily] = true;
+    // 공유용 오늘의 별 기록(오늘 것만 보관, 더 좋은 기록 유지)
+    if (!progress.dailyStars || progress.dailyStars.d !== dk) progress.dailyStars = { d: dk, s: [0, 0, 0] };
+    progress.dailyStars.s[G.daily] = Math.max(progress.dailyStars.s[G.daily] || 0, tier);
     if (progress.daily[dk].every(Boolean)) {
       if (progress.streak.last !== dk) {
         progress.streak.n = (progress.streak.last === shiftDay(dk, -1)) ? (progress.streak.n + 1) : 1;
@@ -1101,16 +1215,20 @@ function onWin() {
     const hasNext = G.index < STAGES.length - 1;
     btnNextEl.textContent = t('win_next');
     btnNextEl.style.display = hasNext ? '' : 'none';
+    if (!hasNext) overlay.querySelector('.result-sub').innerHTML += t('all_done'); // 마지막 레벨: 완주 축하 + 데일리 안내
     overlay.dataset.mode = 'normal';
   }
-  overlay.classList.add('show');
-  // portal signal. happytime(사이트 축하 효과)은 문서상 매 클리어가 아닌 큰 순간에만 → 월드 완주·골드 스티커에서 호출
-  if (window.AdsManager) AdsManager.gameplayStop();
-  // midgame ad every 3rd clear (portal-gated via config; a no-op off-portal)
-  G.clearsSinceAd = (G.clearsSinceAd || 0) + 1;
-  if (G.clearsSinceAd >= 3) {
-    G.clearsSinceAd = 0;
-    if (window.AdsManager) { logEvent('midgame_ad', { platform: AdsManager.platform }); AdsManager.showInterstitial(); }
+  // 결과 창은 조금 늦게: 마지막 조각이 도착해 튀어 오르는 축하 동작을 판 위에서 먼저 보여준다.
+  // 그 사이 입력은 잠근다(G.animating) — 창이 뜨면 창이 입력을 막는다.
+  // 포털 신호(gameplayStop)는 창이 뜰 때 syncGameplay가 보낸다. happytime은 월드 완주·골드 스티커에서만.
+  G.animating = true;
+  clearTimeout(G.winTimer);
+  G.winTimer = setTimeout(() => { G.animating = false; overlay.classList.add('show'); syncGameplay(); }, WIN_REVEAL_MS);
+  // 중간 광고는 클리어 순간이 아니라 '다음 문제'를 누를 때(레벨 전환) 띄운다 — 3판마다.
+  // 처음 온 플레이어는 AD_GRACE_CLEARS판을 깰 때까지 광고 없이 게임에 빠져들게 둔다.
+  if (!daily && Object.keys(progress.completed).length > AD_GRACE_CLEARS) {
+    G.clearsSinceAd = (G.clearsSinceAd || 0) + 1;
+    if (G.clearsSinceAd >= ADS_EVERY_CLEARS) G.adDue = true;
   }
   Sound.win(); haptic([20, 40, 60]); confettiBurst(); screenFlash();
   pieceEls().forEach((el, k) => { setTimeout(() => { el.classList.remove('win-bounce'); void el.offsetWidth; el.classList.add('win-bounce'); }, k * 70); });
@@ -1141,7 +1259,7 @@ function onWin() {
     if (newGold) q.push(() => showStickerReward(sw, 'gold'));
     if (newSticker) q.push(() => showStickerReward(sw, worldStickers(sw) - 1));
     G.rewardQueue = q;
-    if (q.length) setTimeout(nextReward, 900);
+    if (q.length) setTimeout(nextReward, WIN_REVEAL_MS + 900);
   }
 }
 function nextReward() {
@@ -1193,18 +1311,36 @@ function renderStageLabels() {
   }
 }
 
+// 새 칸을 처음 만나는 판: 보드 아래에 한 줄 소개 + 그 칸들을 반짝(칸이 처음 작동할 때까지 문구 유지)
+// 이미 본 종류여도, 그 칸이 처음 나오는 월드의 첫 판에서는 다시 알려준다.
+function introduceTiles() {
+  if (!G.tileMap.size) return;
+  const kinds = [...G.tileMap.values()];
+  const hasTurn = kinds.includes(TILE_TURN), hasDir = kinds.some(k => k !== TILE_TURN);
+  const seen = progress.seenTiles || (progress.seenTiles = {});
+  const kind = hasTurn && !seen.turn ? 'turn' : hasDir && !seen.dir ? 'dir' : null;
+  if (!kind) return;
+  seen[kind] = true; saveProgress(progress);
+  G.introMsg = t(kind === 'turn' ? 'tip_turn_tile' : 'tip_dir_tile');
+  setTimeout(() => G.tileMap.forEach((k, c) => {
+    if ((k === TILE_TURN) === (kind === 'turn')) { const [x, y] = c.split(',').map(Number); flashTile(x, y); }
+  }), 450);
+}
 function loadStage(index, dailySlot = null) {
   clearHintDemo();
+  clearTimeout(G.winTimer); G.animating = false; // 결과 창 대기 중에 다른 스테이지로 가도 옛 결과가 뜨지 않게
   G.index = Math.max(0, Math.min(STAGES.length - 1, index));
   G.stage = STAGES[G.index];
   G.wallSet = new Set((G.stage.walls || []).map(w => w[0] + ',' + w[1])); // impassable cells
+  G.tileMap = new Map((G.stage.tiles || []).map(c => [c[0] + ',' + c[1], c[2]])); // 방향 칸·회전 칸
+  G.dirShown = null; // 칸 효과 연출 중 잠깐 보여줄 '바뀌기 전' 방향
   G.state = clone(G.stage.start);
   G.history = [];
   G.selected = [];
   G.usedHint = false;
   G.attemptAdUsed = false;
   G.budgetBonus = 0;
-  G.hintPair = null; G.hintMsg = ''; G.tipMsg = '';
+  G.hintPair = null; G.hintMsg = ''; G.tipMsg = ''; G.introMsg = '';
   G.daily = dailySlot; // non-null => playing today's daily puzzle
   if (dailySlot === null) { progress.last = G.index; saveProgress(progress); } // daily doesn't move main progress
   updateHintButton();
@@ -1214,11 +1350,12 @@ function loadStage(index, dailySlot = null) {
   overlay.classList.remove('show');
   buildBoard();
   coachOn = false;
+  introduceTiles();
   updateHud();
   updatePreview();
   renderProgress();
   startCoach();
-  if (window.AdsManager) AdsManager.gameplayStart(); // portal signal: level active
+  syncGameplay(); // portal signal: level active (창이 하나도 안 떠 있을 때만)
 }
 
 // 진행 막대: 지금 월드 안에서 몇 문제 깼는지(x/30) — 전체 1050 대신 손에 잡히는 목표
@@ -1384,7 +1521,27 @@ function renderDaily() {
     wrap.appendChild(card);
   });
   $('#dailyAllDone').hidden = !done.every(Boolean);
+  // 결과 공유: 오늘 3문제를 다 깼고 결제·외부 링크가 없는 포털이 아닐 때만(포털은 외부 링크 금지)
+  $('#dailyShare').hidden = !done.every(Boolean) || onPortal();
   renderWeekly();
+}
+// 워들처럼 이모지 결과 한 덩어리 — 공유 시트가 있으면 그것을, 없으면 클립보드로
+async function shareDaily() {
+  const dk = todayKey();
+  const ds = progress.dailyStars && progress.dailyStars.d === dk ? progress.dailyStars.s : [0, 0, 0];
+  const labels = [t('daily_easy'), t('daily_medium'), t('daily_hard')];
+  const name = (window.BM_BRAND && window.BM_BRAND.name) || 'SwapStep';
+  const url = (window.BM_BRAND && window.BM_BRAND.shareUrl) || (location.origin + location.pathname);
+  const lines = [`${name} · ${t('daily_title')} ${dk}`]
+    .concat(labels.map((l, k) => `${l} ${'⭐'.repeat(ds[k] || 1)}${'▫️'.repeat(3 - (ds[k] || 1))}`))
+    .concat([t('daily_streak', { n: progress.streak.n || 0 }), url]);
+  const text = lines.join('\n');
+  logEvent('daily_share');
+  try {
+    if (navigator.share) { await navigator.share({ text }); return; }
+  } catch (e) { if (e && e.name === 'AbortError') return; }
+  try { await navigator.clipboard.writeText(text); $('#dailyShareMsg').textContent = t('share_copied'); }
+  catch (e) { $('#dailyShareMsg').textContent = text; }
 }
 
 /* ---------- weekly reward panel ---------- */
@@ -1435,7 +1592,10 @@ function claimWeekly(i) {
 
 /* ---------- tutorial ---------- */
 const tutorial = $('#tutorial');
-function openTutorial() { tutorial.classList.add('show'); }
+function openTutorial() {
+  const tt = $('#tutTiles'); if (tt) tt.hidden = !(progress.seenTiles && (progress.seenTiles.dir || progress.seenTiles.turn)); // 칸을 만난 뒤에만 설명
+  tutorial.classList.add('show');
+}
 function closeTutorial() {
   tutorial.classList.remove('show');
   progress.tutorialSeen = true; saveProgress(progress);
@@ -1504,15 +1664,24 @@ btnUndo.addEventListener('click', undo);
 btnRestart.addEventListener('click', restart);
 btnHint.addEventListener('click', useHint);
 $('#coachSkip').addEventListener('click', endCoach);
-$('#btnNext').addEventListener('click', () => {
-  if (overlay.dataset.mode === 'daily') { overlay.classList.remove('show'); openDaily(); }
-  else loadStage(G.index + 1);
+$('#btnNext').addEventListener('click', async e => {
+  if (overlay.dataset.mode === 'daily') { overlay.classList.remove('show'); openDaily(); return; }
+  if (G.adDue && window.AdsManager) {
+    // 광고 요청~종료 동안 버튼을 막아 진행하지 못하게 한다(포털 규격)
+    const btn = e.currentTarget; btn.disabled = true;
+    G.adDue = false; G.clearsSinceAd = 0;
+    logEvent('midgame_ad', { platform: AdsManager.platform });
+    try { await AdsManager.showInterstitial(); } catch (err) {}
+    btn.disabled = false;
+  }
+  loadStage(G.index + 1);
 });
 $('#btnReplay').addEventListener('click', () => { overlay.classList.remove('show'); restart(); });
 $('#btnStages').addEventListener('click', openDrawer);
 // daily challenge
 $('#btnDaily').addEventListener('click', openDaily);
 $('#dailyClose').addEventListener('click', closeDaily);
+$('#dailyShare').addEventListener('click', shareDaily);
 $('#dailyBackdrop').addEventListener('click', closeDaily);
 $('#drawerClose').addEventListener('click', closeDrawer);
 $('#drawerBackdrop').addEventListener('click', closeDrawer);
@@ -1566,6 +1735,7 @@ $('#backupBackdrop').addEventListener('click', closeBackup);
 $('#backupCopy').addEventListener('click', copyBackup);
 $('#backupRestore').addEventListener('click', doRestore);
 $('#btnGoogleSync').addEventListener('click', cloudSignInOrOut);
+$('#btnCloudDelete').addEventListener('click', cloudDelete);
 
 // store / monetization
 $('#btnStore').addEventListener('click', () => openStore());
@@ -1590,6 +1760,21 @@ document.addEventListener('keydown', e => {
   else if (e.key === 'r' || e.key === 'R') restart();
   else if (e.key === 'h' || e.key === 'H') useHint();
 });
+
+// 포털 gameplayStart/Stop: 결과·메뉴·상점 등 어떤 창이든 떠 있으면 '멈춤', 모두 닫히면 '플레이 중'.
+// 창마다 호출을 넣는 대신 창들의 class 변화를 지켜보고 한곳에서 판단한다(중복 신호 없음).
+let gameplayOn = false;
+function syncGameplay() {
+  if (!window.AdsManager) return;
+  const on = !!G.stage && !document.querySelector('.modal.show, .overlay.show, .drawer.open');
+  if (on === gameplayOn) return;
+  gameplayOn = on;
+  if (on) AdsManager.gameplayStart(); else AdsManager.gameplayStop();
+}
+if (window.MutationObserver) {
+  const mo = new MutationObserver(syncGameplay);
+  document.querySelectorAll('.modal, .overlay, .drawer').forEach(el => mo.observe(el, { attributes: true, attributeFilter: ['class'] }));
+}
 
 let resizeTimer;
 const relayoutBoard = () => {
@@ -1627,9 +1812,12 @@ async function boot() {
   }
   // 포털 SDK 저장소가 준비됐다면 그 백엔드에서 진행도를 다시 읽는다(부팅 전엔 localStorage 기본값).
   if (window.Store && Store.backend === 'sdk') progress = loadProgress();
+  // 포털이 알려주는 사용자 언어 우선(직접 고른 언어가 있으면 그대로)
+  if (window.AdsManager && AdsManager.locale) { window.I18N.adoptLocale(AdsManager.locale); langSelect.value = window.I18N.lang; }
 
   reconcileReached();        // unlock up to the furthest completed stage (migration)
   applyBranding();           // apply rebranding config (name/tagline/accent)
+  if (onPortal()) { const dl = $('#drawerLegal'); if (dl) dl.hidden = true; } // 포털: 외부 링크 숨김
   window.I18N.apply();       // fill static data-i18n strings
   applySoundIcon();
   resetDailyIfNeeded();
@@ -1640,5 +1828,6 @@ async function boot() {
   loadStage(progress.last || 0);        // start at last played stage
   // 첫 플레이 안내는 규칙 창 대신 1레벨 화면 안에서 손가락으로(startCoach, loadStage에서 호출)
   trySilentCloudRestore(); // 백그라운드: 이전에 연결한 계정이면 조용히 최신 진행도로 맞춘다
+  booted = true;
 }
-boot();
+boot().catch(e => { logEvent('js_error', { msg: String((e && e.message) || e).slice(0, 200), kind: 'boot' }); showCrash(); });
