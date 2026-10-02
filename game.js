@@ -18,7 +18,6 @@ const CHAPTER_KEY = {
 const chapterName = ko => (CHAPTER_KEY[ko] ? t(CHAPTER_KEY[ko]) : ko);
 const WORLD_SIZE = 30; // stages per world in the picker
 const worldOf = index => Math.floor(index / WORLD_SIZE); // 0-based world of a stage index
-const worldLabel = index => t('world', { n: worldOf(index) + 1 });
 const WORLD_TINTS = 7; // 배경 색조 순환 개수(기본 테마에서만 적용; index.html의 data-world-tint 규칙과 짝)
 function applyWorldTint(index) { document.documentElement.dataset.worldTint = String(worldOf(index) % WORLD_TINTS); }
 
@@ -285,11 +284,13 @@ const Sound = (() => {
   const SEL = [523.25, 587.33, 659.25, 783.99];               // C5 D5 E5 G5 by piece
   const LOCK = [523.25, 659.25, 783.99, 987.77, 1174.66];      // rising as pieces land
   return {
-    selectAt(i) { if (on()) voice(SEL[i % SEL.length], 0.13, { type: 'triangle', gain: 0.12, attack: 0.004, wet: 0.3 }); },
+    // 마림바처럼 둥근 소리: 사인 기음 + 옅은 2배음, 짧게 감쇠 (거친 톱니/사각파는 쓰지 않는다)
+    selectAt(i) { if (on()) { const f = SEL[i % SEL.length]; voice(f, 0.16, { type: 'sine', gain: 0.13, attack: 0.003, wet: 0.3 }); voice(f * 2, 0.08, { type: 'sine', gain: 0.035, attack: 0.003, wet: 0.2 }); } },
     select() { this.selectAt(0); },
-    swap() { if (on()) { voice(660, 0.1, { type: 'triangle', gain: 0.09, glide: 500, wet: 0.4 }); voice(500, 0.12, { type: 'triangle', gain: 0.08, when: 0.045, glide: 680, wet: 0.4 }); } },
-    move() { if (on()) voice(300, 0.17, { type: 'sine', gain: 0.13, glide: 540, wet: 0.5 }); },
-    blocked() { if (on()) { voice(150, 0.15, { type: 'sawtooth', gain: 0.1, glide: 85, wet: 0.2 }); voice(95, 0.1, { type: 'square', gain: 0.05, when: 0.02, wet: 0.1 }); } },
+    swap() { if (on()) { voice(587.33, 0.09, { type: 'sine', gain: 0.08, glide: 784, wet: 0.35 }); voice(784, 0.1, { type: 'sine', gain: 0.07, when: 0.05, glide: 587.33, wet: 0.35 }); } },
+    move() { if (on()) { voice(392, 0.16, { type: 'sine', gain: 0.12, glide: 523.25, wet: 0.45 }); voice(784, 0.09, { type: 'triangle', gain: 0.03, when: 0.03, wet: 0.3 }); } },
+    // 막힘: 나무 블록을 '톡' 두드린 소리 — 틀렸다는 경고음이 아니라 부딪힘 느낌
+    blocked() { if (on()) { voice(240, 0.09, { type: 'sine', gain: 0.12, attack: 0.002, glide: 170, wet: 0.15 }); voice(480, 0.04, { type: 'triangle', gain: 0.03, attack: 0.002, wet: 0.05 }); } },
     lock(step) { if (on()) { const f = LOCK[Math.min(step, LOCK.length - 1)]; voice(f, 0.55, { type: 'sine', gain: 0.18, attack: 0.003, wet: 0.9 }); voice(f * 2, 0.35, { type: 'triangle', gain: 0.05, when: 0.004, wet: 0.6 }); } },
     win() { if (on()) [523.25, 659.25, 783.99, 1046.5, 1318.5].forEach((f, i) => voice(f, 0.5, { type: 'triangle', gain: 0.16, when: i * 0.085, wet: 0.8 })); },
     sticker() { if (on()) [784, 988, 1319, 1568].forEach((f, i) => voice(f, 0.4, { type: 'sine', gain: 0.14, when: i * 0.07, wet: 0.9 })); },
@@ -382,8 +383,8 @@ const hintTextEl = $('#hintText');
 const btnUndo = $('#btnUndo');
 const btnRestart = $('#btnRestart');
 const btnHint = $('#btnHint');
-const btnCommit = $('#btnCommit');
-const btnCancel = $('#btnCancel');
+const movesInfoEl = $('#movesInfo');
+const goalInfoEl = $('#goalInfo');
 const overlay = $('#overlay');
 const stageListEl = $('#stageList');
 const progressBarEl = $('#progressBar');
@@ -429,26 +430,20 @@ function buildBoard() {
     tok.className = 'piece';
     tok.dataset.i = i;
     tok.style.setProperty('--c', PIECE_COLORS[i]);
-    tok.innerHTML = `<span class="num">${i + 1}</span><span class="arrow"></span><span class="stop">${t('stop_badge')}</span>`;
+    tok.setAttribute('aria-label', String(i + 1));
+    tok.innerHTML = `<span class="num">${i + 1}</span><span class="arrow">${ARROW_SVG}</span>`;
     tok.addEventListener('click', () => onPieceClick(i));
     layerEl.appendChild(tok);
-  });
-
-  G.state.forEach((p, i) => {
-    const gh = document.createElement('div');
-    gh.className = 'pv-ghost';
-    gh.dataset.i = i;
-    gh.style.setProperty('--c', PIECE_COLORS[i]);
-    gh.innerHTML = `<span>${i + 1}</span>`;
-    layerEl.appendChild(gh);
   });
 
   applyStaticGeometry();
   refreshPieces();
 }
 
+// 오른쪽을 가리키는 굵은 화살표(회전으로 방향 표시) — 이 게임의 핵심 정보라 크게
+const ARROW_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h13M12 5.5 18.5 12 12 18.5" fill="none" stroke="#fff" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
 function pieceEls() { return [...layerEl.querySelectorAll('.piece')]; }
-function ghostEls() { return [...layerEl.querySelectorAll('.pv-ghost')]; }
 function targetEls() { return [...layerEl.querySelectorAll('.target')]; }
 
 // size + place elements that do not depend on preview (targets, token sizes, fonts)
@@ -468,19 +463,14 @@ function applyStaticGeometry() {
   pieceEls().forEach(el => {
     el.style.width = pieceSize + 'px';
     el.style.height = pieceSize + 'px';
-    el.querySelector('.num').style.fontSize = fs;
-  });
-  ghostEls().forEach(el => {
-    el.style.width = pieceSize + 'px';
-    el.style.height = pieceSize + 'px';
-    el.style.fontSize = fs;
+    el.querySelector('.num').style.fontSize = Math.round(cell * 0.32) + 'px'; // 큰 화살표와 겹치지 않는 크기
   });
 }
 
-function refreshPieces(previewState) {
-  const { center } = geom();
+function refreshPieces() {
+  const { center, cell } = geom();
   const toks = pieceEls();
-  const ghosts = ghostEls();
+  const off = cell * 0.09; // 숫자를 화살표 반대쪽으로 미는 거리(위·아래 화살표와 숫자가 겹치지 않게)
 
   // decide displayed direction: if two selected, show swapped directions
   const shown = clone(G.state);
@@ -494,29 +484,14 @@ function refreshPieces(previewState) {
     tok.style.left = center(p[0]) + 'px';
     tok.style.top = center(p[1]) + 'px';
     const arrow = tok.querySelector('.arrow');
-    arrow.style.transform = `rotate(${shown[i][2] * 90}deg)`;
+    const d = shown[i][2];
+    arrow.style.transform = `rotate(${d * 90}deg)`;
+    tok.querySelector('.num').style.transform = `translate(${-VECTORS[d][0] * off}px, ${-VECTORS[d][1] * off}px)`;
     tok.classList.toggle('selected', G.selected.includes(i));
+    tok.classList.toggle('hinted', !!(G.hintPair && G.hintPair.includes(i)) && !G.selected.includes(i));
     tok.classList.toggle('on-target',
       p[0] === G.stage.targets[i][0] && p[1] === G.stage.targets[i][1]);
-    tok.classList.remove('will-stop');
   });
-
-  // ghosts + stop badges
-  ghosts.forEach(g => g.classList.remove('show'));
-  if (previewState) {
-    G.selected.forEach(i => {
-      const from = G.state[i], to = previewState[i];
-      const moved = from[0] !== to[0] || from[1] !== to[1];
-      if (moved) {
-        const g = ghosts[i];
-        g.style.left = center(to[0]) + 'px';
-        g.style.top = center(to[1]) + 'px';
-        g.classList.add('show');
-      } else {
-        toks[i].classList.add('will-stop');
-      }
-    });
-  }
 }
 
 /* ---------- hint demo (non-destructive move preview animation) ---------- */
@@ -530,84 +505,94 @@ function clearHintDemo() {
   hintDemoTimers = [];
   resetDemoPieces();
 }
+// 힌트로 추천된 두 조각(G.hintPair)이 화살표를 맞바꾼 채 목적지로 갔다 돌아오는 시연을 반복
 function demoHint(pair) {
   clearHintDemo();
   if (!G.stage || G.animating) return;
   const n = G.stage.n, { center } = geom();
   const next = outcome(G.state, pair, n, G.wallSet);
   const later = (fn, ms) => hintDemoTimers.push(setTimeout(fn, ms));
-  const stillSelected = () => G.selected.length === 2 && G.selected[0] === pair[0] && G.selected[1] === pair[1];
+  const same = () => !G.selected.length && G.hintPair && G.hintPair[0] === pair[0] && G.hintPair[1] === pair[1];
   const slideOut = () => {
-    if (G.animating || !stillSelected()) { clearHintDemo(); return; }
+    if (G.animating || !same()) { clearHintDemo(); return; }
     const toks = pieceEls();
-    pair.forEach(i => {
+    pair.forEach((i, k) => {
       const el = toks[i]; if (!el) return;
+      const d = next[i][2], off = geom().cell * 0.09; // 맞바꾼 방향 + 숫자는 반대쪽으로
+      el.querySelector('.arrow').style.transform = `rotate(${d * 90}deg)`;
+      el.querySelector('.num').style.transform = `translate(${-VECTORS[d][0] * off}px, ${-VECTORS[d][1] * off}px)`;
+      if (next[i][0] === G.state[i][0] && next[i][1] === G.state[i][1]) { bumpPiece(i, next[i][2]); return; }
       el.style.zIndex = 7; el.classList.add('demo');
       el.style.left = center(next[i][0]) + 'px';
       el.style.top = center(next[i][1]) + 'px';
     });
-    later(slideBack, 640); // hold at destination, then return
+    later(slideBack, 720); // 목적지에서 잠깐 멈췄다가 복귀
   };
-  // updatePreview() would overwrite the "hint: pieces a & b" message each loop, so only reposition
   const slideBack = () => {
     resetDemoPieces();
-    refreshPieces(movesLeft() > 0 ? outcome(G.state, G.selected, n, G.wallSet) : null);
-    later(slideOut, 1100); // pause at the start before the next loop
+    refreshPieces();
+    later(slideOut, 1100);
   };
-  later(slideOut, 260); // let the arrow swap register first
+  later(slideOut, 320);
 }
 
 /* ---------- interaction ---------- */
+// 조각을 하나 누르면 들어 올리고, 두 번째를 누르면 화살표가 맞바뀌는 걸 잠깐 보여준 뒤 바로 이동한다.
+// 같은 조각을 다시 누르면 선택 해제. (예전의 '미리보기 → 이동 버튼' 3단계 조작은 포털 심사에서 느리다는 평)
+const SWAP_SHOW_MS = 240;
 function onPieceClick(i) {
-  if (G.animating) return;
+  if (G.animating || G.selected.length === 2) return;
   clearHintDemo();
   Sound.unlock();
-  const pos = G.selected.indexOf(i);
-  if (pos !== -1) {
-    G.selected.splice(pos, 1);
-  } else if (G.selected.length < 2) {
-    G.selected.push(i);
-  } else {
-    // replace oldest
-    G.selected = [G.selected[1], i];
+  G.tipMsg = '';
+  if (movesLeft() <= 0) { Sound.blocked(); haptic([12, 30, 12]); updatePreview(); return; }
+  if (G.selected.includes(i)) {
+    G.selected = [];
+    Sound.selectAt(i);
+    updatePreview();
+    return;
   }
+  G.selected.push(i);
   Sound.selectAt(i); haptic(8);
-  updatePreview();
+  if (G.selected.length < 2) { updatePreview(); return; }
+  refreshPieces();
+  coachUpdate();
+  Sound.swap();
+  G.animating = true; // 화살표 교환을 보여주는 동안 입력 잠금
+  setTimeout(() => { G.animating = false; commitMove(); }, SWAP_SHOW_MS);
 }
 
+// 보드 아래 한 줄 안내 + 버튼 상태 갱신 (예전 이름 유지: 여러 곳에서 호출)
 function updatePreview() {
   const outOfMoves = movesLeft() <= 0;
-  let preview = null;
-  if (G.selected.length === 2 && !outOfMoves) {
-    preview = outcome(G.state, G.selected, G.stage.n, G.wallSet);
-    boardEl.classList.add('previewing');
-  } else {
-    boardEl.classList.remove('previewing');
-  }
-  refreshPieces(preview);
+  refreshPieces();
   // 예산 소진 + 비프리미엄 → '광고 보고 +이동' 버튼 노출 (프리미엄은 광고 없음, 되돌리기/재시작 사용)
   const canAdMoves = outOfMoves && !isPremium() && adsOn();
-  btnCommit.disabled = G.selected.length !== 2 || outOfMoves; // 예산 소진 시 이동 불가
-  btnCancel.disabled = G.selected.length === 0;
-  hintTextEl.textContent = outOfMoves ? t(canAdMoves ? 'moves_out' : 'moves_out_noad')
-    : t(G.selected.length === 2 ? 'preview_hint' : 'select_two');
+  let msg = '';
+  if (outOfMoves) msg = t(canAdMoves ? 'moves_out' : 'moves_out_noad');
+  else if (G.hintPair && G.hintMsg) msg = G.hintMsg;
+  else if (G.tipMsg) msg = G.tipMsg;
+  else if (G.daily == null && G.index < WORLD_SIZE && !G.history.length && !G.selected.length && !coachOn) msg = t('select_two');
+  hintTextEl.textContent = msg;
+  btnUndo.classList.toggle('attn', outOfMoves);
+  btnRestart.classList.toggle('attn', outOfMoves && !canAdMoves);
   const mmRow = $('#moreMovesRow'), mmBtn = $('#btnMoreMoves');
   if (mmRow && mmBtn) {
     mmRow.hidden = !canAdMoves;
     if (canAdMoves) mmBtn.textContent = t('more_moves_btn', { n: MOVES_PER_AD });
   }
+  coachUpdate();
 }
 
 function commitMove() {
   if (G.selected.length !== 2 || G.animating) return;
-  if (movesLeft() <= 0) return; // 이동 예산 소진 — 되돌리기/재시작 필요
+  if (movesLeft() <= 0) { G.selected = []; updatePreview(); return; } // 이동 예산 소진 — 되돌리기/재시작 필요
   clearHintDemo();
   const tg = G.stage.targets;
   const onTgt = st => st.map((p, i) => p[0] === tg[i][0] && p[1] === tg[i][1]);
   const before = onTgt(G.state);
   const next = outcome(G.state, G.selected, G.stage.n, G.wallSet);
-  const anyBlocked = G.selected.some(i =>
-    G.state[i][0] === next[i][0] && G.state[i][1] === next[i][1]);
+  const blocked = G.selected.filter(i => G.state[i][0] === next[i][0] && G.state[i][1] === next[i][1]);
   const after = onTgt(next);
   const arrivals = next.map((_, i) => i).filter(i => after[i] && !before[i]);
   const placedAfter = after.filter(Boolean).length;
@@ -616,27 +601,86 @@ function commitMove() {
   G.history.push(clone(G.state));
   G.state = next;
   G.selected = [];
+  G.hintPair = null; G.hintMsg = '';
   G.animating = true;
-  boardEl.classList.remove('previewing');
   refreshPieces();
   updateHud();
 
-  Sound.swap();
-  if (anyBlocked) { Sound.blocked(); haptic([12, 30, 12]); } else { Sound.move(); haptic(16); }
-  // target lock-in: ring pulse (always) + rising chime (except on the winning move,
+  blocked.forEach(i => bumpPiece(i, next[i][2]));
+  if (blocked.length) {
+    Sound.blocked(); haptic([12, 30, 12]);
+    // 처음 막혀 봤을 때만 규칙을 한 줄로 알려준다(경험하는 순간에 설명)
+    if (!progress.tipBlocked) { progress.tipBlocked = true; saveProgress(progress); G.tipMsg = t('tip_blocked'); }
+  } else { Sound.move(); haptic(16); }
+  // target lock-in: ring pulse + sparkles (always) + rising chime (except on the winning move,
   // where the win jingle takes over)
   arrivals.forEach((i, k) => {
     setTimeout(() => {
-      pulseTarget(i);
+      pulseTarget(i); sparkle(i);
       if (!willWin) { Sound.lock(placedAfter - arrivals.length + k); haptic(10); }
     }, 300 + k * 90);
   });
 
   setTimeout(() => {
     G.animating = false;
+    if (coachOn) endCoach();
     if (isGoal(G.state, G.stage.targets)) onWin();
     else updatePreview();
-  }, 320);
+  }, 360);
+}
+
+// 막힌 조각: 화살표 방향으로 툭 부딪혔다가 제자리
+function bumpPiece(i, dir) {
+  const el = pieceEls()[i]; if (!el) return;
+  const d = geom().cell * 0.14;
+  el.style.setProperty('--dx', VECTORS[dir][0] * d + 'px');
+  el.style.setProperty('--dy', VECTORS[dir][1] * d + 'px');
+  el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
+  setTimeout(() => el.classList.remove('bump'), 400);
+}
+
+// 목표 도착: 조각 색 반짝이가 사방으로 튄다
+function sparkle(i) {
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const { cell, center } = geom(), t = G.stage.targets[i];
+  for (let k = 0; k < 10; k++) {
+    const a = (k / 10) * Math.PI * 2 + Math.random() * 0.4, r = cell * (0.45 + Math.random() * 0.25);
+    const s = document.createElement('div');
+    s.className = 'spark';
+    s.style.left = center(t[0]) + 'px'; s.style.top = center(t[1]) + 'px';
+    s.style.setProperty('--c', k % 3 === 0 ? '#f5c518' : PIECE_COLORS[i]);
+    s.style.setProperty('--tx', Math.cos(a) * r + 'px'); s.style.setProperty('--ty', Math.sin(a) * r + 'px');
+    layerEl.appendChild(s);
+    setTimeout(() => s.remove(), 650);
+  }
+}
+
+/* ---------- first-play coach: in-game tutorial on Level 1 ---------- */
+// 텍스트 규칙 창 대신, 처음 플레이하는 사람에게 손가락이 누를 조각을 가리키며 한 줄씩 안내(건너뛰기 가능).
+const coachEl = $('#coach');
+let coachOn = false;
+function startCoach() {
+  coachOn = !progress.tutorialSeen && G.index === 0 && G.daily == null;
+  coachUpdate();
+}
+function endCoach() {
+  coachOn = false;
+  coachEl.hidden = true;
+  if (!progress.tutorialSeen) { progress.tutorialSeen = true; saveProgress(progress); }
+  if (G.stage && !G.animating) updatePreview();
+}
+function coachUpdate() {
+  if (!coachOn || !G.stage) { coachEl.hidden = true; return; }
+  const pair = solveNext(G.state, G.stage.targets, G.stage.n, G.wallSet);
+  const target = pair && (G.selected.length ? pair.find(i => !G.selected.includes(i)) : pair[0]);
+  if (target == null) { coachEl.hidden = true; return; }
+  coachEl.hidden = false;
+  $('#coachText').textContent = t(G.selected.length ? 'coach_2' : 'coach_1');
+  const wrap = coachEl.parentElement.getBoundingClientRect();
+  const { center } = geom(), lay = layerEl.getBoundingClientRect(), p = G.state[target];
+  const f = $('#coachFinger');
+  f.style.left = (lay.left - wrap.left + center(p[0])) + 'px';
+  f.style.top = (lay.top - wrap.top + center(p[1])) + 'px';
 }
 
 // ring pulse on a target + brief glow on the piece that just landed there
@@ -660,6 +704,8 @@ function undo() {
   clearHintDemo();
   G.state = G.history.pop();
   G.selected = [];
+  G.hintPair = null; G.hintMsg = ''; G.tipMsg = '';
+  Sound.selectAt(0);
   refreshPieces();
   updateHud();
   updatePreview();
@@ -671,6 +717,7 @@ function restart() {
   G.state = clone(G.stage.start);
   G.history = [];
   G.selected = [];
+  G.hintPair = null; G.hintMsg = ''; G.tipMsg = '';
   G.usedHint = false;
   G.attemptAdUsed = false;
   G.budgetBonus = 0; // 재시작 시 예산 원복(전체 이동 복구)
@@ -682,6 +729,8 @@ function restart() {
 // hint entry point — routes through free quota / rewarded ad / premium
 function useHint() {
   if (G.animating) return;
+  if (G.selected.length) { G.selected = []; refreshPieces(); }
+  if (G.hintPair) { demoHint(G.hintPair); return; } // 이미 보여준 힌트는 다시 써도 차감 없이 시연만 반복
   const pair = solveNext(G.state, G.stage.targets, G.stage.n, G.wallSet);
   if (!pair) {
     // stuck (needs undo): always free, never charged or ad-gated
@@ -698,20 +747,21 @@ function useHint() {
   hintTextEl.textContent = t(adsOn() ? 'hint_none_left' : 'hint_none_left_noad');
   if (!onPortal()) openStore(t('store_note_hint')); // 포털에선 프리미엄 유도 대신 안내만
 }
+// 추천된 두 조각을 빛나게 표시하고 이동 모습을 시연 — 실제로 누르는 건 플레이어
 function applyHint(pair, src) {
   G.usedHint = true;
-  G.selected = pair.slice();
-  updatePreview();
-  demoHint(pair); // animate the suggested move so the player sees how the two pieces move
+  G.selected = [];
+  G.hintPair = pair.slice();
   const left = isPremium() ? t('hint_left_unlimited') : t('hint_left_free', { n: hintsAvailable() });
-  hintTextEl.textContent = t('hint_applied', { a: pair[0] + 1, b: pair[1] + 1, left });
+  G.hintMsg = t('hint_applied', { a: pair[0] + 1, b: pair[1] + 1, left });
+  updatePreview();
+  demoHint(pair);
   updateHintButton();
   logEvent('hint_used', { src });
 }
 function updateHintButton() {
-  if (!btnHint) return;
-  const badge = isPremium() ? '∞' : `(${hintsAvailable()})`;
-  btnHint.innerHTML = `💡 ${t('hint_btn')} <span style="color:var(--muted);font-weight:600">${badge}</span>`;
+  const c = $('#hintCount'); if (!c) return;
+  c.textContent = isPremium() ? '∞' : String(hintsAvailable());
 }
 
 /* ---------- rewarded ad (routed through AdsManager adapter) ---------- */
@@ -1126,8 +1176,20 @@ function starTier(moves, min) {
 
 /* ---------- hud / navigation ---------- */
 function updateHud() {
-  const min = G.stage ? G.stage.min : 0;
-  btnUndo.innerHTML = `${t('undo')} <span style="color:var(--muted);font-weight:600">${t('undo_meta', { n: G.history.length, max: moveBudget(), min })}</span>`;
+  if (!G.stage) return;
+  movesInfoEl.textContent = t('moves_info', { n: G.history.length, max: moveBudget() });
+  goalInfoEl.textContent = t('goal_info', { min: G.stage.min });
+}
+// 상단 라벨: "Level 41" + "World 2 · Paris" (데일리는 "Daily Challenge" + 난이도)
+function renderStageLabels() {
+  if (!G.stage) return;
+  if (G.daily != null) {
+    stageTitleEl.textContent = t('daily_title');
+    chapterEl.textContent = [t('daily_easy'), t('daily_medium'), t('daily_hard')][G.daily];
+  } else {
+    stageTitleEl.textContent = t('level', { n: G.index + 1 });
+    chapterEl.textContent = t('album_page', { n: worldOf(G.index) + 1, place: placeName(worldOf(G.index)) });
+  }
 }
 
 function loadStage(index, dailySlot = null) {
@@ -1141,25 +1203,29 @@ function loadStage(index, dailySlot = null) {
   G.usedHint = false;
   G.attemptAdUsed = false;
   G.budgetBonus = 0;
+  G.hintPair = null; G.hintMsg = ''; G.tipMsg = '';
   G.daily = dailySlot; // non-null => playing today's daily puzzle
   if (dailySlot === null) { progress.last = G.index; saveProgress(progress); } // daily doesn't move main progress
   updateHintButton();
 
-  stageTitleEl.textContent = `${G.stage.id} · ${G.index + 1}/${STAGES.length}`;
-  chapterEl.textContent = worldLabel(G.index);
+  renderStageLabels();
   applyWorldTint(G.index);
   overlay.classList.remove('show');
   buildBoard();
+  coachOn = false;
   updateHud();
   updatePreview();
   renderProgress();
+  startCoach();
   if (window.AdsManager) AdsManager.gameplayStart(); // portal signal: level active
 }
 
+// 진행 막대: 지금 월드 안에서 몇 문제 깼는지(x/30) — 전체 1050 대신 손에 잡히는 목표
 function renderProgress() {
-  const done = Object.keys(progress.completed).filter(k => progress.completed[k]).length;
-  progressBarEl.style.width = (done / STAGES.length * 100) + '%';
-  progressTextEl.textContent = t('progress_done', { done, total: STAGES.length });
+  if (!G.stage) return;
+  const w = worldOf(G.index), done = worldClears(w), total = worldRange(w)[1] - worldRange(w)[0];
+  progressBarEl.style.width = (done / total * 100) + '%';
+  progressTextEl.textContent = `${done}/${total}`;
 }
 
 function renderStageList() {
@@ -1391,7 +1457,9 @@ function applyBranding() {
   const b = window.BM_BRAND || {};
   const name = b.name || 'SwapStep', tag = b.tagline || '';
   const brandEl = document.querySelector('header .brand');
-  if (brandEl) brandEl.innerHTML = name + (tag ? `<small>${tag}</small>` : '');
+  // 기본 이름이면 표지와 같은 두 색(주황 Swap + 청록 Step), 라이선스로 바꾼 이름은 그대로
+  const nameHtml = name === 'SwapStep' ? '<span class="a">Swap</span><span class="b">Step</span>' : name;
+  if (brandEl) brandEl.innerHTML = nameHtml + (tag ? `<small>${tag}</small>` : '');
   if (name) document.title = name;
   // recolor only when a licensee set a non-default accent (keeps themes intact by default)
   if (b.accent && b.accent !== '#d98b4a') document.documentElement.style.setProperty('--accent', b.accent);
@@ -1434,8 +1502,7 @@ function closeDrawer() { drawer.classList.remove('open'); }
 btnUndo.addEventListener('click', undo);
 btnRestart.addEventListener('click', restart);
 btnHint.addEventListener('click', useHint);
-btnCommit.addEventListener('click', commitMove);
-btnCancel.addEventListener('click', () => { clearHintDemo(); G.selected = []; updatePreview(); });
+$('#coachSkip').addEventListener('click', endCoach);
 $('#btnNext').addEventListener('click', () => {
   if (overlay.dataset.mode === 'daily') { overlay.classList.remove('show'); openDaily(); }
   else loadStage(G.index + 1);
@@ -1480,9 +1547,9 @@ langSelect.addEventListener('change', () => window.I18N.setLang(langSelect.value
 // re-render dynamic strings when language changes (static handled by I18N.apply)
 function refreshDynamic() {
   if ($('#langSelect')) $('#langSelect').value = window.I18N.lang;
-  updateHud(); updateHintButton(); applySoundIcon(); renderProgress();
-  if (G.stage) chapterEl.textContent = worldLabel(G.index);
-  document.querySelectorAll('#layer .piece .stop').forEach(el => el.textContent = t('stop_badge')); // 배지 언어 갱신
+  updateHud(); updateHintButton(); applySoundIcon(); renderProgress(); renderStageLabels();
+  if (G.hintPair) G.hintMsg = t('hint_applied', { a: G.hintPair[0] + 1, b: G.hintPair[1] + 1,
+    left: isPremium() ? t('hint_left_unlimited') : t('hint_left_free', { n: hintsAvailable() }) });
   updatePreview();
   if (drawer.classList.contains('open')) renderStageList();
   if ($('#store').classList.contains('show')) renderStore('');
@@ -1515,10 +1582,12 @@ $('#adOfferClose').addEventListener('click', closeAd);
 $('#btnMoreMoves').addEventListener('click', offerMoreMoves);
 
 document.addEventListener('keydown', e => {
+  if (document.querySelector('.modal.show, .overlay.show, .drawer.open')) return; // 창이 떠 있으면 게임 키 무시
   if (e.key === 'z' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); undo(); }
-  else if (e.key === 'Enter' && !btnCommit.disabled) commitMove();
-  // Escape는 포털(CrazyGames)에서 전체화면 종료용이라 게임 동작에 쓰지 않는다. 선택 해제는 '취소' 버튼 사용.
-  else if (e.key === 'r') restart();
+  // 숫자 키 1~4 = 그 번호 조각 누르기 (두 개 누르면 이동). Escape는 포털 전체화면 종료용이라 쓰지 않는다.
+  else if (/^[1-4]$/.test(e.key) && !e.ctrlKey && !e.metaKey && G.stage && +e.key <= G.state.length) onPieceClick(+e.key - 1);
+  else if (e.key === 'r' || e.key === 'R') restart();
+  else if (e.key === 'h' || e.key === 'H') useHint();
 });
 
 let resizeTimer;
@@ -1527,8 +1596,8 @@ const relayoutBoard = () => {
   resizeTimer = setTimeout(() => {
     if (!G.stage) return;
     applyStaticGeometry();
-    const preview = G.selected.length === 2 ? outcome(G.state, G.selected, G.stage.n, G.wallSet) : null;
-    refreshPieces(preview);
+    refreshPieces();
+    coachUpdate();
   }, 120);
 };
 window.addEventListener('resize', relayoutBoard);
@@ -1568,7 +1637,7 @@ async function boot() {
   registerSW();
   if (window.AdsManager) AdsManager.loadingStop(); // 로딩 끝 → 이어서 loadStage가 gameplayStart
   loadStage(progress.last || 0);        // start at last played stage
-  if (!progress.tutorialSeen) openTutorial(); // first-run tutorial
+  // 첫 플레이 안내는 규칙 창 대신 1레벨 화면 안에서 손가락으로(startCoach, loadStage에서 호출)
   trySilentCloudRestore(); // 백그라운드: 이전에 연결한 계정이면 조용히 최신 진행도로 맞춘다
 }
 boot();
