@@ -19,8 +19,8 @@ const PORT = 8130;
 const RATE = 0.25;         // 게임 시간이 실제의 1/4 속도로 흐르게 해서 프레임을 촘촘히 찍는다
 const FPS = 30;
 const COVER_SEC = 1.0, FADE_SEC = 0.5;
-const STAGE = 181;         // SS-0182: 월드 7, 4x4·조각 3·벽 1·최소 4수(조각이 제자리인 수가 0인 판) — 2026-10-02 초반 곡선 재생성 후 다시 고름
-const WORLD_START = 180;   // 월드 7 첫 스테이지. 이 월드에서 이 판을 뺀 9문제를 깬 상태로 시작 → 이 판이 10번째 = 스티커 2장째(🚣)
+const STAGE = 540;         // SS-0541: 월드 19, 4x4·조각 3·벽 1·방향 칸 1·최소 4수 — 풀이 중 방향 칸이 실제로 작동하는 판(새 요소를 보여 줌)
+const WORLD_START = 540;   // 월드 19 첫 스테이지. 이 월드에서 이 판을 뺀 9문제를 깬 상태로 시작 → 이 판이 10번째 = 스티커 2장째(🥟)
 
 const VIDEOS = [
   { name: 'preview-landscape-1920x1080.mp4', vw: 960, vh: 540, dsf: 2, W: 1920, H: 1080, cover: 'cover-landscape-1920x1080.png', bitrate: 10e6 },
@@ -66,7 +66,7 @@ function seedProgress(stages) {
   return { completed, best, solo: {}, last: STAGE, reached: STAGE, tutorialSeen: true, settings: { sound: false }, theme: 'default' };
 }
 
-// 페이지 안에서 도는 시연: 손가락이 조각 두 개 → 이동 버튼을 누르며 최단 해법대로 푼다(시간은 게임 시간 기준)
+// 페이지 안에서 도는 시연: 손가락이 조각 두 개를 차례로 눌러 최단 해법대로 푼다(시간은 게임 시간 기준)
 async function demoInPage() {
   const sleep = ms => new Promise(r => setTimeout(r, ms));
   const f = document.createElement('div');
@@ -100,7 +100,7 @@ async function demoInPage() {
   f.style.opacity = '1';
   await sleep(200);
   for (let k = 0; k < 8; k++) {
-    const pair = solveNext(G.state, G.stage.targets, G.stage.n, G.wallSet);
+    const pair = solveNext(G.state, G.stage.targets, G.stage.n, G.wallSet, G.tileMap);
     if (!pair) break;
     await tap(pieceEls()[pair[0]]); await sleep(260);   // 첫 조각이 들려 있는 모습
     await tap(pieceEls()[pair[1]]);                     // 두 번째 탭 → 화살표 교환 후 바로 이동
