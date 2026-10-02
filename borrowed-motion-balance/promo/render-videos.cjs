@@ -95,20 +95,19 @@ async function demoInPage() {
     place(cur, 0.86); ripple(cur); await sleep(110);
     el.click(); place(cur); await sleep(90);
   };
-  place(cur); await sleep(520);
+  place(cur); await sleep(800);
   f.style.opacity = '1';
   await sleep(200);
   for (let k = 0; k < 8; k++) {
     const pair = solveNext(G.state, G.stage.targets, G.stage.n, G.wallSet);
     if (!pair) break;
-    await tap(pieceEls()[pair[0]]); await sleep(170);
-    await tap(pieceEls()[pair[1]]); await sleep(560);          // 미리보기(점선 유령)가 보이는 시간
-    await tap(document.querySelector('#btnCommit'));
-    await sleep(100); while (G.animating) await sleep(30); await sleep(240);
+    await tap(pieceEls()[pair[0]]); await sleep(260);   // 첫 조각이 들려 있는 모습
+    await tap(pieceEls()[pair[1]]);                     // 두 번째 탭 → 화살표 교환 후 바로 이동
+    await sleep(100); while (G.animating) await sleep(30); await sleep(520);
   }
   f.style.opacity = '0';
   while (!document.querySelector('#stickerOverlay.show')) await sleep(40); // 승리 → 0.9초 뒤 스티커 팝업
-  await sleep(1900);
+  await sleep(3000); // 규정상 영상은 15초 이상 — 마지막 스티커 장면을 넉넉히
 }
 
 const jpegSize = buf => { for (let i = 2; i < buf.length;) { const m = buf[i + 1], L = buf.readUInt16BE(i + 2); if (m >= 0xC0 && m <= 0xC2) return [buf.readUInt16BE(i + 7), buf.readUInt16BE(i + 5)]; i += 2 + L; } };

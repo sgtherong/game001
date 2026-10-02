@@ -22,9 +22,17 @@ const SIZES = [
     await page.setViewport({ width: s.w, height: s.h, deviceScaleFactor: 1 });
     await page.goto(`${url}?layout=${s.layout}`, { waitUntil: 'networkidle0' });
     await page.waitForSelector('body[data-ready="1"]');
-    const font = await page.evaluate(() => document.fonts.check('700 40px Fredoka'));
+    const m = await page.evaluate(() => {
+      const t = document.querySelector('.title').getBoundingClientRect(), b = document.querySelector('.board').getBoundingClientRect();
+      const pct = (v, total) => Math.round(v / total * 100);
+      return { font: document.fonts.check('700 40px Fredoka'), titleTop: pct(t.top, innerHeight), titleLeft: pct(t.left, innerWidth),
+        boardTop: pct(b.top, innerHeight), boardBottom: pct(b.bottom, innerHeight) };
+    });
+    // CrazyGames 크롭 화면에 표시되는 왼쪽 위 라벨 영역(가로%, 세로%) — 제목이 여기와 겹치면 안 된다
+    const zone = { landscape: [40, 19], portrait: [40, 10], square: [35, 30] }[s.layout];
+    const labelClear = m.titleTop >= zone[1] + 2 || m.titleLeft >= zone[0] + 2;
     await page.screenshot({ path: path.join(OUT, s.name), type: 'png' });
-    console.log(`${s.name}  (font loaded: ${font})`);
+    console.log(`${s.name}  font:${m.font} title top ${m.titleTop}% left ${m.titleLeft}% (label zone ${zone[0]}x${zone[1]}%: ${labelClear ? 'clear' : 'OVERLAP'}), board ${m.boardTop}-${m.boardBottom}%`);
     await page.close();
   }
   await browser.close();

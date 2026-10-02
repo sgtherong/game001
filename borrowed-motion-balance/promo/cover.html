@@ -23,8 +23,10 @@
   .stage { position: relative; display: flex; align-items: center; justify-content: center; }
   body.landscape .stage { flex-direction: row; gap: calc(var(--u) * 7); }
   body.portrait .stage, body.square .stage { flex-direction: column; }
-  body.portrait .stage { gap: calc(var(--u) * 11); }
-  body.square .stage { gap: calc(var(--u) * 7); }
+  /* CrazyGames가 표지 왼쪽 위에 라벨을 덮는다(크롭 화면 기준: 세로형 ~40%x10%, 정사각 ~35%x30%).
+     세로형은 제목을 조금 내리고, 정사각은 영역이 커서 보드를 위·제목을 아래로 둔다. */
+  body.portrait .stage { gap: calc(var(--u) * 9); position: relative; top: calc(var(--u) * 7); }
+  body.square .stage { flex-direction: column-reverse; gap: calc(var(--u) * 5); position: relative; top: calc(var(--u) * 1); }
 
   /* title */
   .title {
@@ -38,7 +40,7 @@
   body.landscape .title .b { margin-left: calc(var(--u) * 7); }
   body.portrait .title { font-size: calc(var(--u) * 20); }
   body.portrait .title .a, body.portrait .title .b { display: inline; }
-  body.square .title { font-size: calc(var(--u) * 15); }
+  body.square .title { font-size: calc(var(--u) * 14); }
   body.square .title .a, body.square .title .b { display: inline; }
 
   /* board */
@@ -50,7 +52,7 @@
     transform: rotate(-5deg);
   }
   body.portrait .board { --B: calc(var(--u) * 76); transform: rotate(-4deg); }
-  body.square .board { --B: calc(var(--u) * 57); transform: rotate(-4deg); }
+  body.square .board { --B: calc(var(--u) * 53); transform: rotate(-4deg); }
   .grid { position: absolute; inset: calc(var(--B) * .035); display: grid; grid-template: repeat(4, 1fr) / repeat(4, 1fr); gap: calc(var(--B) * .022); }
   .cell { background: #f6efe0; border: calc(var(--u) * .2) solid #e8dcc4; border-radius: calc(var(--B) * .04); }
   .cell.wall {
