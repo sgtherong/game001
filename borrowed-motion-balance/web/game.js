@@ -153,7 +153,7 @@ function saveProgress(p) {
 const FREE_HINTS_PER_DAY = 3;
 const AD_HINTS_PER_DAY = 3;
 const MOVES_PER_AD = 3; // extra moves granted per rewarded ad when the budget runs out
-const WIN_REVEAL_MS = 650; // 마지막 이동 후 결과 창이 뜨기까지(판 위 축하 동작을 먼저 보여줌)
+const WIN_REVEAL_MS = 1650; // 마지막 이동 후 결과 창이 뜨기까지(통통 → 조각이 목표로 쏙 → 여행지 그림을 판 위에서 먼저 보여줌)
 // 플레이로 얻는 보너스 힌트(매일 초기화 안 됨): 광고가 없는 곳(포털 Basic 단계 등)에서도 막히면 쓸 수 있게
 const HINTS_PER_STICKER = 1, HINTS_PER_GOLD = 2, HINTS_PER_WORLD = 3;
 const AD_GRACE_CLEARS = 10; // 첫 10판은 중간 광고 없음
@@ -563,7 +563,8 @@ function buildBoard() {
     tok.dataset.i = i;
     tok.style.setProperty('--c', PIECE_COLORS[i]);
     tok.setAttribute('aria-label', SHAPE_NAME[i]);
-    tok.innerHTML = `<span class="num">${SHAPE_SVG[i]}</span><span class="arrow">${ARROW_SVG}</span>`;
+    tok.innerHTML = `<span class="face">${EYES_SVG}<span class="num">${SHAPE_SVG[i]}</span></span><span class="arrow">${ARROW_SVG}</span>`;
+    tok.style.setProperty('--blink-delay', (-1.7 * i - 0.4) + 's'); // 조각마다 깜빡이는 때를 어긋나게
     tok.addEventListener('click', () => onPieceClick(i));
     layerEl.appendChild(tok);
   });
@@ -574,6 +575,18 @@ function buildBoard() {
 
 // 오른쪽을 가리키는 굵은 화살표(회전으로 방향 표시) — 이 게임의 핵심 정보라 크게
 const ARROW_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h13M12 5.5 18.5 12 12 18.5" fill="none" stroke="#fff" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+// 조각 표정: 흰 눈 두 개(눈동자는 화살표 쪽을 봄, 가끔 깜빡임). 목표에 도착하면 웃는 눈(^ ^), 막히면 놀란 눈(.oops)
+const EYES_SVG = '<svg class="eyes" viewBox="0 0 24 10" aria-hidden="true">'
+  + '<g class="open"><ellipse class="eye" cx="7" cy="5" rx="3.6" ry="4.3" fill="#fff"/><ellipse class="eye" cx="17" cy="5" rx="3.6" ry="4.3" fill="#fff"/>'
+  + '<g class="pups"><circle cx="7" cy="5" r="2.1" fill="#2b2320"/><circle cx="17" cy="5" r="2.1" fill="#2b2320"/></g></g>'
+  + '<path class="happy" d="M3.6 6.6Q7 2 10.4 6.6M13.6 6.6Q17 2 20.4 6.6" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>';
+// 얼굴(눈+무늬)을 화살표 반대쪽으로 밀고, 눈동자는 화살표 쪽으로 돌린다
+function setFace(tok, d, cell) {
+  const off = cell * 0.12;
+  tok.querySelector('.face').style.transform = `translate(${-VECTORS[d][0] * off}px, ${-VECTORS[d][1] * off}px)`;
+  tok.querySelector('.pups').style.transform = `translate(${VECTORS[d][0] * 1.4}px, ${VECTORS[d][1] * 1.9}px)`;
+}
 
 // 칸 무늬: 방향 칸(속이 빈 화살표) / 회전 칸(시계 방향 고리 화살표)
 const TILE_ARROW_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 9.5h9V5l8 7-8 7v-4.5h-9z" fill="currentColor" fill-opacity=".22" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>';
@@ -609,7 +622,9 @@ function applyStaticGeometry() {
   pieceEls().forEach(el => {
     el.style.width = pieceSize + 'px';
     el.style.height = pieceSize + 'px';
-    const mk = el.querySelector('.num'); mk.style.width = mk.style.height = Math.round(cell * 0.29) + 'px'; // 큰 화살표와 겹치지 않는 크기
+    const mk = el.querySelector('.num'); mk.style.width = mk.style.height = Math.round(cell * 0.2) + 'px'; // 눈 아래 무늬
+    const ey = el.querySelector('.eyes'); ey.style.width = Math.round(cell * 0.36) + 'px'; ey.style.height = Math.round(cell * 0.15) + 'px';
+    el.querySelector('.face').style.gap = Math.round(cell * 0.03) + 'px';
     el.style.setProperty('--badge', Math.round(cell * 0.34) + 'px'); // 도착 체크 배지 크기
   });
 }
@@ -617,7 +632,6 @@ function applyStaticGeometry() {
 function refreshPieces() {
   const { center, cell } = geom();
   const toks = pieceEls();
-  const off = cell * 0.09; // 숫자를 화살표 반대쪽으로 미는 거리(위·아래 화살표와 숫자가 겹치지 않게)
 
   // decide displayed direction: if two selected, show swapped directions
   const shown = clone(G.state);
@@ -634,7 +648,7 @@ function refreshPieces() {
     const arrow = tok.querySelector('.arrow');
     const d = shown[i][2];
     arrow.style.transform = `rotate(${arrowAngle(arrow, d, G.turnCW && G.turnCW.has(i))}deg)`;
-    tok.querySelector('.num').style.transform = `translate(${-VECTORS[d][0] * off}px, ${-VECTORS[d][1] * off}px)`;
+    setFace(tok, d, cell);
     tok.classList.toggle('selected', G.selected.includes(i));
     tok.classList.toggle('hinted', !!(G.hintPair && G.hintPair.includes(i)) && !G.selected.includes(i));
     tok.classList.toggle('on-target',
@@ -666,9 +680,9 @@ function demoHint(pair) {
     const toks = pieceEls();
     pair.forEach((i, k) => {
       const el = toks[i]; if (!el) return;
-      const d = next[i][2], off = geom().cell * 0.09; // 맞바꾼 방향 + 숫자는 반대쪽으로
+      const d = next[i][2]; // 맞바꾼 방향 + 얼굴은 반대쪽으로
       const ar = el.querySelector('.arrow'); ar.style.transform = `rotate(${arrowAngle(ar, d)}deg)`;
-      el.querySelector('.num').style.transform = `translate(${-VECTORS[d][0] * off}px, ${-VECTORS[d][1] * off}px)`;
+      setFace(el, d, geom().cell);
       if (next[i][0] === G.state[i][0] && next[i][1] === G.state[i][1]) { bumpPiece(i, next[i][2]); return; }
       el.style.zIndex = 7; el.classList.add('demo');
       el.style.left = center(next[i][0]) + 'px';
@@ -798,8 +812,29 @@ function bumpPiece(i, dir) {
   const d = geom().cell * 0.14;
   el.style.setProperty('--dx', VECTORS[dir][0] * d + 'px');
   el.style.setProperty('--dy', VECTORS[dir][1] * d + 'px');
-  el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
+  el.classList.remove('bump', 'oops'); void el.offsetWidth; el.classList.add('bump', 'oops'); // 놀란 눈
   setTimeout(() => el.classList.remove('bump'), 400);
+  setTimeout(() => el.classList.remove('oops'), 650);
+}
+
+// 클리어 마무리: 조각들이 차례로 목표 안으로 쏙 들어가 사라지고, 빈 판 가운데에 이 월드의 여행지 그림이 튀어나온다
+const CLEAR_FX_DELAY = 480; // 마지막 이동 후 '쏙' 시작까지(그 전엔 통통 튀는 축하)
+function playClearFx() {
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const idx = G.index;
+  pieceEls().forEach((el, k) => setTimeout(() => { if (G.index === idx) el.classList.add('cleared'); }, CLEAR_FX_DELAY + k * 90));
+  setTimeout(() => {
+    if (G.index !== idx || !G.stage) return;
+    const e = document.createElement('div');
+    e.className = 'win-emoji';
+    e.textContent = ALBUM[worldOf(idx)].icon;
+    e.style.fontSize = Math.round(geom().cell * 1.25) + 'px';
+    layerEl.appendChild(e);
+  }, CLEAR_FX_DELAY + pieceEls().length * 90 + 120);
+}
+function clearClearFx() {
+  pieceEls().forEach(el => el.classList.remove('cleared', 'win-bounce'));
+  layerEl.querySelectorAll('.win-emoji').forEach(e => e.remove());
 }
 
 // 목표 도착: 조각 색 반짝이가 사방으로 튄다
@@ -883,6 +918,7 @@ function undo() {
 function restart() {
   if (G.animating) return;
   clearHintDemo();
+  clearClearFx(); // '다시 풀기'로 돌아오면 사라졌던 조각을 되살린다
   G.state = clone(G.stage.start);
   G.history = [];
   G.selected = [];
@@ -1310,6 +1346,7 @@ function onWin() {
   }
   Sound.win(); haptic([20, 40, 60]); confettiBurst(); screenFlash();
   pieceEls().forEach((el, k) => { setTimeout(() => { el.classList.remove('win-bounce'); void el.offsetWidth; el.classList.add('win-bounce'); }, k * 70); });
+  playClearFx();
   renderProgress();
 
   // world-clear reward: did this first-clear complete its whole world?
