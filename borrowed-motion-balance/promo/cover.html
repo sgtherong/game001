@@ -73,9 +73,8 @@
       inset 0 calc(var(--u) * .3) 0 rgba(255,255,255,.35); }
   .piece.sel { transform: translate(-50%, -56%) scale(1.07);
     box-shadow: 0 0 0 calc(var(--u) * .7) #fff, 0 0 0 calc(var(--u) * 1.4) var(--c), 0 calc(var(--B) * .03) calc(var(--B) * .045) color-mix(in srgb, var(--c) 45%, transparent); }
-  .piece .face { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 4%; width: 52%; }
-  .piece .eyes { display: block; width: 100%; height: auto; overflow: visible; filter: drop-shadow(0 calc(var(--u) * .2) calc(var(--u) * .15) rgba(0,0,0,.18)); }
-  .piece .num { display: block; width: 52%; aspect-ratio: 1; filter: drop-shadow(0 calc(var(--u) * .3) calc(var(--u) * .2) rgba(0,0,0,.22)); }
+  .piece .face { position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; width: 40%; }
+  .piece .num { display: block; width: 100%; aspect-ratio: 1; filter: drop-shadow(0 calc(var(--u) * .3) calc(var(--u) * .2) rgba(0,0,0,.22)); }
   .piece .arrow { position: absolute; inset: 0; }
   .piece .arrow svg { position: absolute; right: 2%; top: 50%; width: 40%; height: 40%; transform: translateY(-50%); filter: drop-shadow(0 calc(var(--u) * .3) calc(var(--u) * .15) rgba(0,0,0,.2)); }
   /* 목표 도착 체크 배지 */
@@ -135,13 +134,9 @@
   // 조각: 화살표는 회전, 숫자는 화살표 반대쪽으로 살짝(게임과 같게)
   const piece = (cls, x, y, c, n, d) => add('piece ' + cls, x, y, c,
     '<span class="arrow" style="transform:rotate(' + d * 90 + 'deg)">' + ARROW + '</span>' +
-    // 얼굴(게임과 같음): 눈(눈동자는 화살표 쪽) + 무늬, 화살표 반대쪽으로 밀기. 목표 도착(on)이면 웃는 눈
+    // 얼굴(게임과 같음): 무늬만 크게, 화살표 반대쪽으로 밀기
     '<span class="face" style="transform:translate(calc(var(--B) * ' + (-V[d][0] * 0.03) + '),calc(var(--B) * ' + (-V[d][1] * 0.03) + '))">' +
-    '<svg class="eyes" viewBox="0 0 24 10">' + (cls.includes('on')
-      ? '<path d="M3.6 6.6Q7 2 10.4 6.6M13.6 6.6Q17 2 20.4 6.6" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>'
-      : '<ellipse cx="7" cy="5" rx="3.6" ry="4.3" fill="#fff"/><ellipse cx="17" cy="5" rx="3.6" ry="4.3" fill="#fff"/>' +
-        '<g transform="translate(' + V[d][0] * 1.4 + ' ' + V[d][1] * 1.9 + ')"><circle cx="7" cy="5" r="2.1" fill="#2b2320"/><circle cx="17" cy="5" r="2.1" fill="#2b2320"/></g>') +
-    '</svg><span class="num">' + SHAPE[n] + '</span></span>');
+    '<span class="num">' + SHAPE[n] + '</span></span>');
   // 목표 칸(점선)
   add('target', 0, 0, C.o, '<span>' + SHAPE[1] + '</span>');
   add('target', 0, 3, C.t, '<span>' + SHAPE[2] + '</span>');

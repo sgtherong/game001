@@ -563,8 +563,7 @@ function buildBoard() {
     tok.dataset.i = i;
     tok.style.setProperty('--c', PIECE_COLORS[i]);
     tok.setAttribute('aria-label', SHAPE_NAME[i]);
-    tok.innerHTML = `<span class="face">${EYES_SVG}<span class="num">${SHAPE_SVG[i]}</span></span><span class="arrow">${ARROW_SVG}</span>`;
-    tok.style.setProperty('--blink-delay', (-1.7 * i - 0.4) + 's'); // 조각마다 깜빡이는 때를 어긋나게
+    tok.innerHTML = `<span class="face"><span class="num">${SHAPE_SVG[i]}</span></span><span class="arrow">${ARROW_SVG}</span>`;
     tok.addEventListener('click', () => onPieceClick(i));
     layerEl.appendChild(tok);
   });
@@ -576,16 +575,11 @@ function buildBoard() {
 // 오른쪽을 가리키는 굵은 화살표(회전으로 방향 표시) — 이 게임의 핵심 정보라 크게
 const ARROW_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h13M12 5.5 18.5 12 12 18.5" fill="none" stroke="#fff" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
-// 조각 표정: 흰 눈 두 개(눈동자는 화살표 쪽을 봄, 가끔 깜빡임). 목표에 도착하면 웃는 눈(^ ^), 막히면 놀란 눈(.oops)
-const EYES_SVG = '<svg class="eyes" viewBox="0 0 24 10" aria-hidden="true">'
-  + '<g class="open"><ellipse class="eye" cx="7" cy="5" rx="3.6" ry="4.3" fill="#fff"/><ellipse class="eye" cx="17" cy="5" rx="3.6" ry="4.3" fill="#fff"/>'
-  + '<g class="pups"><circle cx="7" cy="5" r="2.1" fill="#2b2320"/><circle cx="17" cy="5" r="2.1" fill="#2b2320"/></g></g>'
-  + '<path class="happy" d="M3.6 6.6Q7 2 10.4 6.6M13.6 6.6Q17 2 20.4 6.6" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>';
-// 얼굴(눈+무늬)을 화살표 반대쪽으로 밀고, 눈동자는 화살표 쪽으로 돌린다
+// 조각의 무늬(해·달·별·하트)가 얼굴 역할 — 눈 표정은 유치하다는 피드백으로 뺐다(2026-10-06).
+// 무늬를 화살표 반대쪽으로 밀어 화살표와 겹치지 않게 한다. 반응은 움직임으로: 막히면 툭(bump), 도착하면 무늬가 반짝(.arrived)
 function setFace(tok, d, cell) {
-  const off = cell * 0.12;
+  const off = cell * 0.1;
   tok.querySelector('.face').style.transform = `translate(${-VECTORS[d][0] * off}px, ${-VECTORS[d][1] * off}px)`;
-  tok.querySelector('.pups').style.transform = `translate(${VECTORS[d][0] * 1.4}px, ${VECTORS[d][1] * 1.9}px)`;
 }
 
 // 칸 무늬: 방향 칸(속이 빈 화살표) / 회전 칸(시계 방향 고리 화살표)
@@ -622,9 +616,7 @@ function applyStaticGeometry() {
   pieceEls().forEach(el => {
     el.style.width = pieceSize + 'px';
     el.style.height = pieceSize + 'px';
-    const mk = el.querySelector('.num'); mk.style.width = mk.style.height = Math.round(cell * 0.2) + 'px'; // 눈 아래 무늬
-    const ey = el.querySelector('.eyes'); ey.style.width = Math.round(cell * 0.36) + 'px'; ey.style.height = Math.round(cell * 0.15) + 'px';
-    el.querySelector('.face').style.gap = Math.round(cell * 0.03) + 'px';
+    const mk = el.querySelector('.num'); mk.style.width = mk.style.height = Math.round(cell * 0.31) + 'px'; // 조각의 얼굴 역할을 하는 무늬 — 크게
     el.style.setProperty('--badge', Math.round(cell * 0.34) + 'px'); // 도착 체크 배지 크기
   });
 }
@@ -871,9 +863,8 @@ function bumpPiece(i, dir) {
   const d = geom().cell * 0.14;
   el.style.setProperty('--dx', VECTORS[dir][0] * d + 'px');
   el.style.setProperty('--dy', VECTORS[dir][1] * d + 'px');
-  el.classList.remove('bump', 'oops'); void el.offsetWidth; el.classList.add('bump', 'oops'); // 놀란 눈
+  el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
   setTimeout(() => el.classList.remove('bump'), 400);
-  setTimeout(() => el.classList.remove('oops'), 650);
 }
 
 // 클리어 마무리: 조각들이 차례로 목표 안으로 쏙 들어가 사라지고, 빈 판 가운데에 이 월드의 여행지 그림이 튀어나온다
