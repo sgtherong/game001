@@ -134,7 +134,18 @@ function loadProgress() {
   if (typeof p.bonusHints !== 'number') p.bonusHints = 0;
   if (typeof p.reached !== 'number') p.reached = 0;
   if (!p.cloud) p.cloud = { linked: false, email: '' };
+  migrateProgress(p);
   // migrate: existing players keep access up to their furthest completed stage
+  return p;
+}
+// 저장 형식 2(2026-10-06): 여행지 35곳 → 100곳. 월드 35 자리에 새 여행지(노르웨이 피오르)가 들어오고, 우주는 더 어려운
+// 새 판(SS-3001~)으로 바뀌어 맨 끝(월드 100)에 있다. 판 기록은 id라 그대로 두고, 월드 번호로 저장한 '월드 완주' 중
+// 예전 우주(0부터 34) 표시만 지운다(새 우주는 아직 안 깬 것). 클라우드·백업에서 온 예전 기록에도 적용.
+const SAVE_FORMAT = 2;
+function migrateProgress(p) {
+  if (!p || (p.format || 1) >= SAVE_FORMAT) return p;
+  if (p.worldsDone) delete p.worldsDone[34];
+  p.format = SAVE_FORMAT;
   return p;
 }
 function saveProgress(p) {
@@ -287,14 +298,80 @@ const ALBUM = [
   { icon: '🥁', name: { en: 'Rio de Janeiro', ko: '리우데자네이루', es: 'Río de Janeiro', pt: 'Rio de Janeiro', ru: 'Рио-де-Жанейро' }, st: ['🎉', '🥁', '🦩', '🌊', '⛰️', '🍌'] },
   { icon: '🐧', name: { en: 'Antarctica', ko: '남극', es: 'Antártida', pt: 'Antártida', ru: 'Антарктида' }, st: ['🐧', '🛷', '🌨️', '⛸️', '🧤', '🔭'] },
   { icon: '🦌', name: { en: 'Lapland', ko: '라플란드', es: 'Laponia', pt: 'Lapônia', ru: 'Лапландия' }, st: ['🎅', '🦌', '🌌', '🛷', '❄️', '🧣'] },
-  { icon: '🚀', name: { en: 'Space', ko: '우주', es: 'El espacio', pt: 'Espaço', ru: 'Космос' }, st: ['🚀', '🌙', '🪐', '🛰️', '☄️', '🌟'] },
+  // ---- 2026-10-06 추가: 두 번째 세계 일주(월드 35~99). 이름은 7개 언어를 함께 둔다 ----
+  { icon: '⛴️', name: { en: 'Norwegian Fjords', ko: '노르웨이 피오르', es: 'Fiordos noruegos', pt: 'Fiordes da Noruega', ru: 'Норвежские фьорды', de: 'Norwegische Fjorde', fr: 'Fjords de Norvège' }, st: ['⛴️', '🐟', '🛶', '🧶', '🌧️', '🦭'] },
+  { icon: '🧜‍♀️', name: { en: 'Copenhagen', ko: '코펜하겐', es: 'Copenhague', pt: 'Copenhague', ru: 'Копенгаген', de: 'Kopenhagen', fr: 'Copenhague' }, st: ['🧜‍♀️', '🚲', '🧱', '🎡', '⚓', '🥐'] },
+  { icon: '🦄', name: { en: 'Scotland', ko: '스코틀랜드', es: 'Escocia', pt: 'Escócia', ru: 'Шотландия', de: 'Schottland', fr: 'Écosse' }, st: ['🦄', '🏰', '🐑', '⛳', '🎶', '🌫️'] },
+  { icon: '☘️', name: { en: 'Ireland', ko: '아일랜드', es: 'Irlanda', pt: 'Irlanda', ru: 'Ирландия', de: 'Irland', fr: 'Irlande' }, st: ['☘️', '🍀', '🌈', '🎻', '🍲', '🐑'] },
+  { icon: '🧇', name: { en: 'Bruges', ko: '브뤼헤', es: 'Brujas', pt: 'Bruges', ru: 'Брюгге', de: 'Brügge', fr: 'Bruges' }, st: ['🧇', '🍫', '🛶', '🏰', '🍟', '🦢'] },
+  { icon: '🥨', name: { en: 'Berlin', ko: '베를린', es: 'Berlín', pt: 'Berlim', ru: 'Берлин', de: 'Berlin', fr: 'Berlin' }, st: ['🥨', '🐻', '🚆', '🎧', '🌭', '🧱'] },
+  { icon: '🏰', name: { en: 'Bavaria', ko: '바이에른', es: 'Baviera', pt: 'Baviera', ru: 'Бавария', de: 'Bayern', fr: 'Bavière' }, st: ['🏰', '🥨', '🏔️', '🐄', '🎺', '🌲'] },
+  { icon: '🕰️', name: { en: 'Prague', ko: '프라하', es: 'Praga', pt: 'Praga', ru: 'Прага', de: 'Prag', fr: 'Prague' }, st: ['🕰️', '🌉', '🎻', '🧸', '🕯️', '🏰'] },
+  { icon: '🦢', name: { en: 'Hallstatt', ko: '할슈타트', es: 'Hallstatt', pt: 'Hallstatt', ru: 'Гальштат', de: 'Hallstatt', fr: 'Hallstatt' }, st: ['🦢', '🏘️', '⛰️', '🧂', '🛶', '🌲'] },
+  { icon: '🛁', name: { en: 'Budapest', ko: '부다페스트', es: 'Budapest', pt: 'Budapeste', ru: 'Будапешт', de: 'Budapest', fr: 'Budapest' }, st: ['🛁', '🌶️', '🧩', '🚢', '🍲', '🏰'] },
+  { icon: '🩰', name: { en: 'Saint Petersburg', ko: '상트페테르부르크', es: 'San Petersburgo', pt: 'São Petersburgo', ru: 'Санкт-Петербург', de: 'Sankt Petersburg', fr: 'Saint-Pétersbourg' }, st: ['🩰', '🪆', '🎻', '🌉', '❄️', '🖼️'] },
+  { icon: '🌻', name: { en: 'Provence', ko: '프로방스', es: 'Provenza', pt: 'Provença', ru: 'Прованс', de: 'Provence', fr: 'Provence' }, st: ['🌻', '💜', '🧀', '🏡', '🐝', '☀️'] },
+  { icon: '🏎️', name: { en: 'Monaco', ko: '모나코', es: 'Mónaco', pt: 'Mônaco', ru: 'Монако', de: 'Monaco', fr: 'Monaco' }, st: ['🏎️', '🛥️', '🏁', '👑', '🌊', '🎆'] },
+  { icon: '🍇', name: { en: 'Tuscany', ko: '토스카나', es: 'Toscana', pt: 'Toscana', ru: 'Тоскана', de: 'Toskana', fr: 'Toscane' }, st: ['🍇', '🫒', '🍝', '🏰', '🚲', '🌅'] },
+  { icon: '🍋', name: { en: 'Amalfi Coast', ko: '아말피 해안', es: 'Costa Amalfitana', pt: 'Costa Amalfitana', ru: 'Амальфитанское побережье', de: 'Amalfiküste', fr: 'Côte amalfitaine' }, st: ['🍋', '⛵', '🍝', '🌅', '🐟', '🏖️'] },
+  { icon: '🦉', name: { en: 'Athens', ko: '아테네', es: 'Atenas', pt: 'Atenas', ru: 'Афины', de: 'Athen', fr: 'Athènes' }, st: ['🦉', '🏛️', '🫒', '🏺', '⚱️', '☀️'] },
+  { icon: '🚋', name: { en: 'Lisbon', ko: '리스본', es: 'Lisboa', pt: 'Lisboa', ru: 'Лиссабон', de: 'Lissabon', fr: 'Lisbonne' }, st: ['🚋', '🐟', '🎸', '🍮', '🌅', '⛵'] },
+  { icon: '🫖', name: { en: 'Marrakech', ko: '마라케시', es: 'Marrakech', pt: 'Marrakech', ru: 'Марракеш', de: 'Marrakesch', fr: 'Marrakech' }, st: ['🫖', '🧿', '🌶️', '🏺', '🐍', '🌴'] },
+  { icon: '🏜️', name: { en: 'Sahara', ko: '사하라 사막', es: 'Desierto del Sahara', pt: 'Deserto do Saara', ru: 'Сахара', de: 'Sahara', fr: 'Sahara' }, st: ['🏜️', '🐪', '⭐', '🌵', '🦂', '🌞'] },
+  { icon: '🎈', name: { en: 'Cappadocia', ko: '카파도키아', es: 'Capadocia', pt: 'Capadócia', ru: 'Каппадокия', de: 'Kappadokien', fr: 'Cappadoce' }, st: ['🎈', '🌄', '🏺', '🐎', '🧿', '🪨'] },
+  { icon: '🪨', name: { en: 'Petra', ko: '페트라', es: 'Petra', pt: 'Petra', ru: 'Петра', de: 'Petra', fr: 'Pétra' }, st: ['🪨', '🐐', '🏜️', '🐪', '🕯️', '🌙'] },
+  { icon: '⛱️', name: { en: 'Zanzibar', ko: '잔지바르', es: 'Zanzíbar', pt: 'Zanzibar', ru: 'Занзибар', de: 'Sansibar', fr: 'Zanzibar' }, st: ['⛱️', '🐬', '🌿', '🐢', '⛵', '🥥'] },
+  { icon: '🥥', name: { en: 'Seychelles', ko: '세이셸', es: 'Seychelles', pt: 'Seicheles', ru: 'Сейшелы', de: 'Seychellen', fr: 'Seychelles' }, st: ['🥥', '🐢', '🏝️', '🐠', '🌺', '🦀'] },
+  { icon: '🦎', name: { en: 'Madagascar', ko: '마다가스카르', es: 'Madagascar', pt: 'Madagascar', ru: 'Мадагаскар', de: 'Madagaskar', fr: 'Madagascar' }, st: ['🦎', '🐒', '🌳', '🦋', '🍦', '🐸'] },
+  { icon: '🌈', name: { en: 'Victoria Falls', ko: '빅토리아 폭포', es: 'Cataratas Victoria', pt: 'Cataratas Vitória', ru: 'Водопад Виктория', de: 'Victoriafälle', fr: 'Chutes Victoria' }, st: ['🌈', '💦', '🦛', '🐊', '🚁', '🌳'] },
+  { icon: '⛰️', name: { en: 'Cape Town', ko: '케이프타운', es: 'Ciudad del Cabo', pt: 'Cidade do Cabo', ru: 'Кейптаун', de: 'Kapstadt', fr: 'Le Cap' }, st: ['⛰️', '🐧', '🍇', '🦈', '🌊', '🦓'] },
+  { icon: '🤿', name: { en: 'Maldives', ko: '몰디브', es: 'Maldivas', pt: 'Maldivas', ru: 'Мальдивы', de: 'Malediven', fr: 'Maldives' }, st: ['🤿', '🐠', '🏝️', '🐋', '🦈', '🐚'] },
+  { icon: '🐘', name: { en: 'Sri Lanka', ko: '스리랑카', es: 'Sri Lanka', pt: 'Sri Lanka', ru: 'Шри-Ланка', de: 'Sri Lanka', fr: 'Sri Lanka' }, st: ['🐘', '🍵', '🚂', '🏄', '🦚', '🌴'] },
+  { icon: '⛺', name: { en: 'Himalayas', ko: '히말라야', es: 'Himalaya', pt: 'Himalaia', ru: 'Гималаи', de: 'Himalaya', fr: 'Himalaya' }, st: ['⛺', '🏔️', '🧗', '🐐', '🙏', '🧣'] },
+  { icon: '🍈', name: { en: 'Samarkand', ko: '사마르칸트', es: 'Samarcanda', pt: 'Samarcanda', ru: 'Самарканд', de: 'Samarkand', fr: 'Samarcande' }, st: ['🍈', '🕌', '🧵', '🐫', '🍞', '🏺'] },
+  { icon: '🐎', name: { en: 'Mongolia', ko: '몽골', es: 'Mongolia', pt: 'Mongólia', ru: 'Монголия', de: 'Mongolei', fr: 'Mongolie' }, st: ['🐎', '⛺', '🦅', '🏹', '🐑', '🌌'] },
+  { icon: '🐒', name: { en: 'Angkor Wat', ko: '앙코르와트', es: 'Angkor Wat', pt: 'Angkor Wat', ru: 'Ангкор-Ват', de: 'Angkor Wat', fr: 'Angkor Vat' }, st: ['🐒', '🛕', '🌄', '🐘', '🌾', '🚲'] },
+  { icon: '🐉', name: { en: 'Ha Long Bay', ko: '하롱베이', es: 'Bahía de Ha Long', pt: 'Baía de Ha Long', ru: 'Бухта Халонг', de: 'Halong-Bucht', fr: 'Baie d’Along' }, st: ['🐉', '⛵', '🍜', '🏮', '🛶', '🪨'] },
+  { icon: '🌇', name: { en: 'Singapore', ko: '싱가포르', es: 'Singapur', pt: 'Singapura', ru: 'Сингапур', de: 'Singapur', fr: 'Singapour' }, st: ['🌇', '🦁', '🌳', '🍜', '🚡', '🎆'] },
+  { icon: '🐋', name: { en: 'Philippines', ko: '필리핀', es: 'Filipinas', pt: 'Filipinas', ru: 'Филиппины', de: 'Philippinen', fr: 'Philippines' }, st: ['🐋', '🏄', '🥭', '🏝️', '🌋', '🐚'] },
+  { icon: '🌃', name: { en: 'Hong Kong', ko: '홍콩', es: 'Hong Kong', pt: 'Hong Kong', ru: 'Гонконг', de: 'Hongkong', fr: 'Hong Kong' }, st: ['🌃', '⛴️', '🥢', '🥠', '🚋', '🎆'] },
+  { icon: '🥟', name: { en: 'Shanghai', ko: '상하이', es: 'Shanghái', pt: 'Xangai', ru: 'Шанхай', de: 'Shanghai', fr: 'Shanghai' }, st: ['🥟', '🌆', '🚄', '🏮', '🦀', '🎋'] },
+  { icon: '🧋', name: { en: 'Taipei', ko: '타이베이', es: 'Taipéi', pt: 'Taipé', ru: 'Тайбэй', de: 'Taipeh', fr: 'Taipei' }, st: ['🧋', '🏮', '🥟', '🌃', '♨️', '⛰️'] },
+  { icon: '🐟', name: { en: 'Busan', ko: '부산', es: 'Busan', pt: 'Busan', ru: 'Пусан', de: 'Busan', fr: 'Busan' }, st: ['🐟', '🦀', '🏖️', '🎆', '🌉', '🚢'] },
+  { icon: '🍊', name: { en: 'Jeju Island', ko: '제주도', es: 'Isla de Jeju', pt: 'Ilha de Jeju', ru: 'Остров Чеджу', de: 'Insel Jeju', fr: 'Île de Jeju' }, st: ['🍊', '🌋', '🐴', '🌼', '🌊', '🐬'] },
+  { icon: '⛩️', name: { en: 'Kyoto', ko: '교토', es: 'Kioto', pt: 'Quioto', ru: 'Киото', de: 'Kyoto', fr: 'Kyoto' }, st: ['⛩️', '🍵', '👘', '🦌', '🎋', '🍁'] },
+  { icon: '🐙', name: { en: 'Osaka', ko: '오사카', es: 'Osaka', pt: 'Osaka', ru: 'Осака', de: 'Osaka', fr: 'Osaka' }, st: ['🐙', '🏯', '🦀', '🎢', '🍜', '🎏'] },
+  { icon: '⛄', name: { en: 'Hokkaido', ko: '홋카이도', es: 'Hokkaido', pt: 'Hokkaido', ru: 'Хоккайдо', de: 'Hokkaido', fr: 'Hokkaidō' }, st: ['⛄', '❄️', '🐻', '🦀', '🍦', '🦢'] },
+  { icon: '🐠', name: { en: 'Great Barrier Reef', ko: '그레이트배리어리프', es: 'Gran Barrera de Coral', pt: 'Grande Barreira de Coral', ru: 'Большой Барьерный риф', de: 'Great Barrier Reef', fr: 'Grande Barrière de corail' }, st: ['🐠', '🐢', '🦈', '🐙', '🐚', '🤿'] },
+  { icon: '🪃', name: { en: 'Uluru', ko: '울루루', es: 'Uluru', pt: 'Uluru', ru: 'Улуру', de: 'Uluru', fr: 'Uluru' }, st: ['🪃', '🦘', '🐍', '🌄', '🔥', '🦎'] },
+  { icon: '🏝️', name: { en: 'Fiji', ko: '피지', es: 'Fiyi', pt: 'Fiji', ru: 'Фиджи', de: 'Fidschi', fr: 'Fidji' }, st: ['🏝️', '🥥', '🐠', '🌺', '🛶', '🌅'] },
+  { icon: '🌴', name: { en: 'Bora Bora', ko: '보라보라', es: 'Bora Bora', pt: 'Bora Bora', ru: 'Бора-Бора', de: 'Bora Bora', fr: 'Bora-Bora' }, st: ['🌴', '🐢', '🛶', '🌺', '🦈', '🐠'] },
+  { icon: '🗿', name: { en: 'Easter Island', ko: '이스터섬', es: 'Isla de Pascua', pt: 'Ilha de Páscoa', ru: 'Остров Пасхи', de: 'Osterinsel', fr: 'Île de Pâques' }, st: ['🗿', '🌋', '🐎', '🌊', '🌅', '🐓'] },
+  { icon: '🧊', name: { en: 'Patagonia', ko: '파타고니아', es: 'Patagonia', pt: 'Patagônia', ru: 'Патагония', de: 'Patagonien', fr: 'Patagonie' }, st: ['🧊', '🐧', '🏔️', '🦙', '🐋', '🦅'] },
+  { icon: '🧉', name: { en: 'Buenos Aires', ko: '부에노스아이레스', es: 'Buenos Aires', pt: 'Buenos Aires', ru: 'Буэнос-Айрес', de: 'Buenos Aires', fr: 'Buenos Aires' }, st: ['🧉', '💃', '🥩', '⚽', '🎻', '🎨'] },
+  { icon: '🔭', name: { en: 'Atacama Desert', ko: '아타카마 사막', es: 'Desierto de Atacama', pt: 'Deserto do Atacama', ru: 'Пустыня Атакама', de: 'Atacama-Wüste', fr: 'Désert d’Atacama' }, st: ['🔭', '🌌', '🏜️', '🦩', '🌵', '🌙'] },
+  { icon: '🧂', name: { en: 'Uyuni Salt Flat', ko: '우유니 소금사막', es: 'Salar de Uyuni', pt: 'Salar de Uyuni', ru: 'Солончак Уюни', de: 'Salar de Uyuni', fr: 'Salar d’Uyuni' }, st: ['🧂', '🪞', '🦩', '☁️', '🚙', '🌅'] },
+  { icon: '🐢', name: { en: 'Galápagos', ko: '갈라파고스', es: 'Galápagos', pt: 'Galápagos', ru: 'Галапагосы', de: 'Galápagos', fr: 'Galápagos' }, st: ['🐢', '🦎', '🐧', '🦭', '🐟', '🐦'] },
+  { icon: '☕', name: { en: 'Colombia', ko: '콜롬비아', es: 'Colombia', pt: 'Colômbia', ru: 'Колумбия', de: 'Kolumbien', fr: 'Colombie' }, st: ['☕', '🦜', '💐', '🌴', '💃', '🍌'] },
+  { icon: '🦥', name: { en: 'Costa Rica', ko: '코스타리카', es: 'Costa Rica', pt: 'Costa Rica', ru: 'Коста-Рика', de: 'Costa Rica', fr: 'Costa Rica' }, st: ['🦥', '🐸', '🌋', '🦜', '🌿', '🐒'] },
+  { icon: '🚗', name: { en: 'Havana', ko: '아바나', es: 'La Habana', pt: 'Havana', ru: 'Гавана', de: 'Havanna', fr: 'La Havane' }, st: ['🚗', '🎺', '💃', '🌴', '🍹', '🌅'] },
+  { icon: '🎢', name: { en: 'Florida', ko: '플로리다', es: 'Florida', pt: 'Flórida', ru: 'Флорида', de: 'Florida', fr: 'Floride' }, st: ['🎢', '🐊', '🚀', '🍊', '🏖️', '🦩'] },
+  { icon: '🎷', name: { en: 'New Orleans', ko: '뉴올리언스', es: 'Nueva Orleans', pt: 'Nova Orleans', ru: 'Новый Орлеан', de: 'New Orleans', fr: 'La Nouvelle-Orléans' }, st: ['🎷', '🎺', '🎭', '🍤', '🐊', '🎉'] },
+  { icon: '💦', name: { en: 'Niagara Falls', ko: '나이아가라 폭포', es: 'Cataratas del Niágara', pt: 'Cataratas do Niágara', ru: 'Ниагарский водопад', de: 'Niagarafälle', fr: 'Chutes du Niagara' }, st: ['💦', '🌈', '🚢', '🍁', '🦅', '🌉'] },
+  { icon: '🤠', name: { en: 'Grand Canyon', ko: '그랜드캐니언', es: 'Gran Cañón', pt: 'Grand Canyon', ru: 'Гранд-Каньон', de: 'Grand Canyon', fr: 'Grand Canyon' }, st: ['🤠', '🏜️', '🐎', '🦅', '🌄', '🌵'] },
+  { icon: '🎰', name: { en: 'Las Vegas', ko: '라스베이거스', es: 'Las Vegas', pt: 'Las Vegas', ru: 'Лас-Вегас', de: 'Las Vegas', fr: 'Las Vegas' }, st: ['🎰', '🃏', '🎲', '💡', '🎤', '🌃'] },
+  { icon: '🎬', name: { en: 'Hollywood', ko: '할리우드', es: 'Hollywood', pt: 'Hollywood', ru: 'Голливуд', de: 'Hollywood', fr: 'Hollywood' }, st: ['🎬', '⭐', '🍿', '🎥', '🌴', '🏆'] },
+  { icon: '🦬', name: { en: 'Yellowstone', ko: '옐로스톤', es: 'Yellowstone', pt: 'Yellowstone', ru: 'Йеллоустон', de: 'Yellowstone', fr: 'Yellowstone' }, st: ['🦬', '♨️', '🐻', '🐺', '🌲', '🦌'] },
+  { icon: '🏕️', name: { en: 'Banff', ko: '밴프', es: 'Banff', pt: 'Banff', ru: 'Банф', de: 'Banff', fr: 'Banff' }, st: ['🏕️', '🛶', '🏔️', '🦌', '🐻', '🌲'] },
+  { icon: '🐺', name: { en: 'Alaska', ko: '알래스카', es: 'Alaska', pt: 'Alasca', ru: 'Аляска', de: 'Alaska', fr: 'Alaska' }, st: ['🐺', '🐻', '🐋', '🛷', '🌌', '🐟'] },
+  { icon: '🚀', name: { en: 'Space', ko: '우주', es: 'El espacio', pt: 'Espaço', ru: 'Космос', de: 'Weltall', fr: 'L’espace' }, st: ['🚀', '🌙', '🪐', '🛰️', '☄️', '🌟'] }, // 항상 마지막
 ];
 const CLEARS_PER_STICKER = 5;
 const STICKERS_PER_PAGE = 6;
 // 나중에 추가한 언어의 여행지 이름(ALBUM 순서 그대로). 표에 없으면 영어로
 const ALBUM_EXTRA = {
-  de: ['Reisevorbereitung', 'Paris', 'London', 'Amsterdam', 'Wien', 'Schweizer Alpen', 'Venedig', 'Rom', 'Barcelona', 'Santorin', 'Island', 'Istanbul', 'Kairo', 'Kenia-Safari', 'Dubai', 'Indien', 'Bangkok', 'Bali', 'Peking', 'Seoul', 'Tokio', 'Sydney', 'Neuseeland', 'Hawaii', 'San Francisco', 'New York', 'Kanada', 'Mexiko', 'Karibik', 'Amazonas', 'Peru', 'Rio de Janeiro', 'Antarktis', 'Lappland', 'Weltall'],
-  fr: ['Préparatifs', 'Paris', 'Londres', 'Amsterdam', 'Vienne', 'Alpes suisses', 'Venise', 'Rome', 'Barcelone', 'Santorin', 'Islande', 'Istanbul', 'Le Caire', 'Safari au Kenya', 'Dubaï', 'Inde', 'Bangkok', 'Bali', 'Pékin', 'Séoul', 'Tokyo', 'Sydney', 'Nouvelle-Zélande', 'Hawaï', 'San Francisco', 'New York', 'Canada', 'Mexique', 'Caraïbes', 'Amazonie', 'Pérou', 'Rio de Janeiro', 'Antarctique', 'Laponie', 'L’espace'],
+  de: ['Reisevorbereitung', 'Paris', 'London', 'Amsterdam', 'Wien', 'Schweizer Alpen', 'Venedig', 'Rom', 'Barcelona', 'Santorin', 'Island', 'Istanbul', 'Kairo', 'Kenia-Safari', 'Dubai', 'Indien', 'Bangkok', 'Bali', 'Peking', 'Seoul', 'Tokio', 'Sydney', 'Neuseeland', 'Hawaii', 'San Francisco', 'New York', 'Kanada', 'Mexiko', 'Karibik', 'Amazonas', 'Peru', 'Rio de Janeiro', 'Antarktis', 'Lappland'],
+  fr: ['Préparatifs', 'Paris', 'Londres', 'Amsterdam', 'Vienne', 'Alpes suisses', 'Venise', 'Rome', 'Barcelone', 'Santorin', 'Islande', 'Istanbul', 'Le Caire', 'Safari au Kenya', 'Dubaï', 'Inde', 'Bangkok', 'Bali', 'Pékin', 'Séoul', 'Tokyo', 'Sydney', 'Nouvelle-Zélande', 'Hawaï', 'San Francisco', 'New York', 'Canada', 'Mexique', 'Caraïbes', 'Amazonie', 'Pérou', 'Rio de Janeiro', 'Antarctique', 'Laponie'],
 };
 const placeName = w => {
   const n = ALBUM[w].name, l = window.I18N.lang;
@@ -665,7 +742,7 @@ function updatePeekButton() {
   b.classList.toggle('on', !!G.peekOn);
 }
 function usePeek() {
-  if (G.animating || !G.stage) return;
+  if (G.animating || !G.stage || G.challenge) return;
   if (G.peekOn) { G.tipMsg = t('peek_on'); updatePreview(); return; } // 이미 켜져 있으면 안내만 다시
   if (peeksLeft() <= 0) { G.tipMsg = t('peek_none_left'); updatePreview(); return; }
   if (!isPremium()) { progress.peek.used++; saveProgress(progress); }
@@ -780,9 +857,10 @@ function updatePreview() {
   const outOfMoves = movesLeft() <= 0;
   refreshPieces();
   // 예산 소진 + 비프리미엄 → '광고 보고 +이동' 버튼 노출 (프리미엄은 광고 없음, 되돌리기/재시작 사용)
-  const canAdMoves = outOfMoves && !isPremium() && adsOn();
+  const canAdMoves = outOfMoves && !isPremium() && adsOn() && !G.challenge;
   let msg = '';
-  if (outOfMoves) msg = t(canAdMoves ? 'moves_out' : 'moves_out_noad');
+  if (G.challenge) msg = G.tipMsg || t('ch_status', { n: Math.max(0, movesLeft()) });
+  else if (outOfMoves) msg = t(canAdMoves ? 'moves_out' : 'moves_out_noad');
   else if (G.hintPair && G.hintMsg) msg = G.hintMsg;
   else if (G.tipMsg) msg = G.tipMsg;
   else if (G.introMsg) msg = G.introMsg;
@@ -853,6 +931,7 @@ function commitMove() {
     G.animating = false;
     if (coachOn) endCoach();
     if (isGoal(G.state, G.stage.targets)) onWin();
+    else if (G.challenge && movesLeft() <= 0) endChallenge(false); // 대결: 이동을 다 쓰면 실패
     else updatePreview();
   }, 360);
 }
@@ -954,7 +1033,7 @@ function screenFlash() {
 }
 
 function undo() {
-  if (!G.history.length || G.animating) return;
+  if (!G.history.length || G.animating || G.challenge) return; // 대결은 되돌리기 없음
   clearHintDemo();
   G.state = G.history.pop();
   G.selected = [];
@@ -966,7 +1045,7 @@ function undo() {
 }
 
 function restart() {
-  if (G.animating) return;
+  if (G.animating || G.challenge) return;
   clearHintDemo();
   clearClearFx(); // '다시 풀기'로 돌아오면 사라졌던 조각을 되살린다
   G.state = clone(G.stage.start);
@@ -983,7 +1062,7 @@ function restart() {
 
 // hint entry point — routes through free quota / rewarded ad / premium
 function useHint() {
-  if (G.animating) return;
+  if (G.animating || G.challenge) return;
   if (G.selected.length) { G.selected = []; refreshPieces(); }
   if (G.hintPair) { demoHint(G.hintPair); return; } // 이미 보여준 힌트는 다시 써도 차감 없이 시연만 반복
   const pair = solveNext(G.state, G.stage.targets, G.stage.n, G.wallSet, G.tileMap);
@@ -1206,6 +1285,7 @@ function closeBackup() { $('#backup').classList.remove('show'); }
  * 클리어/기록은 합집합으로 남긴다(어느 쪽이든 이미 딴 것은 절대 사라지지 않음). */
 function mergeProgress(local, cloud) {
   if (!cloud) return local;
+  migrateProgress(local); migrateProgress(cloud);
   const out = Object.assign({}, local);
   out.completed = Object.assign({}, cloud.completed, local.completed);
   // max를 쓰면 예전 버그로 부풀려진 클라우드 값이 되살아나고, 부팅 시 재계산과 충돌해 새로고침이 반복될 수 있다
@@ -1328,7 +1408,7 @@ function doRestore() {
 
 /* ---------- win ---------- */
 /* ---------- 끝없는 모드(빠른 한 판) ----------
- * 1050판과 별개로 게임 안에서 즉석으로 퍼즐을 만든다. 연속으로 깰수록 어려워진다(조각 수·최소 수·벽·칸).
+ * 정식 레벨과 별개로 게임 안에서 즉석으로 퍼즐을 만든다. 연속으로 깰수록 어려워진다(조각 수·최소 수·벽·칸).
  * 만드는 법은 generate-stages-*.cjs와 같다: 무작위 배치 → 모든 상태를 넓이 우선 탐색 → 원하는 최소 수의 목표 배치를 고른다.
  * 외길 퍼즐(최단 풀이가 1가지)은 제외. 진행 기록(깬 레벨·스티커)에는 넣지 않고 최고 연속 기록만 저장한다. */
 const QUICK_CAP = 6000; // 탐색 상태 상한(4×4·조각 4개에서도 수십 ms)
@@ -1432,7 +1512,210 @@ function onQuickWin() {
   playClearFx();
 }
 
+/* ---------- 친구와 겨루기(도전장) ----------
+ * 둘 다 처음 보는 새 퍼즐을 한 번만 푼다. 되돌리기·다시 시작·힌트·미리보기 없음, 이동 예산을 다 쓰면 실패.
+ * 승부: 성공 > 실패, 둘 다 성공이면 적은 이동 수, 같으면 무승부(둘 다 최소 수면 '둘 다 완벽').
+ * 서버 없이 퍼즐과 보낸 사람 기록을 짧은 코드에 담는다(링크 #ch=코드, 포털에선 코드 복사).
+ * 코드 끝의 검증값은 쉽게 고치지 못하게 하는 정도이고, 최소 수는 받는 쪽이 다시 계산한다. */
+const CH_VER = 'a';
+const b36 = i => i.toString(36);
+function chSpec() { // 보내는 사람이 깬 월드 수준에 맞춘 난이도(빠른 한 판 생성기의 단계)
+  return Math.min(12, Math.floor(worldOf(progress.reached || 0) * 0.4));
+}
+const chId = body => hashStr(body.slice(0, 3) + body.slice(4)).toString(36); // 같은 퍼즐+nonce면 기록(4번째 글자)과 상관없이 같은 id
+function chCheck(body) { return ('000' + hashStr('swapstep-ch|' + body).toString(36)).slice(-3); }
+function encodeChallenge(st, moves, nonce) {
+  const n = st.n, cell = c => b36(c[1] * n + c[0]);
+  let s = CH_VER + n + b36(st.min) + (moves < 0 ? 'z' : b36(moves)) + st.start.length;
+  st.start.forEach((p, i) => { s += cell(p) + p[2] + cell(st.targets[i]); });
+  const walls = st.walls || [], tiles = st.tiles || [];
+  s += walls.length; walls.forEach(w => { s += cell(w); });
+  s += tiles.length; tiles.forEach(c => { s += cell(c) + c[2]; });
+  s += nonce;
+  return s + chCheck(s);
+}
+function decodeChallenge(raw) {
+  const code = String(raw || '').trim().toLowerCase().replace(/[^0-9a-z]/g, '');
+  if (code.length < 12 || code[0] !== CH_VER) return null;
+  const body = code.slice(0, -3);
+  if (chCheck(body) !== code.slice(-3)) return null;
+  let i = 1;
+  const rd = () => { if (i >= body.length) throw 0; return parseInt(body[i++], 36); };
+  try {
+    const n = rd(); if (n !== 3 && n !== 4) return null;
+    const pos = () => { const v = rd(); if (!(v < n * n)) throw 0; return [v % n, Math.floor(v / n)]; };
+    rd(); // 보낸 쪽이 적은 최소 수 — 믿지 않고 아래에서 다시 계산
+    const rr = body[i++], moves = rr === 'z' ? -1 : parseInt(rr, 36);
+    const pc = rd(); if (pc < 2 || pc > 4) return null;
+    const start = [], targets = [];
+    for (let k = 0; k < pc; k++) {
+      const p = pos(), d = rd(); if (d > 3) return null;
+      start.push([p[0], p[1], d]); targets.push(pos());
+    }
+    const walls = []; for (let k = rd(); k > 0; k--) walls.push(pos());
+    const tiles = []; for (let k = rd(); k > 0; k--) { const p = pos(), kind = rd(); if (kind > TILE_TURN) return null; tiles.push([p[0], p[1], kind]); }
+    const nonce = body.slice(i); if (nonce.length !== 4) return null;
+    const ck = c => c[0] + ',' + c[1];
+    const wallSet = new Set(walls.map(ck)), tileMap = new Map(tiles.map(c => [ck(c), c[2]]));
+    const distinct = a => new Set(a.map(ck)).size === a.length && !a.some(c => wallSet.has(ck(c)));
+    if (!distinct(start) || !distinct(targets) || tiles.some(c => wallSet.has(ck(c)))) return null;
+    const goals = quickExplore(start, n, wallSet, tileMap);
+    const g = goals && goals.get(targets.map(ck).join(';'));
+    if (!g || g.d < 1) return null;
+    if (moves >= 0 && (moves < g.d || moves > budgetFor(g.d))) return null;
+    const st = { id: 'CH', seq: 0, chapter: '', n, pieces: pc, start, targets, min: g.d };
+    if (walls.length) st.walls = walls;
+    if (tiles.length) st.tiles = tiles;
+    return { stage: st, moves, id: chId(body) };
+  } catch (e) { return null; }
+}
+const chRecords = () => progress.challenges || (progress.challenges = {});
+function chMark(id, rec) { // 기기에 남기는 도전 기록(같은 도전장 다시 풀기 방지) — 최근 100개만
+  const r = chRecords(); r[id] = rec;
+  const ks = Object.keys(r); ks.slice(0, Math.max(0, ks.length - 100)).forEach(k => delete r[k]);
+  saveProgress(progress);
+}
+const chRec = m => (m < 0 ? t('ch_rec_fail') : t('ch_rec_moves', { n: m }));
+
+// 도전장 창: 새로 만들기 / 받은 코드 입력 / 링크로 받은 도전장
+function openChallenge(msg) {
+  renderChallenge(msg || '');
+  $('#challenge').classList.add('show');
+}
+function closeChallenge() { $('#challenge').classList.remove('show'); }
+function renderChallenge(msg) {
+  const inc = G.chIncoming, box = $('#chIncoming');
+  box.hidden = !inc;
+  if (inc) $('#chIncomingRec').textContent = t('ch_incoming_rec', { r: chRec(inc.moves), min: inc.stage.min });
+  $('#chMsg').textContent = msg;
+}
+function createChallenge() {
+  closeChallenge();
+  const nonce = Array.from({ length: 4 }, () => b36(Math.floor(Math.random() * 36))).join('');
+  // 받는 쪽이 그대로 풀어 볼 수 있는 판인지(코드 왕복) 확인 — 드물게 빌려 온 정식 레벨이 탐색 상한을 넘으면 다시 만든다
+  let st = null, dec = null;
+  for (let k = 0; k < 6 && !dec; k++) { st = genQuickPuzzle(chSpec()); dec = decodeChallenge(encodeChallenge(st, -1, nonce)); }
+  if (!dec) return;
+  st = dec.stage;
+  const id = dec.id;
+  chMark(id, { m: -1, mine: 1 }); // 시작하는 순간 기록(도중에 나가면 실패)
+  logEvent('ch_create');
+  startChallengePlay({ stage: st, role: 'send', nonce, id, opp: null });
+}
+function acceptChallenge(raw) {
+  const ch = typeof raw === 'string' ? decodeChallenge(raw) : raw;
+  if (!ch) { openChallenge(t('ch_bad_code')); return; }
+  try { if (/ch=/.test(location.hash)) history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
+  const rec = chRecords()[ch.id];
+  if (rec && rec.mine) { G.chIncoming = null; openChallenge(t('ch_mine')); return; }
+  if (rec) { G.chIncoming = null; closeChallenge(); showChallengeResult({ stage: ch.stage, role: 'reply', opp: ch.moves, id: ch.id }, rec.m, true); return; }
+  G.chIncoming = null;
+  chMark(ch.id, { m: -1 });
+  closeChallenge();
+  logEvent('ch_accept');
+  startChallengePlay({ stage: ch.stage, role: 'reply', id: ch.id, opp: ch.moves });
+}
+function startChallengePlay(ch) {
+  loadStage(progress.last || 0, null, ch.stage);
+  G.quickMode = false;
+  G.challenge = ch;
+  G.giveUpArm = 0;
+  document.body.classList.add('ch-mode');
+  renderStageLabels(); updateHud(); updatePreview(); renderProgress();
+}
+function giveUpChallenge() {
+  if (!G.challenge || G.animating) return;
+  if (Date.now() - (G.giveUpArm || 0) > 3000) { // 실수로 누르지 않게 두 번 눌러야 포기
+    G.giveUpArm = Date.now();
+    G.tipMsg = t('ch_giveup_confirm'); updatePreview();
+    return;
+  }
+  endChallenge(false);
+}
+function endChallenge(success) {
+  const ch = G.challenge, me = success ? G.history.length : -1;
+  if (!ch || ch.done) return;
+  ch.done = true; ch.outOfMoves = !success && movesLeft() <= 0;
+  const r = chRecords()[ch.id]; if (r) { r.m = me; saveProgress(progress); }
+  logEvent('ch_end', { role: ch.role, ok: success });
+  G.animating = true;
+  clearTimeout(G.winTimer);
+  if (success) {
+    Sound.win(); haptic([20, 40, 60]); confettiBurst(); screenFlash();
+    pieceEls().forEach((el, k) => { setTimeout(() => { el.classList.remove('win-bounce'); void el.offsetWidth; el.classList.add('win-bounce'); }, k * 70); });
+    playClearFx();
+  } else { Sound.blocked(); haptic([12, 30, 12]); }
+  G.winTimer = setTimeout(() => { G.animating = false; showChallengeResult(ch, me); }, success ? WIN_REVEAL_MS : 700);
+}
+// 결과 창(overlay 재사용). seen=true면 이미 푼 도전장을 다시 연 경우(비교만)
+function showChallengeResult(ch, me, seen) {
+  G.chResult = { ch, me, seen };
+  const min = ch.stage.min, badgeEl = overlay.querySelector('.badge');
+  badgeEl.className = 'badge';
+  let title, sub;
+  if (ch.role === 'send') {
+    badgeEl.textContent = me < 0 ? '😵' : '📨';
+    title = me < 0 ? t('ch_fail_title') : t('ch_done_title', { n: me });
+    sub = (ch.outOfMoves ? t('ch_fail_moves') + ' ' : '') + t('ch_send_sub', { min });
+  } else {
+    const opp = ch.opp;
+    const res = me < 0 && opp < 0 ? 0 : me < 0 ? -1 : opp < 0 ? 1 : Math.sign(opp - me);
+    const perfect = res === 0 && me === min;
+    badgeEl.textContent = res > 0 ? '🏆' : res < 0 ? '😤' : perfect ? '🌟' : '🤝';
+    title = t(res > 0 ? 'ch_win' : res < 0 ? 'ch_lose' : perfect ? 'ch_both_perfect' : 'ch_draw');
+    sub = t('ch_compare', { min, me: chRec(me), opp: chRec(opp) });
+    if (seen) sub = t('ch_already') + '<br>' + sub;
+  }
+  overlay.querySelector('.result-title').textContent = title;
+  overlay.querySelector('.result-sub').innerHTML = sub;
+  const next = $('#btnNext'), rp = $('#btnReplay');
+  next.style.display = ''; rp.style.display = '';
+  next.textContent = ch.role === 'send' ? t('ch_send') : t('ch_rematch');
+  rp.textContent = t('ch_close');
+  $('#resultMsg').textContent = '';
+  overlay.dataset.mode = 'challenge';
+  overlay.classList.add('show');
+  syncGameplay();
+}
+async function shareChallenge() {
+  const R = G.chResult; if (!R) return;
+  const ch = R.ch, code = encodeChallenge(ch.stage, R.me, ch.nonce);
+  const name = (window.BM_BRAND && window.BM_BRAND.name) || 'SwapStep';
+  const head = R.me < 0 ? t('ch_share_text_fail', { name }) : t('ch_share_text_ok', { name, n: R.me, min: ch.stage.min });
+  // 링크는 포털이 아닐 때만(포털은 외부 링크 금지 → 코드만). 남의 사이트(itch 등) 안에서는 공식 사이트 주소로.
+  let tail;
+  if (onPortal()) tail = t('ch_share_code', { code });
+  else {
+    const own = window.AdsManager && window.AdsManager.isOwnSite;
+    const base = own ? location.origin + location.pathname : ((window.BM_BRAND && window.BM_BRAND.homeUrl) || 'https://sgtherong.github.io/game001/');
+    tail = base + '#ch=' + code;
+  }
+  const text = head + '\n' + tail;
+  logEvent('ch_share');
+  const msg = $('#resultMsg');
+  try { if (navigator.share && !onPortal()) { await navigator.share({ text }); return; } }
+  catch (e) { if (e && e.name === 'AbortError') return; }
+  try { await navigator.clipboard.writeText(text); msg.textContent = t('share_copied') + '\n' + tail; }
+  catch (e) { msg.textContent = text; }
+}
+function leaveChallenge() {
+  G.chResult = null;
+  loadStage(progress.last || 0);
+}
+// 시작할 때 주소(#ch=코드)로 받은 도전장
+function checkIncomingChallenge() {
+  const m = /[#&]ch=([0-9a-zA-Z]+)/.exec(location.hash || '');
+  if (!m) return;
+  const ch = decodeChallenge(m[1]);
+  if (!ch) { openChallenge(t('ch_bad_code')); return; }
+  const rec = chRecords()[ch.id];
+  if (rec) { acceptChallenge(ch); return; } // 이미 푼(또는 내가 만든) 도전장 → 비교 결과·안내만
+  G.chIncoming = ch;
+  openChallenge();
+}
+
 function onWin() {
+  if (G.challenge) { endChallenge(true); return; } // 대결: 진행 기록 없이 결과 비교
   if (G.quickMode) { onQuickWin(); return; } // 끝없는 모드: 진행 기록·스티커 없이 연속 기록만
   const moves = G.history.length;
   const st = G.stage;
@@ -1572,11 +1855,15 @@ function updateHud() {
   if (!G.stage) return;
   movesInfoEl.textContent = t('moves_info', { n: G.history.length, max: moveBudget() });
   goalInfoEl.textContent = t('goal_info', { min: G.stage.min });
+  if (G.challenge) renderProgress();
 }
 // 상단 라벨: "Level 41" + "World 2 · Paris" (데일리는 "Daily Challenge" + 난이도)
 function renderStageLabels() {
   if (!G.stage) return;
-  if (G.quickMode) {
+  if (G.challenge) {
+    stageTitleEl.textContent = t('ch_label');
+    chapterEl.textContent = G.challenge.role === 'send' ? t('ch_sub_send') : t('ch_sub_reply', { r: chRec(G.challenge.opp) });
+  } else if (G.quickMode) {
     stageTitleEl.textContent = t('quick_title');
     chapterEl.textContent = t('quick_streak', { n: G.quickStreak || 0 });
   } else if (G.daily != null) {
@@ -1622,9 +1909,11 @@ function loadStage(index, dailySlot = null, custom = null) {
   G.hintPair = null; G.hintMsg = ''; G.tipMsg = ''; G.introMsg = '';
   G.peekOn = false; // 미리보기 부스터는 판마다 새로
   G.daily = dailySlot; // non-null => playing today's daily puzzle
+  G.challenge = null; document.body.classList.remove('ch-mode'); // 대결은 startChallengePlay가 다시 켠다
   if (dailySlot === null && !custom) { progress.last = G.index; saveProgress(progress); } // daily/quick doesn't move main progress
   updatePeekButton();
-  const rp = $('#btnReplay'); if (rp) rp.style.display = ''; // 끝없는 모드에서 숨겼던 '다시 풀기' 복구
+  const rp = $('#btnReplay'); if (rp) { rp.style.display = ''; rp.textContent = t('win_replay'); } // 끝없는 모드·대결에서 바꾼 '다시 풀기' 복구
+  $('#resultMsg').textContent = '';
   updateHintButton();
 
   renderStageLabels();
@@ -1640,9 +1929,14 @@ function loadStage(index, dailySlot = null, custom = null) {
   syncGameplay(); // portal signal: level active (창이 하나도 안 떠 있을 때만)
 }
 
-// 진행 막대: 지금 월드 안에서 몇 문제 깼는지(x/30) — 전체 1050 대신 손에 잡히는 목표
+// 진행 막대: 지금 월드 안에서 몇 문제 깼는지(x/30) — 전체 3000판 대신 손에 잡히는 목표
 function renderProgress() {
   if (!G.stage) return;
+  if (G.challenge) { // 대결: 남은 이동
+    progressBarEl.style.width = Math.max(0, movesLeft()) / moveBudget() * 100 + '%';
+    progressTextEl.textContent = `${Math.max(0, movesLeft())}/${moveBudget()}`;
+    return;
+  }
   if (G.quickMode) { // 빠른 한 판: 최고 연속 기록 대비 지금 연속 기록
     const best = Math.max((progress.quick && progress.quick.best) || 0, G.quickStreak || 0, 1);
     progressBarEl.style.width = Math.min(100, (G.quickStreak || 0) / best * 100) + '%';
@@ -1998,6 +2292,11 @@ btnHint.addEventListener('click', useHint);
 $('#btnPeek').addEventListener('click', usePeek);
 $('#coachSkip').addEventListener('click', endCoach);
 $('#btnNext').addEventListener('click', async e => {
+  if (overlay.dataset.mode === 'challenge') { // 보낸 사람: 도전장 보내기 / 받은 사람: 새 판으로 되받아치기
+    if (G.chResult && G.chResult.ch.role === 'send') shareChallenge();
+    else { overlay.classList.remove('show'); createChallenge(); }
+    return;
+  }
   if (overlay.dataset.mode === 'daily') { overlay.classList.remove('show'); openDaily(); return; }
   if (G.adDue && window.AdsManager) {
     // 광고 요청~종료 동안 버튼을 막아 진행하지 못하게 한다(포털 규격)
@@ -2010,7 +2309,18 @@ $('#btnNext').addEventListener('click', async e => {
   if (overlay.dataset.mode === 'quick') nextQuick(); // 끝없는 모드: 다음 즉석 퍼즐(조금 더 어렵게)
   else loadStage(G.index + 1);
 });
-$('#btnReplay').addEventListener('click', () => { overlay.classList.remove('show'); restart(); });
+$('#btnReplay').addEventListener('click', () => {
+  overlay.classList.remove('show');
+  if (overlay.dataset.mode === 'challenge') leaveChallenge(); else restart();
+});
+// 친구와 겨루기
+$('#btnGiveUp').addEventListener('click', giveUpChallenge);
+$('#dailyChallenge').addEventListener('click', () => { closeDaily(); openChallenge(); });
+$('#chMake').addEventListener('click', createChallenge);
+$('#chAccept').addEventListener('click', () => acceptChallenge($('#chCode').value));
+$('#chIncomingGo').addEventListener('click', () => acceptChallenge(G.chIncoming));
+$('#chClose').addEventListener('click', closeChallenge);
+$('#chBackdrop').addEventListener('click', closeChallenge);
 $('#btnStages').addEventListener('click', openDrawer);
 // daily challenge
 $('#btnDaily').addEventListener('click', openDaily);
@@ -2068,6 +2378,10 @@ function refreshDynamic() {
   if ($('#store').classList.contains('show')) renderStore('');
   if (albumOverlay.classList.contains('show')) renderAlbum();
   if (dailyOverlay.classList.contains('show')) renderDaily();
+  if ($('#challenge').classList.contains('show')) renderChallenge($('#chMsg').textContent);
+  if (G.chResult && overlay.dataset.mode === 'challenge' && overlay.classList.contains('show')) {
+    const msg = $('#resultMsg').textContent; showChallengeResult(G.chResult.ch, G.chResult.me, G.chResult.seen); $('#resultMsg').textContent = msg;
+  }
 }
 window.onLangChange = refreshDynamic;
 
@@ -2171,6 +2485,7 @@ async function boot() {
   registerSW();
   if (window.AdsManager) AdsManager.loadingStop(); // 로딩 끝 → 이어서 loadStage가 gameplayStart
   loadStage(progress.last || 0);        // start at last played stage
+  checkIncomingChallenge();             // 링크(#ch=코드)로 받은 도전장이 있으면 도전장 창
   // 첫 플레이 안내는 규칙 창 대신 1레벨 화면 안에서 손가락으로(startCoach, loadStage에서 호출)
   trySilentCloudRestore(); // 백그라운드: 이전에 연결한 계정이면 조용히 최신 진행도로 맞춘다
   booted = true;
