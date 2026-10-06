@@ -1,5 +1,5 @@
 /* 스왑스텝 service worker — offline app shell */
-const CACHE = 'swapstep-v57';
+const CACHE = 'swapstep-v58';
 const ASSETS = [
   './',
   './index.html',
@@ -26,15 +26,15 @@ self.addEventListener('activate', e => {
   );
 });
 
-// cache-first for same-origin GET; fall back to network and cache the result
+// 인터넷 우선: 온라인이면 항상 최신 파일(새로 받은 파일로 캐시도 갱신), 오프라인일 때만 저장본.
+// 예전엔 저장본 우선이라 배포 직후 첫 방문에 옛 버전이 떠서, 도전장 링크(#ch=)를 열어도 도전장 기능이 없는 옛 게임이 평소 레벨을 보여 줬다.
 self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET' || new URL(req.url).origin !== location.origin) return;
   e.respondWith(
-    caches.match(req).then(hit => hit || fetch(req).then(res => {
-      const copy = res.clone();
-      caches.open(CACHE).then(c => c.put(req, copy)).catch(() => {});
+    fetch(req).then(res => {
+      if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(req, copy)).catch(() => {}); }
       return res;
-    }).catch(() => caches.match('./index.html')))
+    }).catch(() => caches.match(req).then(hit => hit || caches.match('./index.html')))
   );
 });
