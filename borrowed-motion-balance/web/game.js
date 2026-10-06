@@ -25,6 +25,16 @@ function applyWorldTint(index) { document.documentElement.dataset.worldTint = St
 const VECTORS = [[1, 0], [0, 1], [-1, 0], [0, -1]]; // 0=right 1=down 2=left 3=up
 const DIR_LABEL = ['→', '↓', '←', '↑'];
 const PIECE_COLORS = ['#e8743b', '#2f8f83', '#7b6cd9', '#c0497b']; // supports up to 4
+// 조각·목표의 짝 표시: 숫자를 쓰면 "1번부터 순서대로 누르라"는 뜻으로 읽혀서(사람 테스트에서 확인) 색 + 모양으로 짝을 표시한다.
+// 모양이 달라 색을 구분하기 어려운 사람도 짝을 찾을 수 있다. 순서: ● ▲ ■ ◆
+const SHAPE_SVG = [
+  '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.2" fill="currentColor"/></svg>',
+  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.8 20.8 19.4H3.2z" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>',
+  '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.9" y="3.9" width="16.2" height="16.2" rx="2.8" fill="currentColor"/></svg>',
+  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8 21.2 12 12 21.2 2.8 12z" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>',
+];
+const SHAPE_CHAR = ['●', '▲', '■', '◆']; // 힌트 문구 안에서 쓰는 글자
+const SHAPE_NAME = ['circle', 'triangle', 'square', 'diamond'];
 
 const clone = s => s.map(p => p.slice());
 const key = s => s.flat().join(',');
@@ -542,7 +552,7 @@ function buildBoard() {
     g.className = 'target';
     g.dataset.i = i;
     g.style.setProperty('--c', PIECE_COLORS[i]);
-    g.innerHTML = `<span>${i + 1}</span>`;
+    g.innerHTML = `<span class="mark">${SHAPE_SVG[i]}</span>`;
     layerEl.appendChild(g);
   });
 
@@ -551,8 +561,8 @@ function buildBoard() {
     tok.className = 'piece';
     tok.dataset.i = i;
     tok.style.setProperty('--c', PIECE_COLORS[i]);
-    tok.setAttribute('aria-label', String(i + 1));
-    tok.innerHTML = `<span class="num">${i + 1}</span><span class="arrow">${ARROW_SVG}</span>`;
+    tok.setAttribute('aria-label', SHAPE_NAME[i]);
+    tok.innerHTML = `<span class="num">${SHAPE_SVG[i]}</span><span class="arrow">${ARROW_SVG}</span>`;
     tok.addEventListener('click', () => onPieceClick(i));
     layerEl.appendChild(tok);
   });
@@ -598,7 +608,7 @@ function applyStaticGeometry() {
   pieceEls().forEach(el => {
     el.style.width = pieceSize + 'px';
     el.style.height = pieceSize + 'px';
-    el.querySelector('.num').style.fontSize = Math.round(cell * 0.32) + 'px'; // 큰 화살표와 겹치지 않는 크기
+    const mk = el.querySelector('.num'); mk.style.width = mk.style.height = Math.round(cell * 0.29) + 'px'; // 큰 화살표와 겹치지 않는 크기
     el.style.setProperty('--badge', Math.round(cell * 0.34) + 'px'); // 도착 체크 배지 크기
   });
 }
@@ -911,7 +921,7 @@ function applyHint(pair, src) {
   G.selected = [];
   G.hintPair = pair.slice();
   const left = isPremium() ? t('hint_left_unlimited') : t('hint_left_free', { n: hintsAvailable() });
-  G.hintMsg = t('hint_applied', { a: pair[0] + 1, b: pair[1] + 1, left });
+  G.hintMsg = t('hint_applied', { a: SHAPE_CHAR[pair[0]], b: SHAPE_CHAR[pair[1]], left });
   updatePreview();
   demoHint(pair);
   updateHintButton();
@@ -1803,7 +1813,7 @@ function refreshDynamic() {
   updatePrivacyLinks();
   if ($('#langSelect')) $('#langSelect').value = window.I18N.lang;
   updateHud(); updateHintButton(); applySoundIcon(); renderProgress(); renderStageLabels();
-  if (G.hintPair) G.hintMsg = t('hint_applied', { a: G.hintPair[0] + 1, b: G.hintPair[1] + 1,
+  if (G.hintPair) G.hintMsg = t('hint_applied', { a: SHAPE_CHAR[G.hintPair[0]], b: SHAPE_CHAR[G.hintPair[1]],
     left: isPremium() ? t('hint_left_unlimited') : t('hint_left_free', { n: hintsAvailable() }) });
   updatePreview();
   if (drawer.classList.contains('open')) renderStageList();

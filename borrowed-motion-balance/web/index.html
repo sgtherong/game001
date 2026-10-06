@@ -139,6 +139,10 @@
     font-weight: 800;
   }
   .target span { opacity: .6; }
+  /* 짝 표시 모양(숫자 대신): 목표 칸엔 조각 색으로 크게, 조각 위엔 흰색으로 */
+  .target .mark { display: block; width: 40%; height: 40%; }
+  .target .mark svg, .piece .num svg { display: block; width: 100%; height: 100%; }
+  .piece .num { display: block; filter: drop-shadow(0 2px 1.5px rgba(0,0,0,.22)); }
 
   /* 조각: 위쪽 하이라이트 + 아래 그림자로 입체감, 화살표는 크게(핵심 정보) */
   .piece {
@@ -439,7 +443,9 @@
   .td-target.lit { animation: tdLit 5s ease-out infinite; }
   @keyframes tdLit { 0%,58% { box-shadow: 0 0 0 0 transparent; } 68% { box-shadow: 0 0 0 7px color-mix(in srgb, currentColor 32%, transparent); } 82%,100% { box-shadow: 0 0 0 11px transparent; } }
   .td-piece { position: absolute; top: 10px; width: 42px; height: 42px; border-radius: 11px; display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 18px; box-shadow: 0 4px 8px rgba(0,0,0,.2); }
-  .td-piece .td-num { position: relative; z-index: 1; text-shadow: 0 1px 2px rgba(0,0,0,.25); }
+  .td-piece .td-num { position: relative; z-index: 1; filter: drop-shadow(0 1px 1px rgba(0,0,0,.25)); }
+  .td-mark { display: block; width: 16px; height: 16px; } .td-target .td-mark { width: 20px; height: 20px; }
+  .td-mark svg { display: block; width: 100%; height: 100%; }
   .td-piece .td-arrow { position: absolute; inset: 0; }
   .td-piece .td-arrow::after { content: ""; position: absolute; right: 7%; top: 50%; width: 16%; height: 3px; background: #fff; transform: translateY(-50%); border-radius: 3px; }
   .td-piece .td-arrow::before { content: ""; position: absolute; right: 5%; top: 50%; width: 0; height: 0; transform: translateY(-50%); border-top: 4px solid transparent; border-bottom: 4px solid transparent; border-left: 6px solid #fff; }
@@ -752,10 +758,10 @@
         <div class="td-cell" style="left:64px"></div>
         <div class="td-cell" style="left:122px"></div>
         <div class="td-cell" style="left:180px"></div>
-        <div class="td-target t1 lit"><span>1</span></div>
-        <div class="td-target t2 lit"><span>2</span></div>
-        <div class="td-piece p1"><span class="td-arrow"></span><span class="td-num">1</span></div>
-        <div class="td-piece p2"><span class="td-arrow"></span><span class="td-num">2</span></div>
+        <div class="td-target t1 lit"><span class="td-mark"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.2" fill="currentColor"/></svg></span></div>
+        <div class="td-target t2 lit"><span class="td-mark"><svg viewBox="0 0 24 24"><path d="M12 3.8 20.8 19.4H3.2z" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></span></div>
+        <div class="td-piece p1"><span class="td-arrow"></span><span class="td-num td-mark"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.2" fill="currentColor"/></svg></span></div>
+        <div class="td-piece p2"><span class="td-arrow"></span><span class="td-num td-mark"><svg viewBox="0 0 24 24"><path d="M12 3.8 20.8 19.4H3.2z" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></span></div>
         <div class="td-finger">👆</div>
       </div>
       <div class="tut-demo-cap" data-i18n="tut_demo_cap">Tap two → swap → each steps once</div>
