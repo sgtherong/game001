@@ -1643,6 +1643,12 @@ function loadStage(index, dailySlot = null, custom = null) {
 // 진행 막대: 지금 월드 안에서 몇 문제 깼는지(x/30) — 전체 1050 대신 손에 잡히는 목표
 function renderProgress() {
   if (!G.stage) return;
+  if (G.quickMode) { // 빠른 한 판: 최고 연속 기록 대비 지금 연속 기록
+    const best = Math.max((progress.quick && progress.quick.best) || 0, G.quickStreak || 0, 1);
+    progressBarEl.style.width = Math.min(100, (G.quickStreak || 0) / best * 100) + '%';
+    progressTextEl.textContent = t('quick_best', { n: (progress.quick && progress.quick.best) || 0 });
+    return;
+  }
   const w = worldOf(G.index), done = worldClears(w), total = worldRange(w)[1] - worldRange(w)[0];
   progressBarEl.style.width = (done / total * 100) + '%';
   progressTextEl.textContent = `${done}/${total}`;
@@ -1848,7 +1854,9 @@ async function shareDaily() {
   const ds = progress.dailyStars && progress.dailyStars.d === dk ? progress.dailyStars.s : [0, 0, 0];
   const labels = [t('daily_easy'), t('daily_medium'), t('daily_hard')];
   const name = (window.BM_BRAND && window.BM_BRAND.name) || 'SwapStep';
-  const url = (window.BM_BRAND && window.BM_BRAND.shareUrl) || (location.origin + location.pathname);
+  // 공유 링크: 공식 사이트에서는 지금 주소, 남의 사이트(itch.io iframe 등)에서는 공식 주소
+  const own = window.AdsManager && window.AdsManager.isOwnSite;
+  const url = (window.BM_BRAND && window.BM_BRAND.shareUrl) || (own ? location.origin + location.pathname : ((window.BM_BRAND && window.BM_BRAND.homeUrl) || 'https://sgtherong.github.io/game001/'));
   const lines = [`${name} · ${t('daily_title')} ${dk}`]
     .concat(labels.map((l, k) => `${l} ${'⭐'.repeat(ds[k] || 1)}${'▫️'.repeat(3 - (ds[k] || 1))}`))
     .concat([t('daily_streak', { n: progress.streak.n || 0 }), url]);
@@ -1972,7 +1980,7 @@ function showSiteLock() {
 function registerSW() {
   // 포털(CrazyGames 등)은 게임 번들을 자체 iframe에 재호스팅한다. 서비스워커/오프라인
   // 캐시는 자체호스팅·gh-pages 전용 기능이므로 포털에서는 등록하지 않는다.
-  if (window.AdsManager && window.AdsManager.isPortal) return;
+  if (window.AdsManager && (window.AdsManager.isPortal || !window.AdsManager.isOwnSite)) return; // itch.io 등 남의 사이트에서도 등록 안 함
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
     navigator.serviceWorker.register('sw.js').catch(() => {});
   }

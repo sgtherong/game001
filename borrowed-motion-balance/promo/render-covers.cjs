@@ -11,6 +11,13 @@ const SIZES = [
   { name: 'cover-portrait-800x1200.png', w: 800, h: 1200, layout: 'portrait' },
   { name: 'cover-square-800x800.png', w: 800, h: 800, layout: 'square' },
   { name: 'cover-portrait-1080x1620.png', w: 1080, h: 1620, layout: 'portrait' },
+  // GameDistribution 등록용 5종 + itch.io 표지
+  { name: 'gd-1280x720.png', w: 1280, h: 720, layout: 'landscape' },
+  { name: 'gd-1280x550.png', w: 1280, h: 550, layout: 'landscape' },
+  { name: 'gd-512x512.png', w: 512, h: 512, layout: 'square' },
+  { name: 'gd-512x384.png', w: 512, h: 384, layout: 'landscape' },
+  { name: 'gd-512x340.png', w: 512, h: 340, layout: 'landscape' },
+  { name: 'itch-cover-630x500.png', w: 630, h: 500, layout: 'landscape' },
 ];
 
 (async () => {
