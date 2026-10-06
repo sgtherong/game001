@@ -26,15 +26,16 @@ const VECTORS = [[1, 0], [0, 1], [-1, 0], [0, -1]]; // 0=right 1=down 2=left 3=u
 const DIR_LABEL = ['→', '↓', '←', '↑'];
 const PIECE_COLORS = ['#e8743b', '#2f8f83', '#7b6cd9', '#c0497b']; // supports up to 4
 // 조각·목표의 짝 표시: 숫자를 쓰면 "1번부터 순서대로 누르라"는 뜻으로 읽혀서(사람 테스트에서 확인) 색 + 모양으로 짝을 표시한다.
-// 모양이 달라 색을 구분하기 어려운 사람도 짝을 찾을 수 있다. 순서: ● ▲ ■ ◆
+// 윤곽이 서로 확실히 다른 해·달·별·하트(여행 앨범 분위기)라 작은 화면·색 구분이 어려운 사람도 짝을 찾는다.
+// 순서(조각 색): 해=주황 달=초록 별=보라 하트=분홍
 const SHAPE_SVG = [
-  '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.2" fill="currentColor"/></svg>',
-  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.8 20.8 19.4H3.2z" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>',
-  '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.9" y="3.9" width="16.2" height="16.2" rx="2.8" fill="currentColor"/></svg>',
-  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8 21.2 12 12 21.2 2.8 12z" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>',
+  '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.8" fill="currentColor"/><path d="M18.6 12L21.4 12M16.7 16.7L18.6 18.6M12 18.6L12 21.4M7.3 16.7L5.4 18.6M5.4 12L2.6 12M7.3 7.3L5.4 5.4M12 5.4L12 2.6M16.7 7.3L18.6 5.4" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>',
+  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.4 3.6a8.6 8.6 0 1 0 5 13.4 7 7 0 0 1-5-13.4z" fill="currentColor"/></svg>',
+  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6l2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17l-5.6 3 1.1-6.3-4.6-4.4 6.3-.9z" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linejoin="round"/></svg>',
+  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.4S3.6 15.5 3.6 9.6A4.5 4.5 0 0 1 12 7.2a4.5 4.5 0 0 1 8.4 2.4c0 5.9-8.4 10.8-8.4 10.8z" fill="currentColor"/></svg>',
 ];
-const SHAPE_CHAR = ['●', '▲', '■', '◆']; // 힌트 문구 안에서 쓰는 글자
-const SHAPE_NAME = ['circle', 'triangle', 'square', 'diamond'];
+const SHAPE_CHAR = ['☀︎', '☾', '★', '♥︎']; // 힌트 문구 안에서 쓰는 글자(︎ = 이모지 그림 말고 글자 모양으로)
+const SHAPE_NAME = ['sun', 'moon', 'star', 'heart'];
 
 const clone = s => s.map(p => p.slice());
 const key = s => s.flat().join(',');
