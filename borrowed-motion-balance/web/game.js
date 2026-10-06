@@ -1577,6 +1577,8 @@ function chMark(id, rec) { // 기기에 남기는 도전 기록(같은 도전장
   saveProgress(progress);
 }
 const chRec = m => (m < 0 ? t('ch_rec_fail') : t('ch_rec_moves', { n: m }));
+// 도전장 번호: 같은 퍼즐이면 보낸 사람·받은 사람 화면에 똑같이 보인다(같은 판인지 눈으로 확인)
+const chTag = id => '#' + String(id || '').slice(0, 4).toUpperCase();
 
 // 도전장 창: 새로 만들기 / 받은 코드 입력 / 링크로 받은 도전장
 function openChallenge(msg) {
@@ -1587,7 +1589,7 @@ function closeChallenge() { $('#challenge').classList.remove('show'); }
 function renderChallenge(msg) {
   const inc = G.chIncoming, box = $('#chIncoming');
   box.hidden = !inc;
-  if (inc) $('#chIncomingRec').textContent = t('ch_incoming_rec', { r: chRec(inc.moves), min: inc.stage.min });
+  if (inc) $('#chIncomingRec').textContent = chTag(inc.id) + ' · ' + t('ch_incoming_rec', { r: chRec(inc.moves), min: inc.stage.min });
   $('#chMsg').textContent = msg;
 }
 function createChallenge() {
@@ -1608,7 +1610,7 @@ function acceptChallenge(raw) {
   if (!ch) { openChallenge(t('ch_bad_code')); return; }
   try { if (/ch=/.test(location.hash)) history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
   const rec = chRecords()[ch.id];
-  if (rec && rec.mine) { G.chIncoming = null; openChallenge(t('ch_mine')); return; }
+  if (rec && rec.mine) { G.chIncoming = null; openChallenge(chTag(ch.id) + ' · ' + t('ch_mine')); return; }
   if (rec) { G.chIncoming = null; closeChallenge(); showChallengeResult({ stage: ch.stage, role: 'reply', opp: ch.moves, id: ch.id }, rec.m, true); return; }
   G.chIncoming = null;
   chMark(ch.id, { m: -1 });
@@ -1668,7 +1670,7 @@ function showChallengeResult(ch, me, seen) {
     if (seen) sub = t('ch_already') + '<br>' + sub;
   }
   overlay.querySelector('.result-title').textContent = title;
-  overlay.querySelector('.result-sub').innerHTML = sub;
+  overlay.querySelector('.result-sub').innerHTML = sub + '<br>' + chTag(ch.id);
   const next = $('#btnNext'), rp = $('#btnReplay');
   next.style.display = ''; rp.style.display = '';
   next.textContent = ch.role === 'send' ? t('ch_send') : t('ch_rematch');
@@ -1862,7 +1864,7 @@ function updateHud() {
 function renderStageLabels() {
   if (!G.stage) return;
   if (G.challenge) {
-    stageTitleEl.textContent = t('ch_label');
+    stageTitleEl.textContent = t('ch_label') + ' ' + chTag(G.challenge.id);
     chapterEl.textContent = G.challenge.role === 'send' ? t('ch_sub_send') : t('ch_sub_reply', { r: chRec(G.challenge.opp) });
   } else if (G.quickMode) {
     stageTitleEl.textContent = t('quick_title');
