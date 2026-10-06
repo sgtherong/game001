@@ -63,7 +63,7 @@
   .tok { position: absolute; width: 21.5%; height: 21.5%; transform: translate(-50%, -50%); display: grid; place-items: center; }
   .target { border: calc(var(--u) * .55) dashed var(--c); border-radius: calc(var(--B) * .045); background: color-mix(in srgb, var(--c) 10%, transparent);
     color: color-mix(in srgb, var(--c) 60%, #a89573); font-weight: 700; font-size: calc(var(--B) * .085); }
-  .target span { opacity: .55; display: block; width: 40%; height: 40%; }
+  .target span { opacity: .55; display: block; width: 48%; height: 48%; }
   .target span svg, .piece .num svg { display: block; width: 100%; height: 100%; }
   /* 조각: 게임과 같은 모양 — 위 하이라이트 + 아래 두께 그림자 + 큰 흰 화살표 */
   .piece { width: 18%; height: 18%; border-radius: 22%; color: #fff; font-weight: 700; font-size: calc(var(--B) * .082);
@@ -73,7 +73,7 @@
       inset 0 calc(var(--u) * .3) 0 rgba(255,255,255,.35); }
   .piece.sel { transform: translate(-50%, -56%) scale(1.07);
     box-shadow: 0 0 0 calc(var(--u) * .7) #fff, 0 0 0 calc(var(--u) * 1.4) var(--c), 0 calc(var(--B) * .03) calc(var(--B) * .045) color-mix(in srgb, var(--c) 45%, transparent); }
-  .piece .num { position: relative; z-index: 1; display: block; width: 32%; height: 32%; filter: drop-shadow(0 calc(var(--u) * .3) calc(var(--u) * .2) rgba(0,0,0,.22)); }
+  .piece .num { position: relative; z-index: 1; display: block; width: 40%; height: 40%; filter: drop-shadow(0 calc(var(--u) * .3) calc(var(--u) * .2) rgba(0,0,0,.22)); }
   .piece .arrow { position: absolute; inset: 0; }
   .piece .arrow svg { position: absolute; right: 2%; top: 50%; width: 40%; height: 40%; transform: translateY(-50%); filter: drop-shadow(0 calc(var(--u) * .3) calc(var(--u) * .15) rgba(0,0,0,.2)); }
   /* 목표 도착 체크 배지 */
@@ -121,11 +121,11 @@
   const layer = document.getElementById('layer');
   const pos = v => (v * 25 + 12.5) + '%';
   const V = [[1, 0], [0, 1], [-1, 0], [0, -1]];
-  // 짝 표시 모양(게임 game.js의 SHAPE_SVG와 같음): 1=● 2=▲ 3=■
+  // 짝 표시 모양(게임 game.js의 SHAPE_SVG와 같음): 1=해 2=달 3=별
   const SHAPE = [null,
-    '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.2" fill="currentColor"/></svg>',
-    '<svg viewBox="0 0 24 24"><path d="M12 3.8 20.8 19.4H3.2z" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>',
-    '<svg viewBox="0 0 24 24"><rect x="3.9" y="3.9" width="16.2" height="16.2" rx="2.8" fill="currentColor"/></svg>'];
+    '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.8" fill="currentColor"/><path d="M18.6 12L21.4 12M16.7 16.7L18.6 18.6M12 18.6L12 21.4M7.3 16.7L5.4 18.6M5.4 12L2.6 12M7.3 7.3L5.4 5.4M12 5.4L12 2.6M16.7 7.3L18.6 5.4" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>',
+    '<svg viewBox="0 0 24 24"><path d="M15.4 3.6a8.6 8.6 0 1 0 5 13.4 7 7 0 0 1-5-13.4z" fill="currentColor"/></svg>',
+    '<svg viewBox="0 0 24 24"><path d="M12 2.6l2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17l-5.6 3 1.1-6.3-4.6-4.4 6.3-.9z" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linejoin="round"/></svg>'];
   const add = (cls, x, y, c, html) => {
     const e = document.createElement('div'); e.className = 'tok ' + cls; e.style.left = pos(x); e.style.top = pos(y); e.style.setProperty('--c', c);
     e.innerHTML = html || ''; layer.appendChild(e); return e;
