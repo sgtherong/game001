@@ -143,22 +143,13 @@
   .target .mark { display: block; width: 40%; height: 40%; }
   .target .mark svg, .piece .num svg { display: block; width: 100%; height: 100%; }
   .piece .num { display: block; filter: drop-shadow(0 2px 1.5px rgba(0,0,0,.22)); }
-  /* 얼굴: 눈(위) + 짝 무늬(아래). JS(setFace)가 화살표 반대쪽으로 밀고 눈동자를 화살표 쪽으로 돌린다 */
-  .piece .face { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; pointer-events: none;
+  /* 무늬(해·달·별·하트)가 조각의 얼굴. JS(setFace)가 화살표 반대쪽으로 민다 */
+  .piece .face { position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; pointer-events: none;
     transition: transform .26s cubic-bezier(.3,1.4,.5,1); }
-  .piece .eyes { display: block; overflow: visible; filter: drop-shadow(0 1.5px 1px rgba(0,0,0,.18)); }
-  .piece .eyes .open { transform-box: fill-box; transform-origin: center; animation: blink 4.8s infinite; animation-delay: var(--blink-delay, 0s); }
-  @keyframes blink { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(.12); } }
-  .piece .eyes .eye { transform-box: fill-box; transform-origin: center; transition: transform .18s ease; }
-  .piece .eyes .pups { transition: transform .25s ease; }
-  .piece .eyes .pups circle { transform-box: fill-box; transform-origin: center; transition: transform .18s ease; }
-  .piece .eyes .happy { display: none; }
-  .piece.selected .eyes .eye { transform: scale(1.12); }                       /* 골랐을 때: 눈이 커짐 */
-  .piece.oops .eyes .eye { transform: scale(1.22); }                           /* 막혔을 때: 놀란 눈 */
-  .piece.oops .eyes .pups circle { transform: scale(.62); }
-  .piece.on-target .eyes .open { display: none; }                              /* 목표 도착: 웃는 눈 ^ ^ */
-  .piece.on-target .eyes .happy { display: inline; }
-  @media (prefers-reduced-motion: reduce) { .piece .eyes .open { animation: none; } }
+  /* 목표에 도착하면 무늬가 한 번 반짝 커진다(표정 대신 움직임으로 반응) */
+  .piece.arrived .num { animation: markPop .5s cubic-bezier(.2,1.6,.4,1); }
+  @keyframes markPop { 0% { transform: scale(1); } 40% { transform: scale(1.35) rotate(-8deg); } 100% { transform: scale(1) rotate(0); } }
+  @media (prefers-reduced-motion: reduce) { .piece.arrived .num { animation: none; } }
 
   /* 조각: 위쪽 하이라이트 + 아래 그림자로 입체감, 화살표는 크게(핵심 정보) */
   .piece {
