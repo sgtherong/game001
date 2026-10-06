@@ -654,9 +654,9 @@
   }
   .bk-status { font-size: 12px; font-weight: 700; color: var(--accent); text-align: center; min-height: 16px; margin-top: 8px; }
   #cloudStatus { font-size: 12px; color: var(--muted); text-align: center; margin-bottom: 8px; line-height: 1.4; }
-  /* 친구와 겨루기: 대결 중엔 되돌리기·다시 시작·미리보기·힌트 대신 '포기' 하나만 */
+  /* 친구와 겨루기: 대결 중엔 미리보기·힌트를 숨기고 '포기'를 보인다(되돌리기·다시 시작은 그대로) */
   .tools #btnGiveUp, .ch-mode .tools .tool { display: none; }
-  .ch-mode .tools #btnGiveUp { display: flex; }
+  .ch-mode .tools #btnGiveUp, .ch-mode .tools #btnUndo, .ch-mode .tools #btnRestart { display: flex; }
   .ch-rules { font-size: 13px; line-height: 1.5; color: var(--muted); margin: 0 2px 12px; }
   .ch-incoming { display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; margin-bottom: 12px; border-radius: 14px;
     border: 2px solid var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--card)); font-size: 13px; font-weight: 700; color: var(--muted); }

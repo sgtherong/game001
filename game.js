@@ -896,6 +896,7 @@ function commitMove() {
   const tiled = G.selected.filter(i => raw[i][2] !== next[i][2]);
 
   G.history.push(clone(G.state));
+  if (G.challenge) G.chMoves++; // 대결: 되돌려도 줄지 않는 '한 이동 수'
   G.state = next;
   G.selected = [];
   G.hintPair = null; G.hintMsg = '';
@@ -1034,7 +1035,7 @@ function screenFlash() {
 }
 
 function undo() {
-  if (!G.history.length || G.animating || G.challenge) return; // 대결은 되돌리기 없음
+  if (!G.history.length || G.animating) return; // 대결에서도 되돌리기는 되지만 이미 한 이동 수(G.chMoves)는 그대로
   clearHintDemo();
   G.state = G.history.pop();
   G.selected = [];
@@ -1046,7 +1047,7 @@ function undo() {
 }
 
 function restart() {
-  if (G.animating || G.challenge) return;
+  if (G.animating) return;
   clearHintDemo();
   clearClearFx(); // '다시 풀기'로 돌아오면 사라졌던 조각을 되살린다
   G.state = clone(G.stage.start);
@@ -1514,7 +1515,8 @@ function onQuickWin() {
 }
 
 /* ---------- 친구와 겨루기(도전장) ----------
- * 둘 다 처음 보는 새 퍼즐을 한 번만 푼다. 되돌리기·다시 시작·힌트·미리보기 없음, 이동 예산을 다 쓰면 실패.
+ * 둘 다 처음 보는 새 퍼즐을 한 번만 푼다. 힌트·미리보기 없음. 되돌리기·다시 시작은 되지만 한 이동은 모두 기록에 남고(G.chMoves),
+ * 한도(chLimit)를 다 쓰면 실패. (2026-10-06: 처음엔 되돌리기 금지였으나 너무 어렵다는 피드백으로 변경)
  * 승부: 성공 > 실패, 둘 다 성공이면 적은 이동 수, 같으면 무승부(둘 다 최소 수면 '둘 다 완벽').
  * 서버 없이 퍼즐과 보낸 사람 기록을 짧은 코드에 담는다(링크 #ch=코드, 포털에선 코드 복사).
  * 코드 끝의 검증값은 쉽게 고치지 못하게 하는 정도이고, 최소 수는 받는 쪽이 다시 계산한다. */
@@ -1563,13 +1565,14 @@ function decodeChallenge(raw) {
     const goals = quickExplore(start, n, wallSet, tileMap);
     const g = goals && goals.get(targets.map(ck).join(';'));
     if (!g || g.d < 1) return null;
-    if (moves >= 0 && (moves < g.d || moves > budgetFor(g.d))) return null;
+    if (moves >= 0 && (moves < g.d || moves > chLimit(g.d))) return null;
     const st = { id: 'CH', seq: 0, chapter: '', n, pieces: pc, start, targets, min: g.d };
     if (walls.length) st.walls = walls;
     if (tiles.length) st.tiles = tiles;
     return { stage: st, moves, id: chId(body) };
   } catch (e) { return null; }
 }
+const chLimit = min => min * 2 + 6; // 대결 이동 한도(되돌린 이동까지 모두 셈)
 const chRecords = () => progress.challenges || (progress.challenges = {});
 function chMark(id, rec) { // 기기에 남기는 도전 기록(같은 도전장 다시 풀기 방지) — 최근 100개만
   const r = chRecords(); r[id] = rec;
@@ -1622,6 +1625,7 @@ function startChallengePlay(ch) {
   loadStage(progress.last || 0, null, ch.stage);
   G.quickMode = false;
   G.challenge = ch;
+  G.chMoves = 0;
   G.giveUpArm = 0;
   document.body.classList.add('ch-mode');
   renderStageLabels(); updateHud(); updatePreview(); renderProgress();
@@ -1636,7 +1640,7 @@ function giveUpChallenge() {
   endChallenge(false);
 }
 function endChallenge(success) {
-  const ch = G.challenge, me = success ? G.history.length : -1;
+  const ch = G.challenge, me = success ? G.chMoves : -1;
   if (!ch || ch.done) return;
   ch.done = true; ch.outOfMoves = !success && movesLeft() <= 0;
   const r = chRecords()[ch.id]; if (r) { r.m = me; saveProgress(progress); }
@@ -1842,8 +1846,8 @@ function showWorldReward(w, themeUnlocked) {
 // 각 스테이지의 이동 예산 = 최소이동 + 여유(약 +50%, 최소 +2). min 기반 자동 산출.
 function budgetFor(min) { return min + Math.max(2, Math.ceil(min * 0.5)); }
 function moveBudgetBase() { return G.stage ? budgetFor(G.stage.min) : 0; }
-function moveBudget() { return moveBudgetBase() + (G.budgetBonus || 0); }
-function movesLeft() { return moveBudget() - G.history.length; }
+function moveBudget() { return G.challenge ? chLimit(G.stage.min) : moveBudgetBase() + (G.budgetBonus || 0); }
+function movesLeft() { return moveBudget() - (G.challenge ? G.chMoves : G.history.length); }
 
 // 별 등급(표시 전용): 3=최소이동, 2=예산 여유의 절반 이내, 1=그 외 클리어
 function starTier(moves, min) {
@@ -1856,7 +1860,7 @@ function starTier(moves, min) {
 /* ---------- hud / navigation ---------- */
 function updateHud() {
   if (!G.stage) return;
-  movesInfoEl.textContent = t('moves_info', { n: G.history.length, max: moveBudget() });
+  movesInfoEl.textContent = t('moves_info', { n: G.challenge ? G.chMoves : G.history.length, max: moveBudget() });
   goalInfoEl.textContent = t('goal_info', { min: G.stage.min });
   if (G.challenge) renderProgress();
 }
