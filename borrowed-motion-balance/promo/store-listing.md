@@ -6,14 +6,14 @@
 ## 공통 문구 (영어)
 
 **Short description (1줄)**
-Swap two arrows, step once — a calm, clever puzzle with 1050 levels.
+Swap two arrows, step once — a calm, clever puzzle with 3000 levels.
 
 **Description**
 SwapStep is a calm, clever puzzle game about trading directions. Tap two pieces and they swap their arrows, then both take one step in their new direction. Get every piece onto the target with the same color and shape to clear the level.
 
 It sounds simple, but every swap moves two pieces at once. Plan your order, use walls to stop pieces where you need them, and find the shortest solution for three stars.
 
-- 35 worlds and 1050 handmade-feeling levels on a travel map, from cozy 3x3 boards to tricky 4x4 puzzles
+- 100 destinations and 3000 handmade-feeling levels on a travel map, from cozy 3x3 boards to tricky 4x4 puzzles
 - New twists along the way: walls, arrow tiles and spin tiles
 - Quick play: endless generated puzzles that get harder as your streak grows
 - Daily Challenge with three fresh puzzles every day and weekly rewards

@@ -13,10 +13,10 @@
 <link rel="icon" type="image/png" href="icon-192.png">
 <title>SwapStep</title>
 <!-- 링크 공유 미리보기(메신저·SNS). 이미지 주소는 절대경로여야 해서 공개 사이트 주소를 쓴다 -->
-<meta name="description" content="Swap two arrows, step once. A cozy puzzle with 1050 levels, daily challenges and a travel sticker album.">
+<meta name="description" content="Swap two arrows, step once. A cozy puzzle with 3000 levels across 100 destinations, daily challenges and a travel sticker album.">
 <meta property="og:type" content="website">
 <meta property="og:title" content="SwapStep — swap the arrows, step to the goal">
-<meta property="og:description" content="A cozy puzzle with 1050 levels, daily challenges and a travel sticker album.">
+<meta property="og:description" content="A cozy puzzle with 3000 levels across 100 destinations, daily challenges and a travel sticker album.">
 <meta property="og:image" content="https://sgtherong.github.io/game001/og-image.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -654,6 +654,14 @@
   }
   .bk-status { font-size: 12px; font-weight: 700; color: var(--accent); text-align: center; min-height: 16px; margin-top: 8px; }
   #cloudStatus { font-size: 12px; color: var(--muted); text-align: center; margin-bottom: 8px; line-height: 1.4; }
+  /* 친구와 겨루기: 대결 중엔 되돌리기·다시 시작·미리보기·힌트 대신 '포기' 하나만 */
+  .tools #btnGiveUp, .ch-mode .tools .tool { display: none; }
+  .ch-mode .tools #btnGiveUp { display: flex; }
+  .ch-rules { font-size: 13px; line-height: 1.5; color: var(--muted); margin: 0 2px 12px; }
+  .ch-incoming { display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; margin-bottom: 12px; border-radius: 14px;
+    border: 2px solid var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--card)); font-size: 13px; font-weight: 700; color: var(--muted); }
+  .ch-incoming b { font-size: 15px; color: var(--ink); }
+  .ch-code { font-size: 16px; letter-spacing: .5px; } /* 16px 미만이면 iOS가 확대 */
   .bk-divider { height: 1px; background: var(--line); margin: 4px 0 14px; }
 
   /* store */
@@ -769,6 +777,7 @@
       <button class="tool" id="btnRestart"><span class="ic">↻</span><span class="lb" data-i18n="restart_lb">Restart</span></button>
       <button class="tool" id="btnPeek"><span class="ic">🔍</span><span class="lb" data-i18n="peek_lb">Peek</span><span class="count" id="peekCount"></span></button>
       <button class="tool" id="btnHint"><span class="ic">💡</span><span class="lb" data-i18n="hint_btn">Hint</span><span class="count" id="hintCount"></span></button>
+      <button class="tool" id="btnGiveUp"><span class="ic">🏳️</span><span class="lb" data-i18n="ch_giveup">Give up</span></button>
     </div>
   </div>
 </div>
@@ -779,6 +788,7 @@
     <div class="badge">🎉</div>
     <div class="result-title">성공!</div>
     <div class="result-sub"></div>
+    <div class="bk-status" id="resultMsg" style="white-space:pre-line;word-break:break-all"></div>
     <div class="btns">
       <button class="btn ghost" id="btnReplay" data-i18n="win_replay">Replay</button>
       <button class="btn primary" id="btnNext" data-i18n="win_next">Next ▶</button>
@@ -884,6 +894,7 @@
     <button class="btn primary" id="dailyShare" data-i18n="daily_share" hidden style="width:100%;margin-top:8px;">Share result</button>
     <div class="bk-status" id="dailyShareMsg" style="white-space:pre-line"></div>
     <button class="quick-entry" id="dailyQuick"><span class="qe-tx"><b data-i18n="quick_title">Quick play</b><small id="dailyQuickBest"></small></span><span class="qe-go">▶</span></button>
+    <button class="quick-entry" id="dailyChallenge"><span class="qe-tx"><b data-i18n="ch_title">⚔️ Challenge a friend</b><small data-i18n="ch_entry_sub"></small></span><span class="qe-go">▶</span></button>
     <div class="weekly">
       <div class="weekly-head">
         <span class="weekly-title" data-i18n="weekly_title">Weekly reward</span>
@@ -980,6 +991,25 @@
 </div>
 
 <!-- backup / restore -->
+<div class="modal" id="challenge">
+  <div class="backdrop" id="chBackdrop"></div>
+  <div class="sheet">
+    <h3 data-i18n="ch_title">⚔️ Challenge a friend</h3>
+    <div class="ch-incoming" id="chIncoming" hidden>
+      <b data-i18n="ch_incoming">A friend challenged you!</b>
+      <span id="chIncomingRec"></span>
+      <button class="btn primary" id="chIncomingGo" data-i18n="ch_accept" style="width:100%;margin-top:8px;">Accept</button>
+    </div>
+    <p class="ch-rules" data-i18n="ch_rules"></p>
+    <button class="btn primary" id="chMake" data-i18n="ch_make" style="width:100%;margin-bottom:14px;">Make a challenge</button>
+    <div class="bk-label" data-i18n="ch_code_label"></div>
+    <input id="chCode" class="bk-area ch-code" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <button class="btn" id="chAccept" data-i18n="ch_accept" style="width:100%;">Accept</button>
+    <div class="bk-status" id="chMsg"></div>
+    <button class="btn ghost" id="chClose" data-i18n="album_close" style="width:100%;margin-top:8px;">Close</button>
+  </div>
+</div>
+
 <div class="modal" id="backup">
   <div class="backdrop" id="backupBackdrop"></div>
   <div class="sheet backup-sheet">
