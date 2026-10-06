@@ -654,6 +654,65 @@ function refreshPieces() {
     tok.classList.toggle('on-target',
       p[0] === G.stage.targets[i][0] && p[1] === G.stage.targets[i][1]);
   });
+  renderPeek();
+}
+
+/* ---------- 미리보기 부스터 ----------
+ * 켜 두면(그 판 동안) 조각 하나를 골랐을 때, 다른 조각 각각과 짝지으면 두 조각이 어디로 가는지
+ * 짝 조각 색의 점선으로 보여 준다. 막혀서 제자리면 ✕. 하루 FREE_PEEKS번 무료(프리미엄은 무제한). */
+const FREE_PEEKS = 5;
+const peeksLeft = () => {
+  if (isPremium()) return Infinity;
+  if (!progress.peek || progress.peek.date !== todayKey()) progress.peek = { date: todayKey(), used: 0 };
+  return Math.max(0, FREE_PEEKS - progress.peek.used);
+};
+function updatePeekButton() {
+  const c = $('#peekCount'), b = $('#btnPeek'); if (!c || !b) return;
+  const left = peeksLeft();
+  c.textContent = left === Infinity ? '∞' : String(left);
+  b.classList.toggle('on', !!G.peekOn);
+}
+function usePeek() {
+  if (G.animating || !G.stage) return;
+  if (G.peekOn) { G.tipMsg = t('peek_on'); updatePreview(); return; } // 이미 켜져 있으면 안내만 다시
+  if (peeksLeft() <= 0) { G.tipMsg = t('peek_none_left'); updatePreview(); return; }
+  if (!isPremium()) { progress.peek.used++; saveProgress(progress); }
+  G.peekOn = true;
+  G.tipMsg = t('peek_on');
+  logEvent('peek_used');
+  updatePeekButton(); updatePreview();
+}
+function renderPeek() {
+  let svg = layerEl.querySelector('.peek-layer');
+  if (!G.peekOn || G.selected.length !== 1 || G.animating) { if (svg) svg.remove(); return; }
+  const { center, cell, W } = geom();
+  if (!svg) {
+    svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('class', 'peek-layer'); svg.setAttribute('aria-hidden', 'true');
+    layerEl.appendChild(svg);
+  }
+  svg.setAttribute('viewBox', `0 0 ${W} ${W}`);
+  const a = G.selected[0], n = G.stage.n;
+  let html = '';
+  G.state.forEach((_, b) => {
+    if (b === a) return;
+    const nx = outcome(G.state, a < b ? [a, b] : [b, a], n, G.wallSet, G.tileMap);
+    const col = PIECE_COLORS[b], k = (b - (b > a ? 1 : 0)) - 1; // 짝마다 선을 조금씩 비켜 그린다
+    const sh = k * cell * 0.07;
+    [a, b].forEach(i => {
+      const x0 = center(G.state[i][0]), y0 = center(G.state[i][1]), x1 = center(nx[i][0]), y1 = center(nx[i][1]);
+      if (x0 === x1 && y0 === y1) { // 막힘: 조각 모서리에 ✕
+        const cx = x0 + cell * 0.3 + sh, cy = y0 + cell * 0.3;
+        html += `<g class="pk-x" style="color:${col}"><circle cx="${cx}" cy="${cy}" r="${cell * 0.1}"/><path d="M${cx - cell * 0.045} ${cy - cell * 0.045}L${cx + cell * 0.045} ${cy + cell * 0.045}M${cx + cell * 0.045} ${cy - cell * 0.045}L${cx - cell * 0.045} ${cy + cell * 0.045}"/></g>`;
+      } else {
+        const ox = (y1 !== y0 ? sh : 0), oy = (x1 !== x0 ? sh : 0);
+        // 선은 조각 가장자리에서 시작(얼굴을 가리지 않게), 도착 칸엔 동그라미
+        const dx = Math.sign(x1 - x0), dy = Math.sign(y1 - y0), sx = x0 + dx * cell * 0.42, sy = y0 + dy * cell * 0.42;
+        html += `<g class="pk-go" style="color:${col}"><path d="M${sx + ox} ${sy + oy}L${x1 + ox} ${y1 + oy}"/><circle cx="${x1 + ox}" cy="${y1 + oy}" r="${cell * 0.11}"/></g>`;
+      }
+    });
+  });
+  svg.innerHTML = html;
 }
 
 /* ---------- hint demo (non-destructive move preview animation) ---------- */
@@ -735,7 +794,7 @@ function updatePreview() {
   else if (G.hintPair && G.hintMsg) msg = G.hintMsg;
   else if (G.tipMsg) msg = G.tipMsg;
   else if (G.introMsg) msg = G.introMsg;
-  else if (G.daily == null && G.index < WORLD_SIZE && !G.history.length && !G.selected.length && !coachOn) msg = t('select_two');
+  else if (G.daily == null && !G.quickMode && G.index < WORLD_SIZE && !G.history.length && !G.selected.length && !coachOn) msg = t('select_two');
   hintTextEl.textContent = msg;
   btnUndo.classList.toggle('attn', outOfMoves);
   btnRestart.classList.toggle('attn', outOfMoves && !canAdMoves);
@@ -858,7 +917,7 @@ function sparkle(i) {
 const coachEl = $('#coach');
 let coachOn = false;
 function startCoach() {
-  coachOn = !progress.tutorialSeen && G.index === 0 && G.daily == null;
+  coachOn = !progress.tutorialSeen && G.index === 0 && G.daily == null && !G.quickMode;
   coachUpdate();
 }
 function endCoach() {
@@ -1172,6 +1231,7 @@ function mergeProgress(local, cloud) {
   out.themeUnlocked = !!(local.themeUnlocked || cloud.themeUnlocked);
   out.premium = !!(local.premium || cloud.premium);
   out.bonusHints = Math.max(local.bonusHints || 0, cloud.bonusHints || 0);
+  out.quick = { best: Math.max((local.quick && local.quick.best) || 0, (cloud.quick && cloud.quick.best) || 0), played: Math.max((local.quick && local.quick.played) || 0, (cloud.quick && cloud.quick.played) || 0) };
   out.tutorialSeen = !!(local.tutorialSeen || cloud.tutorialSeen);
   return out;
 }
@@ -1276,7 +1336,113 @@ function doRestore() {
 }
 
 /* ---------- win ---------- */
+/* ---------- 끝없는 모드(빠른 한 판) ----------
+ * 1050판과 별개로 게임 안에서 즉석으로 퍼즐을 만든다. 연속으로 깰수록 어려워진다(조각 수·최소 수·벽·칸).
+ * 만드는 법은 generate-stages-*.cjs와 같다: 무작위 배치 → 모든 상태를 넓이 우선 탐색 → 원하는 최소 수의 목표 배치를 고른다.
+ * 외길 퍼즐(최단 풀이가 1가지)은 제외. 진행 기록(깬 레벨·스티커)에는 넣지 않고 최고 연속 기록만 저장한다. */
+const QUICK_CAP = 6000; // 탐색 상태 상한(4×4·조각 4개에서도 수십 ms)
+function quickSpec(s) {
+  const pieces = s < 4 ? 3 : 4;
+  const lo = Math.min(7, 3 + Math.floor(s / 3));
+  return { n: 4, pieces, walls: s < 2 ? 0 : 1 + (s % 4 === 3 ? 1 : 0), tile: s >= 5 && s % 2 === 1, lo, hi: lo + 1 };
+}
+// 시작 배치에서 갈 수 있는 모든 상태를 넓이 우선 탐색 → 위치 배치마다 {처음 닿은 거리, 최단 경로 수}. 상한을 넘으면 null
+function quickExplore(start, n, wallSet, tileMap) {
+  const pairs = pairsFor(start.length);
+  const pk = st => st.map(p => p[0] + ',' + p[1]).join(';');
+  const states = [start], idx = new Map([[key(start), 0]]), dist = [0], ways = [1], goals = new Map();
+  for (let i = 0; i < states.length; i++) {
+    if (states.length > QUICK_CAP) return null;
+    const st = states[i], d = dist[i], p = pk(st);
+    if (!goals.has(p)) goals.set(p, { pos: st.map(q => [q[0], q[1]]), key: p, d, ways: 0 });
+    const g = goals.get(p); if (g.d === d) g.ways += ways[i];
+    for (const pr of pairs) {
+      const nx = outcome(st, pr, n, wallSet, tileMap), kk = key(nx);
+      let j = idx.get(kk);
+      if (j === undefined) { j = states.length; idx.set(kk, j); states.push(nx); dist.push(d + 1); ways.push(ways[i]); }
+      else if (dist[j] === d + 1) ways[j] += ways[i];
+    }
+  }
+  return goals;
+}
+function genQuickPuzzle(s) {
+  const sp = quickSpec(s), n = sp.n;
+  for (let tries = 0; tries < 300; tries++) {
+    const cells = [];
+    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) cells.push([x, y]);
+    for (let i = cells.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [cells[i], cells[j]] = [cells[j], cells[i]]; }
+    let k = 0;
+    const walls = cells.slice(k, k += sp.walls);
+    const tiles = sp.tile ? [[cells[k][0], cells[k++][1], Math.floor(Math.random() * 4)]] : [];
+    const start = cells.slice(k, k + sp.pieces).map(c => [c[0], c[1], Math.floor(Math.random() * 4)]);
+    const wallSet = new Set(walls.map(c => c[0] + ',' + c[1])), tileMap = new Map(tiles.map(c => [c[0] + ',' + c[1], c[2]]));
+    const goals = quickExplore(start, n, wallSet, tileMap);
+    if (!goals) continue;
+    let pool = [...goals.values()].filter(g => g.d >= sp.lo && g.d <= sp.hi && g.ways >= 2);
+    // 칸이 있으면 실제로 풀이에 영향을 주는 판만: 칸 없이 탐색해 같은 수 이하로 풀리면 뺀다(탐색 한 번)
+    if (tiles.length && pool.length) {
+      const plain = quickExplore(start, n, wallSet, null);
+      if (!plain) continue;
+      pool = pool.filter(g => { const h = plain.get(g.key); return !h || h.d > g.d; });
+    }
+    if (!pool.length) continue;
+    const g = pool[Math.floor(Math.random() * pool.length)];
+    const st = { id: 'QUICK', seq: 0, chapter: '', n, pieces: sp.pieces, start, targets: g.pos, min: g.d, ways: g.ways };
+    if (walls.length) st.walls = walls;
+    if (tiles.length) st.tiles = tiles;
+    return st;
+  }
+  // 드물게 못 만들면 정식 레벨에서 비슷한 최소 수의 판을 빌려 온다
+  const cand = STAGES.filter(x => x.min >= sp.lo && x.min <= sp.hi && x.pieces === sp.pieces);
+  const b = cand[Math.floor(Math.random() * cand.length)] || STAGES[0];
+  return Object.assign({}, b, { id: 'QUICK' });
+}
+function startQuick() {
+  G.quickStreak = 0; G.quickNext = null;
+  logEvent('quick_start');
+  nextQuick();
+}
+function nextQuick() {
+  const pre = G.quickNext && G.quickNext.s === (G.quickStreak || 0) ? G.quickNext.st : null; // 결과 창 동안 미리 만들어 둔 퍼즐
+  G.quickNext = null;
+  loadStage(progress.last || 0, null, pre || genQuickPuzzle(G.quickStreak || 0));
+}
+function onQuickWin() {
+  const moves = G.history.length, st = G.stage, tier = starTier(moves, st.min);
+  G.quickStreak = (G.quickStreak || 0) + 1;
+  const q = progress.quick || (progress.quick = { best: 0, played: 0 });
+  q.played = (q.played || 0) + 1;
+  const newBest = G.quickStreak > (q.best || 0);
+  if (newBest) q.best = G.quickStreak;
+  saveProgress(progress);
+  logEvent('quick_win', { streak: G.quickStreak });
+  const badgeEl = overlay.querySelector('.badge');
+  badgeEl.innerHTML = [1, 2, 3].map(k => `<span class="st${k <= tier ? ' on' : ''}">★</span>`).join('');
+  badgeEl.className = 'badge stars';
+  overlay.querySelector('.result-title').textContent = t('quick_win', { n: G.quickStreak });
+  overlay.querySelector('.result-sub').innerHTML = t('result_moves', { moves, min: st.min }) + ' · '
+    + (newBest ? t('quick_new_best') : t('quick_best', { n: q.best }));
+  const btnNextEl = overlay.querySelector('#btnNext');
+  btnNextEl.style.display = ''; btnNextEl.textContent = t('quick_next');
+  $('#btnReplay').style.display = 'none'; // 같은 판을 다시 깨서 연속 기록을 올리지 못하게
+  overlay.dataset.mode = 'quick';
+  if (Object.keys(progress.completed).length > AD_GRACE_CLEARS) {
+    G.clearsSinceAd = (G.clearsSinceAd || 0) + 1;
+    if (G.clearsSinceAd >= ADS_EVERY_CLEARS) G.adDue = true;
+  }
+  G.animating = true;
+  clearTimeout(G.winTimer);
+  G.winTimer = setTimeout(() => { G.animating = false; overlay.classList.add('show'); syncGameplay(); }, WIN_REVEAL_MS);
+  // 다음 퍼즐은 결과 창이 뜬 뒤(연출이 끝난 뒤) 미리 만든다 — '다음 퍼즐'을 누르면 바로 시작
+  const s = G.quickStreak;
+  setTimeout(() => { if (G.quickMode && G.quickStreak === s) G.quickNext = { s, st: genQuickPuzzle(s) }; }, WIN_REVEAL_MS + 80);
+  Sound.win(); haptic([20, 40, 60]); confettiBurst(); screenFlash();
+  pieceEls().forEach((el, k) => { setTimeout(() => { el.classList.remove('win-bounce'); void el.offsetWidth; el.classList.add('win-bounce'); }, k * 70); });
+  playClearFx();
+}
+
 function onWin() {
+  if (G.quickMode) { onQuickWin(); return; } // 끝없는 모드: 진행 기록·스티커 없이 연속 기록만
   const moves = G.history.length;
   const st = G.stage;
   const firstClear = !progress.completed[st.id];
@@ -1419,7 +1585,10 @@ function updateHud() {
 // 상단 라벨: "Level 41" + "World 2 · Paris" (데일리는 "Daily Challenge" + 난이도)
 function renderStageLabels() {
   if (!G.stage) return;
-  if (G.daily != null) {
+  if (G.quickMode) {
+    stageTitleEl.textContent = t('quick_title');
+    chapterEl.textContent = t('quick_streak', { n: G.quickStreak || 0 });
+  } else if (G.daily != null) {
     stageTitleEl.textContent = t('daily_title');
     chapterEl.textContent = [t('daily_easy'), t('daily_medium'), t('daily_hard')][G.daily];
   } else {
@@ -1443,11 +1612,13 @@ function introduceTiles() {
     if ((k === TILE_TURN) === (kind === 'turn')) { const [x, y] = c.split(',').map(Number); flashTile(x, y); }
   }), 450);
 }
-function loadStage(index, dailySlot = null) {
+// custom: 끝없는 모드의 즉석 퍼즐(이때 G.index는 배경 색조·월드 표시용으로 마지막 정식 레벨을 유지)
+function loadStage(index, dailySlot = null, custom = null) {
   clearHintDemo();
   clearTimeout(G.winTimer); G.animating = false; // 결과 창 대기 중에 다른 스테이지로 가도 옛 결과가 뜨지 않게
   G.index = Math.max(0, Math.min(STAGES.length - 1, index));
-  G.stage = STAGES[G.index];
+  G.quickMode = !!custom;
+  G.stage = custom || STAGES[G.index];
   G.wallSet = new Set((G.stage.walls || []).map(w => w[0] + ',' + w[1])); // impassable cells
   G.tileMap = new Map((G.stage.tiles || []).map(c => [c[0] + ',' + c[1], c[2]])); // 방향 칸·회전 칸
   G.dirShown = null; // 칸 효과 연출 중 잠깐 보여줄 '바뀌기 전' 방향
@@ -1458,8 +1629,11 @@ function loadStage(index, dailySlot = null) {
   G.attemptAdUsed = false;
   G.budgetBonus = 0;
   G.hintPair = null; G.hintMsg = ''; G.tipMsg = ''; G.introMsg = '';
+  G.peekOn = false; // 미리보기 부스터는 판마다 새로
   G.daily = dailySlot; // non-null => playing today's daily puzzle
-  if (dailySlot === null) { progress.last = G.index; saveProgress(progress); } // daily doesn't move main progress
+  if (dailySlot === null && !custom) { progress.last = G.index; saveProgress(progress); } // daily/quick doesn't move main progress
+  updatePeekButton();
+  const rp = $('#btnReplay'); if (rp) rp.style.display = ''; // 끝없는 모드에서 숨겼던 '다시 풀기' 복구
   updateHintButton();
 
   renderStageLabels();
@@ -1483,41 +1657,73 @@ function renderProgress() {
   progressTextEl.textContent = `${done}/${total}`;
 }
 
+// 여행 지도: 35개 여행지를 위에서 아래로 구불구불한 길 위에 놓는다. 누르면 아래에서 그 월드의 레벨 칸이 올라온다.
+// 줄 높이가 고정이라 점선 길(SVG)을 측정 없이 계산으로 그린다.
+const MAP_ROW = 92; // 여행지 한 줄 높이(px)
+const mapX = w => 50 + 30 * Math.sin(w * 1.15); // 여행지의 가로 위치(%) — 좌우로 굽이치는 길
 function renderStageList() {
   stageListEl.innerHTML = '';
   const total = STAGES.length;
   const worldCount = Math.ceil(total / WORLD_SIZE);
   const curWorld = worldOf(G.index);
+  // 맨 위: 끝없는 모드 입구
+  const quick = document.createElement('button');
+  quick.className = 'quick-entry';
+  quick.innerHTML = `<span class="qe-tx"><b>${t('quick_title')}</b><small>${t('quick_best', { n: (progress.quick && progress.quick.best) || 0 })}</small></span><span class="qe-go">▶</span>`;
+  quick.addEventListener('click', () => { closeDrawer(); startQuick(); });
+  stageListEl.appendChild(quick);
+
+  const map = document.createElement('div');
+  map.className = 'trip-map';
+  map.style.height = (worldCount * MAP_ROW + 16) + 'px';
+  // 점선 길: 여행지 중심을 부드러운 곡선으로 잇는다(가로는 %, 세로는 px — preserveAspectRatio="none" + 선 굵기 고정)
+  const H = worldCount * MAP_ROW + 16;
+  let d = '';
+  for (let w = 0; w < worldCount; w++) {
+    const x = mapX(w), y = w * MAP_ROW + MAP_ROW / 2 + 8;
+    if (!w) d = `M${x} ${y}`;
+    else { const px = mapX(w - 1), py = y - MAP_ROW; d += ` C${px} ${py + MAP_ROW * 0.5} ${x} ${y - MAP_ROW * 0.5} ${x} ${y}`; }
+  }
+  map.innerHTML = `<svg class="tm-path" viewBox="0 0 100 ${H}" preserveAspectRatio="none" aria-hidden="true">`
+    + `<path d="${d}" class="tm-road"/></svg>`;
   for (let w = 0; w < worldCount; w++) {
     const start = w * WORLD_SIZE, end = Math.min(total, start + WORLD_SIZE);
-    const items = [];
-    for (let i = start; i < end; i++) items.push({ s: STAGES[i], i });
-    const done = items.filter(({ s }) => progress.completed[s.id]).length;
-    const details = document.createElement('details');
-    details.className = 'chapter';
-    const isCur = w === curWorld;
-    if (isCur) details.open = true;
-    const theme = chapterName(STAGES[start].chapter); // difficulty flavor of this world
-    const sum = document.createElement('summary');
-    sum.className = 'chapter-head';
-    sum.innerHTML =
-      `<span class="cv"></span>` +
-      `<span class="nm">${t('world', { n: w + 1 })} <em>${theme}</em></span>` +
-      `<span class="cnt">${done}/${items.length}</span>`;
-    details.appendChild(sum);
-    const chips = document.createElement('div');
-    chips.className = 'chips';
-    details.appendChild(chips);
-    // lazy: build a world's chips only when it is (or becomes) open — keeps
-    // opening the drawer O(one world), so the stage count can grow freely
-    const build = () => { if (details.dataset.built) return; details.dataset.built = '1'; buildChips(chips, items); };
-    details.addEventListener('toggle', () => { if (details.open) build(); });
-    if (isCur) build();
-    stageListEl.appendChild(details);
+    let done = 0; for (let i = start; i < end; i++) if (progress.completed[STAGES[i].id]) done++;
+    const unlocked = isUnlocked(start);
+    const node = document.createElement('button');
+    node.className = 'tm-node' + (unlocked ? '' : ' locked') + (progress.worldsDone[w] ? ' done' : '') + (w === curWorld ? ' cur' : '') + (worldGold(w) ? ' gold' : '');
+    node.style.left = mapX(w) + '%';
+    node.style.top = (w * MAP_ROW + MAP_ROW / 2 + 8) + 'px';
+    node.innerHTML = `<span class="tm-ic">${unlocked ? ALBUM[w].icon : '🔒'}</span>`
+      + `<span class="tm-lbl">${w + 1}. ${placeName(w)}</span>`
+      + `<span class="tm-cnt">${done}/${end - start}</span>`
+      + (w === curWorld ? '<span class="tm-pin" aria-hidden="true">📍</span>' : '');
+    node.title = chapterName(STAGES[start].chapter);
+    if (unlocked) node.addEventListener('click', () => openWorldSheet(w));
+    else node.disabled = true;
+    map.appendChild(node);
   }
-  const openEl = stageListEl.querySelector('details[open]');
-  if (openEl) requestAnimationFrame(() => { try { openEl.scrollIntoView({ block: 'nearest' }); } catch (e) {} });
+  stageListEl.appendChild(map);
+  // 지금 월드가 보이게 스크롤하고, 그 월드의 레벨 칸을 바로 띄운다(이어하기가 한 번에)
+  requestAnimationFrame(() => {
+    const cur = map.querySelector('.tm-node.cur');
+    if (cur) { try { stageListEl.scrollTop = Math.max(0, cur.offsetTop - stageListEl.clientHeight * 0.35); } catch (e) {} }
+  });
+  openWorldSheet(curWorld);
 }
+// 아래에서 올라오는 월드 레벨 칸
+function openWorldSheet(w) {
+  const sheet = $('#worldSheet'); if (!sheet) return;
+  const start = w * WORLD_SIZE, end = Math.min(STAGES.length, start + WORLD_SIZE);
+  const items = []; for (let i = start; i < end; i++) items.push({ s: STAGES[i], i });
+  $('#wsTitle').textContent = `${ALBUM[w].icon} ${t('album_page', { n: w + 1, place: placeName(w) })}`;
+  $('#wsSub').textContent = chapterName(STAGES[start].chapter);
+  const chips = $('#wsChips'); chips.innerHTML = '';
+  buildChips(chips, items);
+  sheet.hidden = false;
+  stageListEl.querySelectorAll('.tm-node').forEach((n, k) => n.classList.toggle('open', k === w));
+}
+function closeWorldSheet() { const s = $('#worldSheet'); if (s) s.hidden = true; stageListEl.querySelectorAll('.tm-node.open').forEach(n => n.classList.remove('open')); }
 function buildChips(chips, items) {
   const frag = document.createDocumentFragment();
   for (const { s, i } of items) {
@@ -1642,6 +1848,7 @@ function renderDaily() {
   $('#dailyAllDone').hidden = !done.every(Boolean);
   // 결과 공유: 오늘 3문제를 다 깼고 결제·외부 링크가 없는 포털이 아닐 때만(포털은 외부 링크 금지)
   $('#dailyShare').hidden = !done.every(Boolean) || onPortal();
+  $('#dailyQuickBest').textContent = t('quick_best', { n: (progress.quick && progress.quick.best) || 0 });
   renderWeekly();
 }
 // 워들처럼 이모지 결과 한 덩어리 — 공유 시트가 있으면 그것을, 없으면 클립보드로
@@ -1789,6 +1996,7 @@ function closeDrawer() { drawer.classList.remove('open'); }
 btnUndo.addEventListener('click', undo);
 btnRestart.addEventListener('click', restart);
 btnHint.addEventListener('click', useHint);
+$('#btnPeek').addEventListener('click', usePeek);
 $('#coachSkip').addEventListener('click', endCoach);
 $('#btnNext').addEventListener('click', async e => {
   if (overlay.dataset.mode === 'daily') { overlay.classList.remove('show'); openDaily(); return; }
@@ -1800,7 +2008,8 @@ $('#btnNext').addEventListener('click', async e => {
     try { await AdsManager.showInterstitial(); } catch (err) {}
     btn.disabled = false;
   }
-  loadStage(G.index + 1);
+  if (overlay.dataset.mode === 'quick') nextQuick(); // 끝없는 모드: 다음 즉석 퍼즐(조금 더 어렵게)
+  else loadStage(G.index + 1);
 });
 $('#btnReplay').addEventListener('click', () => { overlay.classList.remove('show'); restart(); });
 $('#btnStages').addEventListener('click', openDrawer);
@@ -1808,8 +2017,10 @@ $('#btnStages').addEventListener('click', openDrawer);
 $('#btnDaily').addEventListener('click', openDaily);
 $('#dailyClose').addEventListener('click', closeDaily);
 $('#dailyShare').addEventListener('click', shareDaily);
+$('#dailyQuick').addEventListener('click', () => { closeDaily(); startQuick(); });
 $('#dailyBackdrop').addEventListener('click', closeDaily);
 $('#drawerClose').addEventListener('click', closeDrawer);
+$('#wsClose').addEventListener('click', closeWorldSheet);
 $('#drawerBackdrop').addEventListener('click', closeDrawer);
 
 // album
@@ -1850,7 +2061,7 @@ function updatePrivacyLinks() {
 function refreshDynamic() {
   updatePrivacyLinks();
   if ($('#langSelect')) $('#langSelect').value = window.I18N.lang;
-  updateHud(); updateHintButton(); applySoundIcon(); renderProgress(); renderStageLabels();
+  updateHud(); updateHintButton(); updatePeekButton(); applySoundIcon(); renderProgress(); renderStageLabels();
   if (G.hintPair) G.hintMsg = t('hint_applied', { a: SHAPE_CHAR[G.hintPair[0]], b: SHAPE_CHAR[G.hintPair[1]],
     left: isPremium() ? t('hint_left_unlimited') : t('hint_left_free', { n: hintsAvailable() }) });
   updatePreview();
@@ -1892,6 +2103,7 @@ document.addEventListener('keydown', e => {
   else if (/^[1-4]$/.test(e.key) && !e.ctrlKey && !e.metaKey && G.stage && +e.key <= G.state.length) onPieceClick(+e.key - 1);
   else if (e.key === 'r' || e.key === 'R') restart();
   else if (e.key === 'h' || e.key === 'H') useHint();
+  else if (e.key === 'p' || e.key === 'P') usePeek();
 });
 
 // 포털 gameplayStart/Stop: 결과·메뉴·상점 등 어떤 창이든 떠 있으면 '멈춤', 모두 닫히면 '플레이 중'.
