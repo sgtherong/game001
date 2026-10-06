@@ -95,7 +95,7 @@
   }
 
   const CloudSync = {
-    get enabled() { return !(window.AdsManager && window.AdsManager.isPortal); },
+    get enabled() { return !!(window.AdsManager && window.AdsManager.isOwnSite && !window.AdsManager.isPortal); },
     _user: null,
     get user() { return this._user; },
     async signIn() {
@@ -159,6 +159,7 @@
       'poki', 'poki-gdn',                                // Poki
       'gamedistribution', 'gamemonetize',                // GameDistribution / GameMonetize
       'sgtherong.github.io',                             // 소유자 gh-pages
+      'itch.io', 'itch.zone',                            // itch.io(게임 파일은 itch.zone에서 서빙)
       'claude.ai', 'claudeusercontent.com', 'anthropic', // Claude Artifact 미리보기
     ];
     const extra = (window.BM_BRAND && Array.isArray(window.BM_BRAND.allowedHosts))
@@ -268,27 +269,42 @@
     },
   };
 
-  // GameDistribution / GameMonetize (portal build must define window.GD_OPTIONS.gameId)
+  // GameDistribution (공식 HTML5 SDK — github.com/GameDistribution/GD-HTML5/wiki)
+  // 게임 ID는 GD 개발자 사이트에서 게임을 등록하면 받는다 → branding.js의 gdGameId(포털 빌드 때 채움).
+  // SDK_GAME_PAUSE = 광고 시작(음소거), SDK_GAME_START = 광고 끝(복구). 보상형은 SDK_REWARDED_WATCH_COMPLETE로 확인.
+  // 규칙: 광고는 사용자가 버튼을 눌렀을 때만(우리는 '다음 문제'·'광고 보기' 버튼에서만 요청한다).
   const gamedistribution = {
     name: 'gamedistribution',
+    _rewardDone: false,
     async init() {
-      if (!window.GD_OPTIONS) throw new Error('GD_OPTIONS(gameId) not set by portal build');
+      const id = (window.GD_OPTIONS && window.GD_OPTIONS.gameId) || (window.BM_BRAND && window.BM_BRAND.gdGameId);
+      if (!id) throw new Error('GameDistribution gameId not set (branding.js gdGameId)');
+      window.GD_OPTIONS = {
+        gameId: id,
+        onEvent: ev => {
+          switch (ev && ev.name) {
+            case 'SDK_GAME_PAUSE': hooks.adStarted(); break;
+            case 'SDK_GAME_START': hooks.adEnded(); break;
+            case 'SDK_REWARDED_WATCH_COMPLETE': gamedistribution._rewardDone = true; break;
+          }
+        },
+      };
       await loadScript('https://html5.api.gamedistribution.com/main.min.js');
+      for (let i = 0; i < 40 && !window.gdsdk; i++) await new Promise(r => setTimeout(r, 100)); // SDK 객체가 생길 때까지(최대 4초)
+      if (!window.gdsdk) throw new Error('gdsdk not available');
+      this.preloadRewarded();
     },
+    preloadRewarded() { try { window.gdsdk.preloadAd('rewarded').catch(() => {}); } catch (e) {} },
     gameplayStart() {}, gameplayStop() {}, happyTime() {},
+    // 끝까지 봤을 때만 true. 광고가 없거나 오류면 reject → 게임이 "광고를 불러오지 못했어요"
     showRewarded() {
-      hooks.adStarted();
-      return new Promise(res => {
-        try { window.gdsdk.showAd('rewarded').then(() => { hooks.adEnded(); res(true); }).catch(() => { hooks.adEnded(); res(false); }); }
-        catch (e) { hooks.adEnded(); res(false); }
-      });
+      this._rewardDone = false;
+      return Promise.resolve(window.gdsdk.showAd('rewarded'))
+        .then(() => { const ok = this._rewardDone; this._rewardDone = false; this.preloadRewarded(); return ok; },
+          e => { this.preloadRewarded(); throw e || new Error('rewarded ad error'); });
     },
     showInterstitial() {
-      hooks.adStarted();
-      return new Promise(res => {
-        try { window.gdsdk.showAd().then(() => { hooks.adEnded(); res(); }).catch(() => { hooks.adEnded(); res(); }); }
-        catch (e) { hooks.adEnded(); res(); }
-      });
+      try { return Promise.resolve(window.gdsdk.showAd()).catch(() => {}); } catch (e) { return Promise.resolve(); }
     },
   };
 
@@ -306,7 +322,7 @@
     const h = location.hostname;
     if (/(^|\.)poki\.com$/.test(h) || /poki/.test(h)) return poki;
     if (/crazygames|1001juegos/.test(h)) return crazygames;
-    if (/gamedistribution|gamemonetize/.test(h)) return gamedistribution;
+    if (/gamedistribution/.test(h)) return gamedistribution; // (GameMonetize는 SDK가 달라 아직 미지원)
     return local; // self-host / gh-pages / artifact / dev
   }
 
@@ -322,10 +338,20 @@
     try { const h = location.hostname || ''; return !h || h === 'localhost' || h === '127.0.0.1' || h === '0.0.0.0' || h.endsWith('.local'); }
     catch (e) { return false; }
   })();
+  // 우리 공식 사이트(또는 개발 환경)인지. 구글 로그인(Firebase 승인 도메인)·오프라인 캐시·공유 링크는 여기서만 쓴다.
+  // itch.io처럼 남의 사이트 iframe 안에서는 로그인 팝업이 막히고 캐시가 꼬일 수 있어 끈다.
+  const IS_OWN = IS_DEV || (() => {
+    try {
+      const h = (location.hostname || '').toLowerCase();
+      const own = ['sgtherong.github.io'].concat((window.BM_BRAND && window.BM_BRAND.ownHosts) || []);
+      return own.some(k => h === k || h.endsWith('.' + k));
+    } catch (e) { return false; }
+  })();
 
   const AdsManager = {
     config,
     isPortal: IS_PORTAL, // true면 포털 iframe(자체호스팅 전용 기능은 끈다)
+    isOwnSite: IS_OWN,   // true면 우리 공식 사이트·개발 환경(로그인·오프라인 캐시 사용)
     get platform() { return adapter.name; },
     // 포털이 알려주는 사용자 언어(없으면 빈 문자열 → 브라우저 언어 유지)
     get locale() { try { return adapter.locale ? adapter.locale() : ''; } catch (e) { return ''; } },
@@ -348,6 +374,7 @@
       adapter = detect();
       // CrazyGames expects midgame (interstitial) ads at natural breaks — enable them there (Full 단계만).
       if (adapter.name === 'crazygames') config.interstitialEnabled = crazygamesAdsAllowed();
+      if (adapter.name === 'gamedistribution') config.interstitialEnabled = true; // GD는 레벨 전환 광고가 기본 수익원
       try { await adapter.init(opts); }
       catch (e) {
         const fb = IS_PORTAL ? unavailable : local;

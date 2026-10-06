@@ -20,4 +20,9 @@ window.BM_BRAND = {
   // CrazyGames 광고 사용 여부. Basic 단계는 광고 금지(QA 도구: "Ads are not allowed in basic launch")라
   // false면 광고 보기 버튼·중간 광고를 모두 숨긴다. Full 단계로 초대받으면 true로 바꿔 다시 업로드하세요.
   crazygamesAds: false,
+  // GameDistribution 게임 ID(GD 개발자 사이트에서 게임을 등록하면 받음). GD 업로드용 빌드에서만 채운다.
+  gdGameId: '',
+  // 공식 사이트 주소(남의 사이트 안에서 '결과 공유'할 때 붙는 링크). 공식 사이트 도메인을 늘리려면 ownHosts에 추가.
+  homeUrl: 'https://sgtherong.github.io/game001/',
+  ownHosts: [],
 };
