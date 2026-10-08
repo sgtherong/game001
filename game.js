@@ -376,7 +376,7 @@ const ALBUM_EXTRA = {
 };
 const placeName = w => {
   const n = ALBUM[w].name, l = window.I18N.lang;
-  return n[l] || (ALBUM_EXTRA[l] && ALBUM_EXTRA[l][w]) || n.en;
+  return n[l] || (ALBUM_EXTRA[l] && ALBUM_EXTRA[l][w]) || window.I18N.place(w) || n.en;
 };
 const stickerName = (w, k) => (ALBUM[w].keys ? t(ALBUM[w].keys[k]) : placeName(w));
 const worldRange = w => [w * WORLD_SIZE, Math.min(STAGES.length, (w + 1) * WORLD_SIZE)];

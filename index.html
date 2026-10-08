@@ -535,6 +535,9 @@
   /* language selector */
   .lang-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
   .lang-lbl { font-size: 12px; font-weight: 700; color: var(--muted); }
+  /* 오른쪽→왼쪽 언어(아랍어·히브리어): 화면 배치는 뒤집되, 판·지도는 그대로(화살표 방향이 규칙이라). 앞/뒤 화살표 글자는 거울로 */
+  [dir="rtl"] #board, [dir="rtl"] .board-wrap, [dir="rtl"] .trip-map, [dir="rtl"] .tut-demo { direction: ltr; } [dir="rtl"] .tut-demo-cap, [dir="rtl"] .tm-node { direction: rtl; }
+  [dir="rtl"] #albumPrev, [dir="rtl"] #albumNext, [dir="rtl"] .qe-go, [dir="rtl"] .dc-go { transform: scaleX(-1); }
   #langSelect { flex: 1; padding: 9px 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--cell); color: var(--ink); font-size: 13px; font-weight: 700; cursor: pointer; }
 
   /* tutorial */
