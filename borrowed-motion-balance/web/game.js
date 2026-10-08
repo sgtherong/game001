@@ -2359,6 +2359,20 @@ $('#tutorialStart').addEventListener('click', closeTutorial);
 $('#btnSound').addEventListener('click', toggleSound);
 $('#btnMusic').addEventListener('click', toggleMusic);
 document.addEventListener('visibilitychange', () => Sound.setHidden(document.hidden));
+// 안드로이드 앱(Capacitor): 뒤로 가기 = 열린 창부터 닫기(아무것도 없으면 앱을 내림), 앱이 백그라운드로 가면 소리 멈춤
+if (window.AdsManager && window.AdsManager.isApp) {
+  try {
+    const AppP = window.Capacitor.Plugins.App;
+    AppP.addListener('backButton', () => {
+      const sheet = $('#worldSheet');
+      if (drawer.classList.contains('open')) { if (sheet && !sheet.hidden) closeWorldSheet(); else closeDrawer(); return; }
+      const m = [...document.querySelectorAll('.modal.show')].pop();
+      if (m) { m.classList.remove('show'); return; }
+      AppP.minimizeApp();
+    });
+    AppP.addListener('appStateChange', st => Sound.setHidden(!st.isActive));
+  } catch (e) {}
+}
 
 // language selector
 const langSelect = $('#langSelect');
@@ -2372,7 +2386,10 @@ langSelect.addEventListener('change', () => window.I18N.setLang(langSelect.value
 // re-render dynamic strings when language changes (static handled by I18N.apply)
 // 개인정보처리방침 링크: 영어가 먼저인 페이지라, 한국어로 하던 사람은 한국어 부분(#ko)으로 바로 연다
 function updatePrivacyLinks() {
-  document.querySelectorAll('a[href^="privacy.html"]').forEach(a => { a.setAttribute('href', 'privacy.html' + (window.I18N.lang === 'ko' ? '#ko' : '')); });
+  // 앱에서는 공식 사이트의 방침 페이지(외부 브라우저로 열림), 웹에서는 같은 폴더의 페이지
+  const app = window.AdsManager && window.AdsManager.isApp;
+  const base = app ? ((window.BM_BRAND && window.BM_BRAND.homeUrl) || 'https://sgtherong.github.io/game001/') + 'privacy.html' : 'privacy.html';
+  document.querySelectorAll('a[href*="privacy.html"]').forEach(a => { a.setAttribute('href', base + (window.I18N.lang === 'ko' ? '#ko' : '')); });
 }
 function refreshDynamic() {
   updatePrivacyLinks();

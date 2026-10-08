@@ -1,4 +1,5 @@
-// 스토어·포털 소개용 게임 화면 캡처(1280x720, 영어): node render-screens.cjs → out/screen-*.png
+// 스토어·포털 소개용 게임 화면 캡처(영어): node render-screens.cjs → out/screen-*.png (1280x720)
+//                                        node render-screens.cjs phone → out/phone-*.png (1080x1920, Google Play 휴대폰 스크린샷)
 // 1) 새 칸 판에서 미리보기 켠 장면  2) 여행 지도  3) 클리어 후 여행지 그림  4) 빠른 한 판
 const path = require('path');
 const fs = require('fs');
@@ -9,6 +10,7 @@ const CHROME = process.env.CHROME || 'C:/Program Files/Google/Chrome/Application
 const WEB = path.join(__dirname, '..', 'web');
 const OUT = path.join(__dirname, 'out');
 const PORT = 8131;
+const PHONE = process.argv[2] === 'phone';
 const MIME = { '.html': 'text/html', '.js': 'application/javascript', '.png': 'image/png', '.jpg': 'image/jpeg', '.webmanifest': 'application/json' };
 
 const server = http.createServer((req, res) => {
@@ -51,13 +53,14 @@ const SCENES = [
     for (const s of SCENES) {
       const page = await browser.newPage();
       const errors = []; page.on('pageerror', e => errors.push(String(e)));
-      await page.setViewport({ width: 1280, height: 720, deviceScaleFactor: 1 });
+      await page.setViewport(PHONE ? { width: 360, height: 640, deviceScaleFactor: 3 } : { width: 1280, height: 720, deviceScaleFactor: 1 });
       await page.evaluateOnNewDocument(() => { localStorage.clear(); localStorage.setItem('bm_lang_v1', 'en'); });
       await page.goto(`http://localhost:${PORT}/index.html`, { waitUntil: 'networkidle0' });
       await page.evaluate(() => endCoach());
       await page.evaluate(`(${s.setup.toString()})()`);
-      await page.screenshot({ path: path.join(OUT, s.name) });
-      console.log(s.name, errors.length ? 'ERRORS ' + errors.join(' | ') : 'ok');
+      const name = PHONE ? s.name.replace('screen-', 'phone-') : s.name;
+      await page.screenshot({ path: path.join(OUT, name) });
+      console.log(name, errors.length ? 'ERRORS ' + errors.join(' | ') : 'ok');
       await page.close();
     }
   } finally { await browser.close(); server.close(); }

@@ -31,3 +31,5 @@ borrowed-motion-balance/early-out/
 borrowed-motion-balance/dist/
 swapstep-*.zip
 borrowed-motion-balance/more-out/
+*.aab
+*.apk

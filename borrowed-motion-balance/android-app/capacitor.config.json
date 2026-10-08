@@ -1,0 +1,12 @@
+{
+  "appId": "com.zeropercent.swapstep",
+  "appName": "SwapStep",
+  "webDir": "www",
+  "backgroundColor": "#f3ead9",
+  "android": {
+    "backgroundColor": "#f3ead9"
+  },
+  "plugins": {
+    "SystemBars": { "style": "LIGHT" }
+  }
+}
