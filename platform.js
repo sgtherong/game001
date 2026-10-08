@@ -184,6 +184,17 @@
 
   /* ---------- adapters ---------- */
 
+  // 안드로이드 앱(Capacitor) 안에서 돌고 있는지. 앱은 내부 주소가 localhost라 '개발 환경'으로 착각하지 않게 먼저 가린다.
+  const IS_APP = (() => { try { return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()); } catch (e) { return false; } })();
+  // 앱: 아직 광고(AdMob)·결제(Play 결제) 연결 전 — 광고 제안·결제 화면 없이 무료로 동작
+  const app = {
+    name: 'app',
+    async init() {},
+    gameplayStart() {}, gameplayStop() {}, happyTime() {},
+    showRewarded() { return Promise.reject(new Error('ads not available in app yet')); },
+    showInterstitial() { return Promise.resolve(); },
+  };
+
   // 자체 호스팅/개발/Artifact: 게임이 넘겨준 시뮬레이션 광고 UI를 사용
   const local = {
     name: 'local',
@@ -320,6 +331,7 @@
 
   function detect() {
     const h = location.hostname;
+    if (IS_APP) return app;
     if (/(^|\.)poki\.com$/.test(h) || /poki/.test(h)) return poki;
     if (/crazygames|1001juegos/.test(h)) return crazygames;
     if (/gamedistribution/.test(h)) return gamedistribution; // (GameMonetize는 SDK가 달라 아직 미지원)
@@ -330,11 +342,12 @@
   let adapterReady = false, gameLoaded = false, loadingStopSent = false;
   const crazygamesAdsAllowed = () => !!(window.BM_BRAND && window.BM_BRAND.crazygamesAds);
   // 로드 시점에 포털 여부를 확정(동기). SW/PWA 게이팅 등에서 init() 완료 전에 참조 가능.
-  const IS_PORTAL = detect() !== local;
+  const IS_PORTAL = detect() !== local && !IS_APP; // 앱은 포털이 아님(개인정보 링크·공유 등은 보임)
   // 개발 환경(내 PC·파일로 열기)에서만 연습용 광고 화면·테스트 결제를 보여준다.
   // 공개 사이트(gh-pages·Artifact)에선 진짜 광고·결제가 붙기 전까지 둘 다 숨긴다 —
   // 실제 가격을 보여주며 돈을 받지 않는 화면은 이용자를 오해하게 만든다.
   const IS_DEV = (() => {
+    if (IS_APP) return false;
     try { const h = location.hostname || ''; return !h || h === 'localhost' || h === '127.0.0.1' || h === '0.0.0.0' || h.endsWith('.local'); }
     catch (e) { return false; }
   })();
@@ -351,6 +364,7 @@
   const AdsManager = {
     config,
     isPortal: IS_PORTAL, // true면 포털 iframe(자체호스팅 전용 기능은 끈다)
+    isApp: IS_APP,       // true면 안드로이드 앱(Capacitor)
     isOwnSite: IS_OWN,   // true면 우리 공식 사이트·개발 환경(로그인·오프라인 캐시 사용)
     get platform() { return adapter.name; },
     // 포털이 알려주는 사용자 언어(없으면 빈 문자열 → 브라우저 언어 유지)
@@ -359,6 +373,7 @@
     get adsEnabled() {
       if (adapter === unavailable) return false;
       if (adapter.name === 'crazygames') return crazygamesAdsAllowed();
+      if (adapter === app) return false; // 앱: AdMob 연결 전
       if (adapter === local) return IS_DEV; // 광고 네트워크가 없는 공개 사이트엔 광고 제안 안 함
       return true;
     },
