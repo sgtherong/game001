@@ -18,8 +18,9 @@ It sounds simple, but every swap moves two pieces at once. Plan your order, use 
 - Quick play: endless generated puzzles that get harder as your streak grows
 - Daily Challenge with three fresh puzzles every day and weekly rewards
 - Collect travel stickers for your album
+- Challenge a friend: send the same new puzzle and see who solves it in fewer moves
 - Free undo and restart, hints and a peek booster when you're stuck
-- Plays in 7 languages: English, Korean, Spanish, Portuguese, Russian, German, French
+- Plays in 31 languages, including English, Korean, Japanese, Chinese, Spanish, Portuguese, French, German, Arabic and Hindi
 
 **Controls**
 Tap a piece, then tap another: the two pieces swap their arrows and each steps one cell.
@@ -70,7 +71,7 @@ Keyboard: 1-4 select pieces (sun, moon, star, heart), P peek, H hint, R restart,
   개인정보처리방침은 공식 사이트 페이지로 열림.
 
 ### 앱 정보
-- 패키지 이름: `com.zeropercent.swapstep` · 버전 1.0.0 (versionCode 1) · targetSdk 36 · 권한: 인터넷, 진동
+- 패키지 이름: `com.zeropercent.swapstep` · 버전 1.1.0 (versionCode 2 — 31개 언어; 1.0.0은 versionCode 1) · targetSdk 36 · 권한: 인터넷, 진동
 - 카테고리: 게임 › 퍼즐 · 무료 · 광고 포함: **아니요**(1.0.0 기준)
 - 개인정보처리방침 URL: https://sgtherong.github.io/game001/privacy.html
 
@@ -89,8 +90,8 @@ Keyboard: 1-4 select pieces (sun, moon, star, heart), P peek, H hint, R restart,
     · 매일 새로 나오는 오늘의 도전과 주간 보상
     · 여행 스티커 앨범 모으기
     · 되돌리기·다시 시작은 언제나 무료, 막히면 힌트와 미리보기
-    · 인터넷 없이도 플레이 가능 · 7개 언어
-- 영어: 위 "공통 문구"의 Short description / Description 사용(앱 이름: SwapStep - Arrow Swap Puzzle)
+    · 인터넷 없이도 플레이 가능 · 31개 언어
+- **언어별 등록 정보(33개, 한국어·영어 포함): [`play-listing.md`](play-listing.md)** — 앱 이름·간단한 설명·자세한 설명을 언어마다 붙여 넣기. 위 한국어 문구와 같은 내용이며 Play용(광고 없음·오프라인 강조)으로 다듬은 판.
 - ※ 레벨 수·여행지 수는 출시 시점의 게임과 맞출 것(2026-10-08 기준 3000판·여행지 100곳)
 
 ### 콘솔 설문 답변(1.0.0 기준)
