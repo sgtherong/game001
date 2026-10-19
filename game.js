@@ -183,6 +183,8 @@ const onPortal = () => !!(window.AdsManager && window.AdsManager.isPortal);
 // 광고 제안을 보여줘도 되는지(CrazyGames Basic 단계·SDK 로드 실패면 false → 광고 버튼 숨김)
 // 유료 결제를 보여줄 수 있는지(포털·공개 사이트=false → 프리미엄 구매/복원/약관 숨김, 황혼 테마 무료)
 const paymentsOn = () => !!(window.AdsManager && window.AdsManager.paymentsEnabled);
+// 진짜 결제(안드로이드 앱의 Google Play 결제)가 붙었는지 — 없으면 개발 환경의 연습용 결제
+const realIAP = () => !!window.BM_IAP;
 const adsOn = () => !window.AdsManager || window.AdsManager.adsEnabled !== false;
 const freeHintsLeft = () => { resetDailyIfNeeded(); return Math.max(0, FREE_HINTS_PER_DAY - progress.hints.free); };
 const adHintsLeft = () => { resetDailyIfNeeded(); return Math.max(0, AD_HINTS_PER_DAY - progress.hints.ad); };
@@ -216,6 +218,28 @@ function logEvent(name, data = {}) {
     while (arr.length > 300) arr.shift();
     localStorage.setItem(k, JSON.stringify(arr));
   } catch (e) {}
+  if (window.Analytics) Analytics.design(name.replace(/_/g, ':'), data.value);
+}
+// 레벨 진행 통계: 일반 레벨만(오늘의 도전·빠른 한 판·대결은 logEvent로 따로).
+// 시작한 판을 깨지 않고 다른 판으로 가면 '포기(Fail)'로 센다 — 어느 판에서 사람들이 막히는지 보려고
+function levelStatStart() {
+  levelStatLeave();
+  if (G.daily != null || G.quickMode || G.challenge) return;
+  G.levelStat = { w: worldOf(G.index) + 1, l: G.index + 1, t: Date.now(), done: false };
+  if (window.Analytics) Analytics.progression('Start', G.levelStat.w, G.levelStat.l);
+}
+function levelStatLeave() {
+  const ls = G.levelStat; G.levelStat = null;
+  if (!ls || ls.done || !window.Analytics) return;
+  if (G.history && G.history.length) Analytics.progression('Fail', ls.w, ls.l);
+}
+function levelStatWin(moves, tier) {
+  const ls = G.levelStat; if (!ls || ls.done || !window.Analytics) return;
+  ls.done = true;
+  Analytics.progression('Complete', ls.w, ls.l, moves);
+  Analytics.design('level:stars', tier);
+  Analytics.design('level:seconds', Math.min(3600, Math.round((Date.now() - ls.t) / 1000)));
+  if (G.usedHint) Analytics.design('level:withHint');
 }
 
 /* ---------- 오류 대비 ----------
@@ -391,6 +415,25 @@ function worldGold(w) {
   for (let i = a; i < b; i++) { const s = STAGES[i]; if (starTier(progress.best[s.id], s.min) !== 3) return false; }
   return true;
 }
+// 결과 창: 이 월드의 다음 스티커까지 몇 판 남았는지 그림과 점으로(글자 없이 — 모든 언어 공통).
+// 스티커를 다 모은 월드는 골드 스티커(모든 판 ★★★)까지의 개수를 보여 준다
+function renderResultProgress(w, justGot) {
+  const el = $('#resultProg'), page = ALBUM[w], earned = worldStickers(w);
+  if (worldGold(w)) { el.hidden = true; return; }
+  if (earned >= STICKERS_PER_PAGE && !justGot) {
+    const [a, b] = worldRange(w); let n = 0;
+    for (let i = a; i < b; i++) if (starTier(progress.best[STAGES[i].id], STAGES[i].min) === 3) n++;
+    el.className = 'res-prog';
+    el.innerHTML = `<span class="rp-st" style="filter:none;opacity:1">${page.icon}</span><span class="rp-txt">★★★ ${n}/${b - a}</span>`;
+    el.hidden = false; return;
+  }
+  const got = justGot ? earned - 1 : earned; // 이번 판에 받은 스티커면 그 스티커를 색 있게
+  const filled = justGot ? CLEARS_PER_STICKER : worldClears(w) - earned * CLEARS_PER_STICKER;
+  el.className = 'res-prog' + (justGot ? ' got' : '');
+  el.innerHTML = `<span class="rp-st">${page.st[got]}</span><span class="rp-dots">` +
+    Array.from({ length: CLEARS_PER_STICKER }, (_, k) => `<i class="${k < filled ? 'on' : ''}${k === filled - 1 ? ' new' : ''}"></i>`).join('') + '</span>';
+  el.hidden = false;
+}
 const albumTotal = () => ALBUM.length * (STICKERS_PER_PAGE + 1);
 function albumEarned() {
   let n = 0;
@@ -508,7 +551,8 @@ const Sound = (() => {
     setSiteMuted(m) { siteMuted = !!m; applyLevel(); },
   };
 })();
-function haptic(ms) { try { if (progress.settings && progress.settings.sound !== false && navigator.vibrate) navigator.vibrate(ms); } catch (e) {} }
+// 진동은 효과음과 따로 켜고 끈다(예전엔 효과음을 끄면 진동도 꺼졌다)
+function haptic(ms) { try { if (progress.settings && progress.settings.vibe !== false && navigator.vibrate) navigator.vibrate(ms); } catch (e) {} }
 
 /* ---------- confetti (canvas, respects reduced motion) ---------- */
 function confettiBurst() {
@@ -861,7 +905,7 @@ function updatePreview() {
   const canAdMoves = outOfMoves && !isPremium() && adsOn() && !G.challenge;
   let msg = '';
   if (G.challenge) msg = G.tipMsg || t('ch_status', { n: Math.max(0, movesLeft()) });
-  else if (outOfMoves) msg = t(canAdMoves ? 'moves_out' : 'moves_out_noad');
+  else if (outOfMoves) { msg = t(canAdMoves ? 'moves_out' : 'moves_out_noad'); if (!G.movesOutLogged) { G.movesOutLogged = true; logEvent('moves_out'); } }
   else if (G.hintPair && G.hintMsg) msg = G.hintMsg;
   else if (G.tipMsg) msg = G.tipMsg;
   else if (G.introMsg) msg = G.introMsg;
@@ -992,7 +1036,8 @@ function startCoach() {
   coachOn = !progress.tutorialSeen && G.index === 0 && G.daily == null && !G.quickMode;
   coachUpdate();
 }
-function endCoach() {
+function endCoach(skipped) {
+  if (coachOn && !progress.tutorialSeen) logEvent(skipped === true ? 'tutorial_skip' : 'tutorial_complete');
   coachOn = false;
   coachEl.hidden = true;
   if (!progress.tutorialSeen) { progress.tutorialSeen = true; saveProgress(progress); }
@@ -1050,6 +1095,7 @@ function restart() {
   if (G.animating) return;
   clearHintDemo();
   clearClearFx(); // '다시 풀기'로 돌아오면 사라졌던 조각을 되살린다
+  levelStatLeave(); // 이전 판을 깨지 않고 떠났으면 포기로 기록(이전 판 이동 기록이 남아 있을 때)
   G.state = clone(G.stage.start);
   G.history = [];
   G.selected = [];
@@ -1199,18 +1245,42 @@ function renderStore(note) {
   $('#restorePurchase').hidden = portal;
   const legal = document.querySelector('#store .store-legal'); if (legal) legal.hidden = portal;
   $('#themeRow').hidden = !canDusk(); // theme selectable via premium/world-1 reward (or free on portal)
-  $('#premiumPrice').textContent = PREMIUM_PRICE;
+  $('#premiumPrice').textContent = realIAP() ? (window.BM_IAP.price || '…') : PREMIUM_PRICE;
+  // 진짜 결제면 '연습용' 표시를 숨기고 약관 문구를 바꾼다
+  const proto = document.querySelector('#store .proto-tag'); if (proto) proto.hidden = realIAP();
+  if (legal) legal.textContent = t(realIAP() ? 'store_legal2' : 'store_legal');
   updateThemeButtons();
 }
-function buyPremium() {
-  // PROTOTYPE ONLY — no real payment. Native build wires this to store IAP.
+function grantPremium(msg) {
+  progress.premium = true;
+  saveProgress(progress);
+  applyThemePack(); updateHintButton(); updatePreview();
+  if ($('#store').classList.contains('show')) renderStore(msg);
+}
+async function buyPremium() {
+  if (realIAP()) { // Google Play 결제 창 → 완료되면 프리미엄
+    const btn = $('#buyPremium'); btn.disabled = true;
+    try {
+      if (await window.BM_IAP.buy()) { logEvent('purchase_success', { product: 'premium' }); grantPremium(t('premium_thanks')); }
+      else renderStore(t('purchase_failed'));
+    } catch (e) { logEvent('purchase_fail'); renderStore(t('purchase_failed')); }
+    btn.disabled = false;
+    return;
+  }
+  // 개발 환경의 연습용 결제(돈이 오가지 않음)
   progress.premium = true;
   saveProgress(progress);
   logEvent('purchase_success', { product: 'premium', prototype: true });
   applyThemePack(); updateHintButton();
   renderStore(t('premium_activated'));
 }
-function restorePurchase() {
+async function restorePurchase() {
+  if (realIAP()) {
+    const ok = await window.BM_IAP.owned();
+    logEvent('purchase_restore', { value: ok ? 1 : 0 });
+    if (ok) grantPremium(t('restored')); else renderStore(t('restore_none2'));
+    return;
+  }
   logEvent('purchase_restore', { prototype: true });
   applyThemePack(); updateHintButton();
   renderStore(isPremium() ? t('restored') : t('restore_none'));
@@ -1722,6 +1792,7 @@ function checkIncomingChallenge() {
 }
 
 function onWin() {
+  $('#resultProg').hidden = true; // 다음 스티커 진행은 일반 레벨에서만(아래 renderResultProgress)
   if (G.challenge) { endChallenge(true); return; } // 대결: 진행 기록 없이 결과 비교
   if (G.quickMode) { onQuickWin(); return; } // 끝없는 모드: 진행 기록·스티커 없이 연속 기록만
   const moves = G.history.length;
@@ -1739,6 +1810,7 @@ function onWin() {
   const newGold = !goldBefore && worldGold(sw); // 다시 풀어 3★로 올려도 달성될 수 있음
   const optimal = moves === st.min;
   const tier = starTier(moves, st.min);
+  levelStatWin(moves, tier); // 일반 레벨일 때만 기록됨(levelStatStart가 정함)
   const badgeEl = overlay.querySelector('.badge');
   badgeEl.innerHTML = [1, 2, 3].map(n => `<span class="st${n <= tier ? ' on' : ''}">★</span>`).join('');
   badgeEl.className = 'badge stars';
@@ -1754,6 +1826,7 @@ function onWin() {
     const dk = todayKey();
     progress.daily[dk] = progress.daily[dk] || [false, false, false];
     progress.daily[dk][G.daily] = true;
+    logEvent('daily_complete_' + G.daily, { value: tier });
     // 공유용 오늘의 별 기록(오늘 것만 보관, 더 좋은 기록 유지)
     if (!progress.dailyStars || progress.dailyStars.d !== dk) progress.dailyStars = { d: dk, s: [0, 0, 0] };
     progress.dailyStars.s[G.daily] = Math.max(progress.dailyStars.s[G.daily] || 0, tier);
@@ -1777,6 +1850,7 @@ function onWin() {
     btnNextEl.textContent = t('win_next');
     btnNextEl.style.display = hasNext ? '' : 'none';
     if (!hasNext) overlay.querySelector('.result-sub').innerHTML += t('all_done'); // 마지막 레벨: 완주 축하 + 데일리 안내
+    if (firstClear) renderResultProgress(sw, newSticker);
     overlay.dataset.mode = 'normal';
   }
   // 결과 창은 조금 늦게: 마지막 조각이 도착해 튀어 오르는 축하 동작을 판 위에서 먼저 보여준다.
@@ -1913,6 +1987,7 @@ function loadStage(index, dailySlot = null, custom = null) {
   G.usedHint = false;
   G.attemptAdUsed = false;
   G.budgetBonus = 0;
+  G.movesOutLogged = false;
   G.hintPair = null; G.hintMsg = ''; G.tipMsg = ''; G.introMsg = '';
   G.peekOn = false; // 미리보기 부스터는 판마다 새로
   G.daily = dailySlot; // non-null => playing today's daily puzzle
@@ -1933,6 +2008,7 @@ function loadStage(index, dailySlot = null, custom = null) {
   updatePreview();
   renderProgress();
   startCoach();
+  levelStatStart();
   syncGameplay(); // portal signal: level active (창이 하나도 안 떠 있을 때만)
 }
 
@@ -2065,7 +2141,7 @@ function renderAlbum() {
     cell.className = 'sticker' + (got ? ' got' : '');
     cell.innerHTML = got
       ? `<span class="emoji">${emoji}</span>` + (page.keys ? `<span class="nm">${stickerName(w, k)}</span>` : '')
-      : `<span class="emoji">?</span>`;
+      : reached ? `<span class="emoji shadow">${emoji}</span>` : `<span class="emoji">?</span>`;
     grid.appendChild(cell);
   });
   const goldEl = $('#albumGold');
@@ -2234,6 +2310,22 @@ function applySoundIcon() {
   if (b) { b.textContent = on ? t('sound_on') : t('sound_off'); b.classList.toggle('off', !on); }
   const mOn = progress.settings.music !== false, mb = $('#btnMusic');
   if (mb) { mb.textContent = mOn ? t('music_on') : t('music_off'); mb.classList.toggle('off', !mOn); }
+  const sOn = progress.settings.stats !== false, sb = $('#btnStats');
+  if (sb) { sb.hidden = !(window.Analytics && Analytics.configured); sb.textContent = sOn ? t('stats_on') : t('stats_off'); sb.classList.toggle('off', !sOn); }
+  const ap = $('#btnAdPrivacy'); if (ap) { ap.hidden = !(window.AdsManager && AdsManager.privacyOptions); ap.textContent = '🛡️ ' + t('privacy_choices'); }
+  const vOn = progress.settings.vibe !== false, vb = $('#btnVibe');
+  if (vb) { vb.hidden = !navigator.vibrate; vb.textContent = vOn ? t('vibe_on') : t('vibe_off'); vb.classList.toggle('off', !vOn); }
+}
+// 플레이 통계 보내기(익명) 켜기/끄기
+function toggleStats() {
+  progress.settings.stats = progress.settings.stats === false;
+  if (window.Analytics) Analytics.setConsent(progress.settings.stats);
+  saveProgress(progress); applySoundIcon();
+}
+function toggleVibe() {
+  progress.settings.vibe = progress.settings.vibe === false;
+  saveProgress(progress); applySoundIcon();
+  haptic(30);
 }
 function toggleSound() {
   progress.settings.sound = progress.settings.sound === false;
@@ -2289,7 +2381,7 @@ function registerSW() {
 
 /* ---------- drawer ---------- */
 const drawer = $('#drawer');
-function openDrawer() { renderStageList(); drawer.classList.add('open'); } // build list on open only
+function openDrawer() { renderStageList(); applySoundIcon(); drawer.classList.add('open'); } // build list on open only
 function closeDrawer() { drawer.classList.remove('open'); }
 
 /* ---------- wire up ---------- */
@@ -2297,7 +2389,7 @@ btnUndo.addEventListener('click', undo);
 btnRestart.addEventListener('click', restart);
 btnHint.addEventListener('click', useHint);
 $('#btnPeek').addEventListener('click', usePeek);
-$('#coachSkip').addEventListener('click', endCoach);
+$('#coachSkip').addEventListener('click', () => endCoach(true));
 $('#btnNext').addEventListener('click', async e => {
   if (overlay.dataset.mode === 'challenge') { // 보낸 사람: 도전장 보내기 / 받은 사람: 새 판으로 되받아치기
     if (G.chResult && G.chResult.ch.role === 'send') shareChallenge();
@@ -2305,7 +2397,7 @@ $('#btnNext').addEventListener('click', async e => {
     return;
   }
   if (overlay.dataset.mode === 'daily') { overlay.classList.remove('show'); openDaily(); return; }
-  if (G.adDue && window.AdsManager) {
+  if (G.adDue && window.AdsManager && !isPremium()) { // 프리미엄은 중간 광고 없음
     // 광고 요청~종료 동안 버튼을 막아 진행하지 못하게 한다(포털 규격)
     const btn = e.currentTarget; btn.disabled = true;
     G.adDue = false; G.clearsSinceAd = 0;
@@ -2358,6 +2450,9 @@ $('#tutorialStart').addEventListener('click', closeTutorial);
 // settings
 $('#btnSound').addEventListener('click', toggleSound);
 $('#btnMusic').addEventListener('click', toggleMusic);
+$('#btnVibe').addEventListener('click', toggleVibe);
+$('#btnStats').addEventListener('click', toggleStats);
+$('#btnAdPrivacy').addEventListener('click', () => AdsManager.showPrivacyOptions());
 document.addEventListener('visibilitychange', () => Sound.setHidden(document.hidden));
 // 안드로이드 앱(Capacitor): 뒤로 가기 = 열린 창부터 닫기(아무것도 없으면 앱을 내림), 앱이 백그라운드로 가면 소리 멈춤
 if (window.AdsManager && window.AdsManager.isApp) {
@@ -2503,10 +2598,16 @@ async function boot() {
   window.I18N.apply();       // fill static data-i18n strings
   updatePrivacyLinks();
   applySoundIcon();
+  if (window.Analytics) Analytics.setConsent(progress.settings.stats !== false); // 플레이어가 끈 통계는 처음부터 안 보냄
   resetDailyIfNeeded();
   applyThemePack();
   updateHintButton();
   registerSW();
+  // 앱 결제: 그 나라 가격을 받아 오고, 이 구글 계정으로 산 적이 있으면(기기 변경·재설치) 프리미엄을 되살린다
+  if (realIAP()) {
+    window.BM_IAP.load().then(() => { if ($('#store').classList.contains('show')) renderStore(); });
+    if (!isPremium()) window.BM_IAP.owned().then(ok => { if (ok) grantPremium(); });
+  }
   if (window.AdsManager) AdsManager.loadingStop(); // 로딩 끝 → 이어서 loadStage가 gameplayStart
   loadStage(progress.last || 0);        // start at last played stage
   checkIncomingChallenge();             // 링크(#ch=코드)로 받은 도전장이 있으면 도전장 창

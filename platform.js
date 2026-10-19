@@ -186,14 +186,109 @@
 
   // 안드로이드 앱(Capacitor) 안에서 돌고 있는지. 앱은 내부 주소가 localhost라 '개발 환경'으로 착각하지 않게 먼저 가린다.
   const IS_APP = (() => { try { return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()); } catch (e) { return false; } })();
-  // 앱: 아직 광고(AdMob)·결제(Play 결제) 연결 전 — 광고 제안·결제 화면 없이 무료로 동작
+  // 앱 광고(AdMob, @capacitor-community/admob). branding.js 의 admob 설정:
+  //   rewardedId·interstitialId 가 있으면 진짜 광고, test:true 면 Google 공식 테스트 광고, 둘 다 아니면 광고 없음.
+  //   ※ 앱 ID(ca-app-pub-…~…)는 android/app/src/main/res/values/strings.xml 의 admob_app_id 에 넣는다(앱을 다시 빌드해야 함).
+  // 유럽 등 동의가 필요한 곳은 처음 광고를 준비할 때 Google 동의 창(UMP)을 띄운다 — AdMob 콘솔에서 동의 메시지를 만들어야 뜬다.
+  const ADMOB_TEST = { rewarded: 'ca-app-pub-3940256099942544/5224354917', interstitial: 'ca-app-pub-3940256099942544/1033173712' };
+  const admobCfg = () => {
+    const c = (window.BM_BRAND && window.BM_BRAND.admob) || {};
+    if (c.rewardedId || c.interstitialId) return { rewarded: c.rewardedId || '', interstitial: c.interstitialId || '', testing: !!c.test };
+    if (c.test) return { rewarded: ADMOB_TEST.rewarded, interstitial: ADMOB_TEST.interstitial, testing: true };
+    return null;
+  };
+  const appPlugin = name => { try { return window.Capacitor.Plugins[name] || null; } catch (e) { return null; } };
   const app = {
     name: 'app',
-    async init() {},
+    ready: false,       // 광고 SDK 초기화 끝
+    privacyForm: false, // 메뉴에 '개인정보 선택' 버튼이 필요한지(UMP)
+    _prepared: { rewarded: false, interstitial: false },
+    async init() {
+      const cfg = admobCfg(), AdMob = appPlugin('AdMob');
+      if (!cfg || !AdMob) return; // 광고 설정이 없으면 광고 없이(adsEnabled=false)
+      this.cfg = cfg;
+      try {
+        // 동의(UMP): 필요하면 창을 띄우고, 광고를 요청해도 되는지(canRequestAds) 확인
+        let info = await AdMob.requestConsentInfo();
+        if (info.isConsentFormAvailable && info.status === 'REQUIRED') info = await AdMob.showConsentForm();
+        this.privacyForm = info.privacyOptionsRequirementStatus === 'REQUIRED';
+        if (info.canRequestAds === false) return;
+      } catch (e) { /* 동의 정보를 못 받아도(오프라인 등) 광고 초기화는 시도 */ }
+      await AdMob.initialize({ initializeForTesting: cfg.testing, maxAdContentRating: 'ParentalGuidance' });
+      this.ready = true;
+      this.prepare('rewarded'); this.prepare('interstitial');
+    },
+    async prepare(kind) {
+      const AdMob = appPlugin('AdMob'), id = this.cfg && this.cfg[kind];
+      if (!this.ready || !AdMob || !id || this._prepared[kind]) return this._prepared[kind];
+      try {
+        if (kind === 'rewarded') await AdMob.prepareRewardVideoAd({ adId: id, isTesting: this.cfg.testing });
+        else await AdMob.prepareInterstitial({ adId: id, isTesting: this.cfg.testing });
+        this._prepared[kind] = true;
+      } catch (e) { this._prepared[kind] = false; }
+      return this._prepared[kind];
+    },
+    // 끝나는 것을 '광고 닫힘' 이벤트로 기다린다 — 끝까지 안 보고 닫으면 플러그인 약속이 영영 안 끝나기 때문
+    _show(kind, showFn, ev) {
+      const AdMob = appPlugin('AdMob');
+      return new Promise(async (res, rej) => {
+        if (!(await this.prepare(kind))) { rej(new Error('ad not ready')); return; }
+        this._prepared[kind] = false;
+        let earned = false, done = false;
+        const subs = [];
+        const finish = (ok, err) => {
+          if (done) return; done = true;
+          subs.forEach(h => { try { h.remove(); } catch (e) {} });
+          hooks.adEnded();
+          setTimeout(() => this.prepare(kind), 500); // 다음 광고 미리 준비
+          if (err) rej(err); else res(ok);
+        };
+        try {
+          subs.push(await AdMob.addListener(ev.dismissed, () => finish(earned)));
+          subs.push(await AdMob.addListener(ev.failed, e => finish(false, new Error((e && e.message) || 'ad failed to show'))));
+          if (ev.reward) subs.push(await AdMob.addListener(ev.reward, () => { earned = true; }));
+        } catch (e) {}
+        hooks.adStarted();
+        showFn().then(() => { if (ev.reward) earned = true; }, e => finish(false, e));
+      });
+    },
     gameplayStart() {}, gameplayStop() {}, happyTime() {},
-    showRewarded() { return Promise.reject(new Error('ads not available in app yet')); },
-    showInterstitial() { return Promise.resolve(); },
+    showRewarded() {
+      const AdMob = appPlugin('AdMob');
+      return this._show('rewarded', () => AdMob.showRewardVideoAd(),
+        { dismissed: 'onRewardedVideoAdDismissed', failed: 'onRewardedVideoAdFailedToShow', reward: 'onRewardedVideoAdReward' });
+    },
+    showInterstitial() {
+      const AdMob = appPlugin('AdMob');
+      return this._show('interstitial', () => AdMob.showInterstitial(),
+        { dismissed: 'interstitialAdDismissed', failed: 'interstitialAdFailedToShow' }).catch(() => {});
+    },
+    showPrivacyForm() { const AdMob = appPlugin('AdMob'); return AdMob ? AdMob.showPrivacyOptionsForm().catch(() => {}) : Promise.resolve(); },
   };
+
+  // 앱 결제(Google Play 결제, @capgo/native-purchases). branding.js 의 iapPremiumId(Play 콘솔의 인앱 상품 ID)가 있어야 켜진다.
+  // window.BM_IAP 가 생기면 게임 상점이 진짜 결제 화면이 된다(가격도 Play가 알려주는 그 나라 가격으로).
+  if (IS_APP && window.BM_BRAND && window.BM_BRAND.iapPremiumId && appPlugin('NativePurchases')) {
+    const NP = appPlugin('NativePurchases'), PID = window.BM_BRAND.iapPremiumId;
+    const owned = list => (list || []).some(p => p.productIdentifier === PID && (p.purchaseState == null || String(p.purchaseState) === '1'));
+    window.BM_IAP = {
+      price: '',
+      async load() {
+        try { const r = await NP.getProduct({ productIdentifier: PID, productType: 'inapp' }); this.price = (r && r.product && r.product.priceString) || ''; } catch (e) {}
+        return this.price;
+      },
+      // true = 구매 완료. 취소·실패는 false(오류 메시지는 게임이 보여 줌)
+      async buy() {
+        const tx = await NP.purchaseProduct({ productIdentifier: PID, productType: 'inapp' });
+        return !!tx && (tx.purchaseState == null || String(tx.purchaseState) === '1');
+      },
+      // 이 구글 계정으로 산 적이 있는지(기기를 바꿨을 때 복원)
+      async owned() {
+        try { await NP.restorePurchases(); } catch (e) {}
+        try { const r = await NP.getPurchases({ productType: 'inapp' }); return owned(r && r.purchases); } catch (e) { return false; }
+      },
+    };
+  }
 
   // 자체 호스팅/개발/Artifact: 게임이 넘겨준 시뮬레이션 광고 UI를 사용
   const local = {
@@ -367,13 +462,16 @@
     isApp: IS_APP,       // true면 안드로이드 앱(Capacitor)
     isOwnSite: IS_OWN,   // true면 우리 공식 사이트·개발 환경(로그인·오프라인 캐시 사용)
     get platform() { return adapter.name; },
+    // 앱(유럽 등): 메뉴에서 광고 개인정보 선택을 다시 열 수 있어야 한다(UMP 규정)
+    get privacyOptions() { return adapter === app && app.privacyForm; },
+    showPrivacyOptions() { return adapter === app ? app.showPrivacyForm() : Promise.resolve(); },
     // 포털이 알려주는 사용자 언어(없으면 빈 문자열 → 브라우저 언어 유지)
     get locale() { try { return adapter.locale ? adapter.locale() : ''; } catch (e) { return ''; } },
     // false면 게임이 광고 제안(보상형) 버튼 자체를 숨긴다: SDK를 못 불러왔거나, CrazyGames Basic 단계
     get adsEnabled() {
       if (adapter === unavailable) return false;
       if (adapter.name === 'crazygames') return crazygamesAdsAllowed();
-      if (adapter === app) return false; // 앱: AdMob 연결 전
+      if (adapter === app) return app.ready; // 앱: AdMob 설정이 있고 초기화됐을 때만
       if (adapter === local) return IS_DEV; // 광고 네트워크가 없는 공개 사이트엔 광고 제안 안 함
       return true;
     },
@@ -390,6 +488,7 @@
       // CrazyGames expects midgame (interstitial) ads at natural breaks — enable them there (Full 단계만).
       if (adapter.name === 'crazygames') config.interstitialEnabled = crazygamesAdsAllowed();
       if (adapter.name === 'gamedistribution') config.interstitialEnabled = true; // GD는 레벨 전환 광고가 기본 수익원
+      if (adapter === app) config.interstitialEnabled = true; // 앱: 광고가 준비됐을 때만 실제로 뜬다
       try { await adapter.init(opts); }
       catch (e) {
         const fb = IS_PORTAL ? unavailable : local;
@@ -420,4 +519,61 @@
   };
 
   window.AdsManager = AdsManager;
+
+  /* ---------- 플레이 통계(GameAnalytics) ----------
+   * branding.js 의 gaGameKey/gaSecretKey 를 넣어야 켜진다(비어 있으면 아무것도 보내지 않음).
+   * 포털(CrazyGames 등)에서는 끈다 — 포털이 자체 통계를 갖고 있고, 외부 전송 없음으로 심사받았다.
+   * 플레이어가 메뉴에서 끄면(setConsent(false)) 그때부터 보내지 않는다.
+   * SDK는 처음 이벤트가 생길 때 한 번만 불러오고, 그 전 이벤트는 모아 뒀다가 보낸다. */
+  const GA_SDK = 'https://download.gameanalytics.com/js/GameAnalytics-4.4.6.min.js';
+  const gaQueue = [];
+  let gaState = 'idle'; // idle → loading → ready | failed
+  let gaConsent = true;
+  const Analytics = {
+    get configured() { const b = window.BM_BRAND || {}; return !!(b.gaGameKey && b.gaSecretKey) && !IS_PORTAL; },
+    get on() { return this.configured && gaConsent; },
+    setConsent(v) {
+      gaConsent = !!v;
+      try { if (gaState === 'ready') window.gameanalytics.GameAnalytics.setEnabledEventSubmission(gaConsent); } catch (e) {}
+    },
+    _send(fn) {
+      if (!this.on) return;
+      if (gaState === 'ready') { try { fn(window.gameanalytics); } catch (e) {} return; }
+      if (gaQueue.length < 200) gaQueue.push(fn);
+      if (gaState === 'idle') this._load();
+    },
+    _load() {
+      gaState = 'loading';
+      const b = window.BM_BRAND || {};
+      const sc = document.createElement('script');
+      sc.src = GA_SDK; sc.async = true;
+      sc.onload = () => {
+        try {
+          const GA = window.gameanalytics.GameAnalytics;
+          GA.configureBuild((IS_APP ? 'android ' : 'web ') + (b.version || '1'));
+          GA.initialize(b.gaGameKey, b.gaSecretKey);
+          GA.setEnabledEventSubmission(gaConsent);
+          gaState = 'ready';
+          while (gaQueue.length) { try { gaQueue.shift()(window.gameanalytics); } catch (e) {} }
+        } catch (e) { gaState = 'failed'; gaQueue.length = 0; }
+      };
+      sc.onerror = () => { gaState = 'failed'; gaQueue.length = 0; }; // 인터넷이 없으면 조용히 포기(게임엔 영향 없음)
+      document.head.appendChild(sc);
+    },
+    // 레벨 진행: status 'Start' | 'Complete' | 'Fail', world·level은 숫자(1부터)
+    progression(status, world, level, score) {
+      const w = 'world' + String(world).padStart(3, '0'), l = 'level' + String(level).padStart(4, '0');
+      this._send(ga => {
+        const S = ga.EGAProgressionStatus[status];
+        if (score != null) ga.GameAnalytics.addProgressionEvent(S, w, l, undefined, Math.round(score));
+        else ga.GameAnalytics.addProgressionEvent(S, w, l);
+      });
+    },
+    // 그 밖의 행동(힌트 사용 등): 'hint:used' 처럼 ':'로 나눈 이름(조각마다 32자까지, 5조각까지)
+    design(id, value) {
+      const ev = String(id).split(':').slice(0, 5).map(p => p.replace(/[^A-Za-z0-9_.-]/g, '').slice(0, 32) || 'x').join(':');
+      this._send(ga => { if (value != null && isFinite(value)) ga.GameAnalytics.addDesignEvent(ev, Number(value)); else ga.GameAnalytics.addDesignEvent(ev); });
+    },
+  };
+  window.Analytics = Analytics;
 })();
