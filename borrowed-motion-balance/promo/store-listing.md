@@ -77,7 +77,9 @@ Keyboard: 1-4 select pieces (sun, moon, star, heart), P peek, H hint, R restart,
 
 ### 스토어 등록 정보
 - 앱 아이콘: `promo/out/app/play-icon-512.png` · 그래픽 이미지: `promo/out/app/feature-1024x500.png`
-- 휴대폰 스크린샷: `promo/out/phone-1-puzzle.png` ~ `phone-4-quick.png` (1080x1920)
+- 휴대폰 스크린샷(언어별, 문구가 들어간 판): `node render-store-shots.cjs` → `promo/out/store/<언어>/1.png ~ 4.png` (1080x1920, 31개 언어).
+  Play 콘솔에서 언어를 고른 뒤 그 언어 폴더의 4장을 올린다(es는 es-ES·es-419, pt는 pt-BR·pt-PT에 같이, he는 iw-IL, nb는 no-NO). 문구는 `promo/store-captions.json`.
+  (예전 문구 없는 영어 캡처: `node render-screens.cjs phone` → `promo/out/phone-*.png`)
 - 한국어
   - 앱 이름(30자): SwapStep - 화살표 바꾸기 퍼즐
   - 간단한 설명(80자): 두 조각의 화살표를 맞바꾸고 한 칸씩! 여행지 100곳, 3000판의 차분한 두뇌 퍼즐
@@ -93,6 +95,28 @@ Keyboard: 1-4 select pieces (sun, moon, star, heart), P peek, H hint, R restart,
     · 인터넷 없이도 플레이 가능 · 31개 언어
 - **언어별 등록 정보(33개, 한국어·영어 포함): [`play-listing.md`](play-listing.md)** — 앱 이름·간단한 설명·자세한 설명을 언어마다 붙여 넣기. 위 한국어 문구와 같은 내용이며 Play용(광고 없음·오프라인 강조)으로 다듬은 판.
 - ※ 레벨 수·여행지 수는 출시 시점의 게임과 맞출 것(2026-10-08 기준 3000판·여행지 100곳)
+
+### 광고·결제·통계 켜기 (1.2.0부터 코드 준비됨 — 계정을 만든 뒤 아래 순서대로)
+지금 1.2.0 빌드는 세 기능이 모두 **꺼진 상태**(설정값이 비어 있음)라 1.1.0과 똑같이 동작한다.
+단, 1.2.0에는 광고 SDK가 들어 있어서 Play 콘솔에서 **광고 ID(AD_ID) 사용 신고**가 필요하다. 광고를 켜기 전이라면 1.1.0을 올려도 된다.
+
+1. **통계(GameAnalytics)** — gameanalytics.com 가입 → 게임 추가(플랫폼: Android와 HTML5 각각 또는 하나) → Game Key / Secret Key
+   → `web/branding.js` 의 `gaGameKey`·`gaSecretKey` 에 넣기. 포털 빌드에서는 넣어도 자동으로 꺼진다.
+   보내는 것: 레벨 시작·클리어·포기(월드·레벨 번호, 이동 수, 별, 걸린 초), 힌트·미리보기·광고·상점 사용, 튜토리얼 완료/건너뛰기,
+   기기 종류·OS·국가(IP로 추정), 익명 기기 ID. 이름·이메일은 보내지 않는다. 메뉴의 "📊 익명 플레이 통계 보내기"로 끌 수 있다.
+2. **광고(AdMob)** — admob.google.com 가입 → 앱 추가(Android, Play에 올린 앱 연결) → **앱 ID**(ca-app-pub-…~…)
+   → 광고 단위 2개 만들기: **보상형**(힌트·이동 추가), **전면**(레벨 사이) → 광고 단위 ID 2개
+   → 앱 ID는 `android-app/android/app/src/main/res/values/strings.xml` 의 `admob_app_id`, 광고 단위 ID는 `branding.js` 의 `admob.rewardedId`·`interstitialId`.
+   → AdMob › 개인정보 보호 및 메시지 › **유럽 규정 메시지(GDPR) 만들기**(게임이 처음 켤 때 Google 동의 창을 띄움; 메뉴에 "광고 개인정보 선택" 버튼이 자동으로 생김).
+   → 시험할 때는 `admob: { test: true }` 로 빌드하면 Google 공식 테스트 광고가 나온다(돈 안 됨). **자기 광고를 직접 누르면 계정 정지** — 시험은 테스트 광고로만.
+   광고 동작: 보상형은 버튼을 눌렀을 때만, 전면 광고는 처음 10판 이후 3판마다 '다음 문제'를 누를 때. 프리미엄 구매자는 광고 없음.
+3. **결제(Google Play 결제)** — Play 콘솔 › 수익 창출 › 제품 › **인앱 상품** 만들기: 상품 ID `premium`, 가격 설정(예: ₩4,900), 활성화
+   (그 전에 결제 프로필(판매자 계정) 등록 필요) → `branding.js` 의 `iapPremiumId: 'premium'`.
+   가격은 Play가 그 나라 통화로 알려준 값이 상점에 표시된다. 재설치·기기 변경 시 같은 구글 계정이면 자동 복원.
+   시험: Play 콘솔 › 설정 › 라이선스 테스트에 본인 계정을 넣으면 실제 돈 없이 구매 시험 가능(비공개 테스트 트랙에서).
+4. 위 값을 넣은 뒤: `versionCode` 올리기 → 앱 다시 빌드 → 웹도 다시 배포(통계 키는 웹에도 적용됨).
+5. **문서 함께 고치기(필수)**: 개인정보처리방침(`web/privacy.html`, 영어·한국어 — "광고와 분석" 항목을 AdMob·GameAnalytics 사용으로),
+   Play 콘솔 **데이터 보안** 설문(기기 ID·앱 활동·진단 정보 수집/공유: AdMob·GameAnalytics), **광고 포함: 예**, 광고 ID 신고, 콘텐츠 등급 설문의 광고 항목.
 
 ### 콘솔 설문 답변(1.0.0 기준)
 - 데이터 보안(Data safety): **수집·공유하는 데이터 없음**. 진행 기록은 기기에만 저장되고 외부로 보내지 않음.

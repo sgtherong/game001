@@ -4,4 +4,6 @@
     <string name="title_activity_main">SwapStep</string>
     <string name="package_name">com.zeropercent.swapstep</string>
     <string name="custom_url_scheme">com.zeropercent.swapstep</string>
+    <!-- AdMob 앱 ID. 지금은 Google 공식 테스트 앱 ID — AdMob에 앱을 등록하면 받은 ID(ca-app-pub-…~…)로 바꾼다 -->
+    <string name="admob_app_id">ca-app-pub-3940256099942544~3347511713</string>
 </resources>

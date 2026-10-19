@@ -213,8 +213,10 @@
     position: absolute; left: 50%; top: 6px; transform: translateX(-50%); width: max-content; max-width: 92%;
     display: flex; align-items: center; gap: 10px; pointer-events: auto;
     background: #3a3226; color: #fff; font-size: 14px; font-weight: 700; line-height: 1.35;
-    padding: 9px 10px 9px 14px; border-radius: 14px; box-shadow: 0 8px 20px rgba(0,0,0,.22); animation: pop .3s cubic-bezier(.2,1.2,.4,1);
+    padding: 9px 10px 9px 14px; border-radius: 14px; box-shadow: 0 8px 20px rgba(0,0,0,.22); animation: coachPop .3s cubic-bezier(.2,1.2,.4,1);
   }
+  /* pop과 같지만 가운데 정렬(translateX)을 유지한다 — 그냥 pop을 쓰면 나오는 동안 오른쪽으로 밀려 잘려 보였다 */
+  @keyframes coachPop { from { transform: translateX(-50%) scale(.9); opacity: 0 } to { transform: translateX(-50%) scale(1); opacity: 1 } }
   .coach-bubble button { flex: none; border: 0; background: rgba(255,255,255,.16); color: #fff; font-size: 12px; font-weight: 700; padding: 5px 9px; border-radius: 9px; cursor: pointer; }
   .coach-finger { position: absolute; font-size: 44px; line-height: 1; transform: translate(-42%, -6%); filter: drop-shadow(0 4px 6px rgba(0,0,0,.3));
     transition: left .35s ease, top .35s ease; animation: tapBob 1s ease-in-out infinite; }
@@ -288,6 +290,17 @@
   .result-title { font-size: 22px; font-weight: 800; margin: 2px 0 6px; }
   .result-sub { font-size: 13px; color: var(--muted); margin-bottom: 18px; }
   .result .btns { display: flex; gap: 10px; }
+  /* 결과 창의 '다음 스티커까지' 진행: 다음 스티커 그림자 + 점 5개(이 월드에서 5판마다 1장). 스티커를 받은 판은 색이 들어오며 톡 */
+  .res-prog { display: flex; align-items: center; justify-content: center; gap: 10px; margin: -6px 0 16px; }
+  .res-prog .rp-st { font-size: 30px; line-height: 1; filter: grayscale(1) brightness(.4); opacity: .42; }
+  .res-prog.got .rp-st { filter: none; opacity: 1; animation: pop .5s .25s cubic-bezier(.2,1.6,.4,1) both; }
+  .res-prog .rp-dots { display: flex; gap: 6px; }
+  .res-prog .rp-dots i { width: 12px; height: 12px; border-radius: 50%; background: var(--line); }
+  .res-prog .rp-dots i.on { background: var(--accent); }
+  .res-prog .rp-dots i.new { animation: rpDot .45s .2s cubic-bezier(.2,1.6,.4,1) both; }
+  @keyframes rpDot { from { transform: scale(0); } to { transform: scale(1); } }
+  .res-prog .rp-txt { font-size: 13px; font-weight: 800; color: #c99712; font-variant-numeric: tabular-nums; }
+  @media (prefers-reduced-motion: reduce) { .res-prog .rp-dots i.new, .res-prog.got .rp-st { animation: none; } }
 
   /* drawer / stage list */
   .drawer { position: fixed; inset: 0; z-index: 50; visibility: hidden; }
@@ -557,6 +570,7 @@
     color: var(--muted);
   }
   .sticker .emoji { font-size: 30px; opacity: .35; }
+  .sticker .emoji.shadow { filter: grayscale(1) brightness(.35); opacity: .22; }
   .sticker .nm { font-size: 10px; font-weight: 700; }
   .sticker.got {
     border: none; background: radial-gradient(120% 120% at 30% 20%, #fff6e8, #f3e2c4);
@@ -631,11 +645,12 @@
     margin-top: auto; padding-top: 12px; border-top: 1px solid var(--line);
   }
   .snd-row { display: flex; gap: 8px; }
-  #btnSound, #btnMusic, #btnBackup {
+  #btnSound, #btnMusic, #btnVibe, #btnStats, #btnAdPrivacy, #btnBackup {
     width: 100%; border: 1px solid var(--line); background: var(--cell); color: var(--ink);
     padding: 12px; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer;
   }
-  #btnBackup { margin-top: 8px; }
+  #btnBackup, #btnVibe, #btnStats, #btnAdPrivacy { margin-top: 8px; }
+  #btnVibe.off, #btnStats.off { color: var(--muted); }
   #btnSound.off, #btnMusic.off { color: var(--muted); }
   .snd-row button { flex: 1; min-width: 0; font-size: 13px !important; padding: 12px 6px !important; }
   /* world theme flavor in the picker header */
@@ -791,6 +806,7 @@
     <div class="badge">🎉</div>
     <div class="result-title">성공!</div>
     <div class="result-sub"></div>
+    <div class="res-prog" id="resultProg" hidden></div>
     <div class="bk-status" id="resultMsg" style="white-space:pre-line;word-break:break-all"></div>
     <div class="btns">
       <button class="btn ghost" id="btnReplay" data-i18n="win_replay">Replay</button>
@@ -813,6 +829,9 @@
     <div class="sound-toggle">
       <div class="lang-row"><span class="lang-lbl" data-i18n="lang_label">Language</span><select id="langSelect"></select></div>
       <div class="snd-row"><button id="btnSound">🔊 Sound on</button><button id="btnMusic">🎵 Music on</button></div>
+      <button id="btnVibe" hidden>📳 Vibration on</button>
+      <button id="btnStats" hidden>📊 Share anonymous stats</button>
+      <button id="btnAdPrivacy" hidden>🛡️ Ad privacy choices</button>
       <button id="btnBackup" data-i18n="backup_open">Backup / Restore</button>
       <div class="legal-links" id="drawerLegal"><a class="link-btn" href="privacy.html" target="_blank" rel="noopener" data-i18n="privacy_link">Privacy Policy</a></div>
     </div>
@@ -936,7 +955,7 @@
       </div>
       <ul class="prod-feat">
         <li data-i18n-html="feat_unlimited"></li>
-        <li data-i18n-html="feat_noads"></li>
+        <li data-i18n-html="feat_noads2"></li>
         <li data-i18n-html="feat_theme"></li>
         <li data-i18n-html="feat_restore"></li>
       </ul>
