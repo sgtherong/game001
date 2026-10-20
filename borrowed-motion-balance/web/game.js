@@ -1539,6 +1539,15 @@ function mergeProgress(local, cloud) {
   out.bonusHints = Math.max(local.bonusHints || 0, cloud.bonusHints || 0);
   out.quick = { best: Math.max((local.quick && local.quick.best) || 0, (cloud.quick && cloud.quick.best) || 0), played: Math.max((local.quick && local.quick.played) || 0, (cloud.quick && cloud.quick.played) || 0) };
   out.tutorialSeen = !!(local.tutorialSeen || cloud.tutorialSeen);
+  // 친구 랭킹: 내 이름·ID는 계정 쪽(먼저 만든 것)을 따라 기기마다 같게, 친구 목록은 합치고 더 새 기록을 남긴다
+  out.me = (cloud.me && cloud.me.pid) ? cloud.me : local.me;
+  const lf = local.friends || {}, cf = cloud.friends || {};
+  out.friends = Object.assign({}, cf);
+  Object.keys(lf).forEach(k => {
+    const a = lf[k], b = cf[k];
+    out.friends[k] = !b ? a : Object.assign({}, (a.day >= b.day ? a : b), { w: Math.max(a.w || 0, b.w || 0), l: Math.max(a.l || 0, b.l || 0) });
+  });
+  if (out.me) delete out.friends[out.me.pid];
   return out;
 }
 function renderCloudStatus() {
@@ -1753,7 +1762,7 @@ function onQuickWin() {
  * 승부: 성공 > 실패, 둘 다 성공이면 적은 이동 수, 같으면 무승부(둘 다 최소 수면 '둘 다 완벽').
  * 서버 없이 퍼즐과 보낸 사람 기록을 짧은 코드에 담는다(링크 #ch=코드, 포털에선 코드 복사).
  * 코드 끝의 검증값은 쉽게 고치지 못하게 하는 정도이고, 최소 수는 받는 쪽이 다시 계산한다. */
-const CH_VER = 'a';
+const CH_VER = 'b'; // 'a' = 예전 코드(프로필 없음, 계속 읽을 수 있음), 'b' = 보낸 사람 프로필(친구 랭킹용)이 붙은 코드
 const b36 = i => i.toString(36);
 function chSpec() { // 보내는 사람이 깬 월드 수준에 맞춘 난이도(빠른 한 판 생성기의 단계)
   return Math.min(12, Math.floor(worldOf(progress.reached || 0) * 0.4));
@@ -1767,12 +1776,12 @@ function encodeChallenge(st, moves, nonce) {
   const walls = st.walls || [], tiles = st.tiles || [];
   s += walls.length; walls.forEach(w => { s += cell(w); });
   s += tiles.length; tiles.forEach(c => { s += cell(c) + c[2]; });
-  s += nonce;
+  s += nonce + encProfile(myProfile());
   return s + chCheck(s);
 }
 function decodeChallenge(raw) {
   const code = String(raw || '').trim().toLowerCase().replace(/[^0-9a-z]/g, '');
-  if (code.length < 12 || code[0] !== CH_VER) return null;
+  if (code.length < 12 || (code[0] !== 'a' && code[0] !== 'b')) return null;
   const body = code.slice(0, -3);
   if (chCheck(body) !== code.slice(-3)) return null;
   let i = 1;
@@ -1790,7 +1799,10 @@ function decodeChallenge(raw) {
     }
     const walls = []; for (let k = rd(); k > 0; k--) walls.push(pos());
     const tiles = []; for (let k = rd(); k > 0; k--) { const p = pos(), kind = rd(); if (kind > TILE_TURN) return null; tiles.push([p[0], p[1], kind]); }
-    const nonce = body.slice(i); if (nonce.length !== 4) return null;
+    const rest = body.slice(i), ver = body[0];
+    const nonce = rest.slice(0, 4); if (nonce.length !== 4 || (ver === 'a' && rest.length !== 4)) return null;
+    const from = ver === 'b' ? decProfile(rest.slice(4)) : null; if (ver === 'b' && !from) return null;
+    const core = ver === 'b' ? body.slice(0, body.length - PROFILE_LEN) : body; // 도전장 번호는 프로필과 상관없이 퍼즐로만
     const ck = c => c[0] + ',' + c[1];
     const wallSet = new Set(walls.map(ck)), tileMap = new Map(tiles.map(c => [ck(c), c[2]]));
     const distinct = a => new Set(a.map(ck)).size === a.length && !a.some(c => wallSet.has(ck(c)));
@@ -1802,10 +1814,57 @@ function decodeChallenge(raw) {
     const st = { id: 'CH', seq: 0, chapter: '', n, pieces: pc, start, targets, min: g.d };
     if (walls.length) st.walls = walls;
     if (tiles.length) st.tiles = tiles;
-    return { stage: st, moves, id: chId(body) };
+    return { stage: st, moves, id: chId(core), from };
   } catch (e) { return null; }
 }
 const chLimit = min => min * 2 + 6; // 대결 이동 한도(되돌린 이동까지 모두 셈)
+
+/* ---------- 친구 랭킹(서버 없음) ----------
+ * 도전장 코드에 보낸 사람의 프로필(익명 ID·이름·깬 레벨·별·빠른 한 판 최고·연속 출석·날짜)을 담는다.
+ * 도전장을 받을 때마다 그 친구 기록이 이 기기의 친구 목록에 쌓이고, 나와 함께 순위를 보여 준다.
+ * 이름은 동물 + 번호(자유 입력 없음 → 욕설 걱정 없음). 동물 이름은 보는 사람의 언어로 나온다. */
+const ANIMALS = ['🦦', '🦊', '🐼', '🐨', '🦉', '🐧', '🐢', '🐬', '🦁', '🐯', '🐰', '🦔', '🐻', '🐱', '🐶', '🦒', '🐘', '🦩', '🐙', '🦜', '🐿️', '🦭', '🐳', '🦄'];
+const PROFILE_LEN = 21;
+const DAY0 = Date.UTC(2026, 0, 1);
+const dayNum = () => Math.floor((Date.now() - DAY0) / 86400000);
+const padB36 = (v, w) => { const m = Math.pow(36, w) - 1; return ('0000' + Math.max(0, Math.min(m, Math.floor(v || 0))).toString(36)).slice(-w); };
+function ensureMe() {
+  if (progress.me && progress.me.pid) return progress.me;
+  progress.me = { pid: padB36(Math.floor(Math.random() * Math.pow(36, 5)), 5), an: Math.floor(Math.random() * ANIMALS.length), num: 1 + Math.floor(Math.random() * 99) };
+  saveProgress(progress);
+  return progress.me;
+}
+function totalStars() { let n = 0; for (const s of STAGES) if (progress.completed[s.id]) n += starTier(progress.best[s.id], s.min); return n; }
+function currentStreak() { // 오늘이나 어제까지 이어진 오늘의 도전 연속 일수(끊겼으면 0)
+  const k = progress.streak; if (!k || !k.last) return 0;
+  const d = todayKey(); return (k.last === d || k.last === shiftDay(d, -1)) ? (k.n || 0) : 0;
+}
+function myProfile() {
+  const me = ensureMe();
+  return { pid: me.pid, an: me.an, num: me.num, lv: Object.keys(progress.completed).filter(id => STAGE_INDEX.has(id)).length,
+    st: totalStars(), qb: (progress.quick && progress.quick.best) || 0, sk: currentStreak(), day: dayNum() };
+}
+const encProfile = p => p.pid + padB36(p.an, 1) + padB36(p.num, 2) + padB36(p.lv, 3) + padB36(p.st, 3) + padB36(p.qb, 2) + padB36(p.sk, 2) + padB36(p.day, 3);
+function decProfile(x) {
+  if (!x || x.length !== PROFILE_LEN || !/^[0-9a-z]+$/.test(x)) return null;
+  const n = (a, b) => parseInt(x.slice(a, b), 36);
+  const p = { pid: x.slice(0, 5), an: n(5, 6), num: n(6, 8), lv: n(8, 11), st: n(11, 14), qb: n(14, 16), sk: n(16, 18), day: n(18, 21) };
+  if (p.an >= ANIMALS.length || p.num > 99 || p.lv > STAGES.length || p.st > STAGES.length * 3) return null;
+  return p;
+}
+const playerName = p => ANIMALS[p.an] + ' ' + t('an' + p.an) + ' #' + p.num;
+const friendsOf = () => progress.friends || (progress.friends = {});
+// 받은 도전장의 프로필을 친구 목록에 반영. 새 친구면 true
+function addFriend(p) {
+  if (!p || p.pid === ensureMe().pid) return false;
+  const F = friendsOf(), old = F[p.pid];
+  if (old && old.day > p.day) return false; // 예전에 받은 링크를 다시 열었으면 더 최신 기록을 지킨다
+  F[p.pid] = Object.assign({ w: 0, l: 0 }, old || {}, { an: p.an, num: p.num, lv: p.lv, st: p.st, qb: p.qb, sk: p.sk, day: p.day });
+  const ks = Object.keys(F);
+  if (ks.length > 100) ks.sort((a, b) => F[a].day - F[b].day).slice(0, ks.length - 100).forEach(k => delete F[k]);
+  saveProgress(progress);
+  return !old;
+}
 const chRecords = () => progress.challenges || (progress.challenges = {});
 function chMark(id, rec) { // 기기에 남기는 도전 기록(같은 도전장 다시 풀기 방지) — 최근 100개만
   const r = chRecords(); r[id] = rec;
@@ -1844,6 +1903,7 @@ function createChallenge() {
 function acceptChallenge(raw) {
   const ch = typeof raw === 'string' ? decodeChallenge(raw) : raw;
   if (!ch) { openChallenge(t('ch_bad_code')); return; }
+  addFriend(ch.from); // 코드를 붙여 넣어 받은 경우도 친구 목록에
   try { if (/ch=/.test(location.hash)) history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
   const rec = chRecords()[ch.id];
   if (rec && rec.mine) { G.chIncoming = null; openChallenge(chTag(ch.id) + ' · ' + t('ch_mine')); return; }
@@ -1852,7 +1912,7 @@ function acceptChallenge(raw) {
   chMark(ch.id, { m: -1 });
   closeChallenge();
   logEvent('ch_accept');
-  startChallengePlay({ stage: ch.stage, role: 'reply', id: ch.id, opp: ch.moves });
+  startChallengePlay({ stage: ch.stage, role: 'reply', id: ch.id, opp: ch.moves, from: ch.from });
 }
 function startChallengePlay(ch) {
   loadStage(progress.last || 0, null, ch.stage);
@@ -1877,6 +1937,12 @@ function endChallenge(success) {
   if (!ch || ch.done) return;
   ch.done = true; ch.outOfMoves = !success && movesLeft() <= 0;
   const r = chRecords()[ch.id]; if (r) { r.m = me; saveProgress(progress); }
+  // 받은 도전장이면 그 친구와의 맞대결 기록(승·패)을 남긴다
+  if (ch.role === 'reply' && ch.from && friendsOf()[ch.from.pid]) {
+    const opp = ch.opp, res = me < 0 && opp < 0 ? 0 : me < 0 ? -1 : opp < 0 ? 1 : Math.sign(opp - me);
+    const f = friendsOf()[ch.from.pid]; if (res > 0) f.w = (f.w || 0) + 1; else if (res < 0) f.l = (f.l || 0) + 1;
+    saveProgress(progress);
+  }
   logEvent('ch_end', { role: ch.role, ok: success });
   G.animating = true;
   clearTimeout(G.winTimer);
@@ -1938,6 +2004,49 @@ async function shareChallenge() {
   try { await navigator.clipboard.writeText(text); msg.textContent = t('share_copied') + '\n' + tail; }
   catch (e) { msg.textContent = text; }
 }
+let frSort = 'lv', frRemoveArm = null;
+const FR_SORTS = [['lv', 'fr_sort_level'], ['st', 'fr_sort_stars'], ['qb', 'fr_sort_quick'], ['sk', 'fr_sort_streak']];
+function openFriends() { closeChallenge(); frRemoveArm = null; $('#frPick').hidden = true; renderFriends(); $('#friends').classList.add('show'); logEvent('friends_open'); }
+function closeFriends() { $('#friends').classList.remove('show'); }
+function renderFriends(msg) {
+  const me = myProfile();
+  $('#frMe').textContent = playerName(me);
+  $('#frSorts').innerHTML = FR_SORTS.map(([k, lb]) => '<button class="fr-sort' + (k === frSort ? ' sel' : '') + '" data-k="' + k + '">' + t(lb) + '</button>').join('');
+  const F = friendsOf(), today = dayNum();
+  const rows = [Object.assign({ me: true }, me)].concat(Object.keys(F).map(pid => Object.assign({ pid }, F[pid])));
+  rows.sort((a, b) => (b[frSort] - a[frSort]) || (b.lv - a.lv) || (a.me ? -1 : b.me ? 1 : 0));
+  const val = r => frSort === 'st' ? '★ ' + r.st : frSort === 'qb' ? '⚡ ' + r.qb : frSort === 'sk' ? '🔥 ' + r.sk : String(r.lv);
+  const ago = d => today - d <= 0 ? t('fr_today') : t('fr_days', { n: today - d });
+  $('#frList').innerHTML = rows.map((r, k) => {
+    const sub = r.me ? '' : ago(r.day) + ((r.w || r.l) ? ' · ' + t('fr_record', { w: r.w || 0, l: r.l || 0 }) : '');
+    return '<div class="fr-row' + (r.me ? ' me' : '') + '">'
+      + '<span class="fr-rank">' + (k < 3 ? ['🥇', '🥈', '🥉'][k] : k + 1) + '</span>'
+      + '<span class="fr-name"><b>' + playerName(r) + (r.me ? ' <em>' + t('fr_you') + '</em>' : '') + '</b>' + (sub ? '<small>' + sub + '</small>' : '') + '</span>'
+      + '<span class="fr-val">' + val(r) + '</span>'
+      + (r.me ? '' : '<button class="fr-x" data-pid="' + r.pid + '" aria-label="remove">✕</button>') + '</div>';
+  }).join('');
+  $('#frEmpty').hidden = rows.length > 1;
+  $('#frMsg').textContent = msg || '';
+}
+function frListClick(e) {
+  const sb = e.target.closest('.fr-sort'); if (sb) { frSort = sb.dataset.k; frRemoveArm = null; renderFriends(); return; }
+  const x = e.target.closest('.fr-x'); if (!x) return;
+  if (frRemoveArm !== x.dataset.pid) { frRemoveArm = x.dataset.pid; renderFriends(t('fr_remove_confirm')); return; } // 실수 방지: 두 번 눌러야 지움
+  delete friendsOf()[x.dataset.pid]; frRemoveArm = null; saveProgress(progress); renderFriends();
+}
+function toggleNamePick() {
+  const box = $('#frPick');
+  if (!box.hidden) { box.hidden = true; return; }
+  const me = ensureMe();
+  box.innerHTML = '<div class="bk-label">' + t('fr_name_pick') + '</div>'
+    + ANIMALS.map((a, i) => '<button class="fr-an' + (i === me.an ? ' sel' : '') + '" data-an="' + i + '" title="' + t('an' + i) + '">' + a + '</button>').join('');
+  box.hidden = false;
+}
+function pickAnimal(e) {
+  const b = e.target.closest('.fr-an'); if (!b) return;
+  ensureMe().an = +b.dataset.an; saveProgress(progress);
+  $('#frPick').hidden = true; renderFriends();
+}
 function leaveChallenge() {
   G.chResult = null;
   loadStage(progress.last || 0);
@@ -1948,10 +2057,11 @@ function checkIncomingChallenge() {
   if (!m) return;
   const ch = decodeChallenge(m[1]);
   if (!ch) { openChallenge(t('ch_bad_code')); return; }
+  const isNew = addFriend(ch.from);
   const rec = chRecords()[ch.id];
   if (rec) { acceptChallenge(ch); return; } // 이미 푼(또는 내가 만든) 도전장 → 비교 결과·안내만
   G.chIncoming = ch;
-  openChallenge();
+  openChallenge(isNew ? t('fr_new_friend', { name: playerName(ch.from) }) : '');
 }
 
 function onWin() {
@@ -2592,6 +2702,13 @@ $('#chMake').addEventListener('click', createChallenge);
 $('#chAccept').addEventListener('click', () => acceptChallenge($('#chCode').value));
 $('#chIncomingGo').addEventListener('click', () => acceptChallenge(G.chIncoming));
 $('#chClose').addEventListener('click', closeChallenge);
+$('#chFriends').addEventListener('click', openFriends);
+$('#frClose').addEventListener('click', closeFriends);
+$('#frBackdrop').addEventListener('click', closeFriends);
+$('#frList').addEventListener('click', frListClick);
+$('#frSorts').addEventListener('click', frListClick);
+$('#frChange').addEventListener('click', toggleNamePick);
+$('#frPick').addEventListener('click', pickAnimal);
 $('#chBackdrop').addEventListener('click', closeChallenge);
 $('#btnStages').addEventListener('click', openDrawer);
 // daily challenge
@@ -2790,6 +2907,7 @@ async function boot() {
   if (window.AdsManager) AdsManager.loadingStop(); // 로딩 끝 → 이어서 loadStage가 gameplayStart
   loadStage(progress.last || 0);        // start at last played stage
   checkIncomingChallenge();             // 링크(#ch=코드)로 받은 도전장이 있으면 도전장 창
+  window.addEventListener('hashchange', checkIncomingChallenge); // 게임이 열린 채로 새 도전장 링크를 연 경우
   // 첫 플레이 안내는 규칙 창 대신 1레벨 화면 안에서 손가락으로(startCoach, loadStage에서 호출)
   trySilentCloudRestore(); // 백그라운드: 이전에 연결한 계정이면 조용히 최신 진행도로 맞춘다
   booted = true;
