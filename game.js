@@ -417,6 +417,15 @@ function worldGold(w) {
 }
 // 결과 창: 이 월드의 다음 스티커까지 몇 판 남았는지 그림과 점으로(글자 없이 — 모든 언어 공통).
 // 스티커를 다 모은 월드는 골드 스티커(모든 판 ★★★)까지의 개수를 보여 준다
+// 결과 창이 뜬 뒤 별을 하나씩 '톡' 켠다(별마다 한 음씩 올라가는 소리)
+function revealStars() {
+  const b = overlay.querySelector('.badge.stars'); if (!b) return;
+  const tier = +b.dataset.tier || 0, st = b.querySelectorAll('.st');
+  for (let k = 0; k < tier; k++) setTimeout(() => {
+    if (!overlay.classList.contains('show')) return;
+    st[k].classList.add('on', 'lit'); Sound.star(k); haptic(8);
+  }, 180 + k * 230);
+}
 function renderResultProgress(w, justGot) {
   const el = $('#resultProg'), page = ALBUM[w], earned = worldStickers(w);
   if (worldGold(w)) { el.hidden = true; return; }
@@ -443,100 +452,222 @@ function albumEarned() {
 
 /* ---------- sound (WebAudio synth, no asset files) + haptics ---------- */
 const Sound = (() => {
-  let ctx = null, master = null, echo = null;
+  /* 소리는 모두 즉석 합성(음원 파일 없음, 용량 0). 진짜 악기처럼 들리도록
+   * 배음·타격 잡음·공간 울림(리버브)을 섞는다. 효과음은 세 가지 스타일(마림바·유리 종·칼림바) 중 고르고,
+   * 배경음악은 두 곡(잔잔한 로파이·경쾌한 여행)이 월드마다 번갈아 나온다.
+   * 모든 소리는 master를 지나므로 광고 중·사이트 음소거가 그대로 적용된다. */
+  let ctx = null, master = null, verb = null, noiseBuf = null;
   // 광고 중 음소거와 포털 사이트 음소거는 따로 기억 — 광고가 끝나도 사이트가 음소거면 계속 조용히
   let adMuted = false, siteMuted = false;
-  const level = () => (adMuted || siteMuted ? 0 : 0.85);
+  const level = () => (adMuted || siteMuted ? 0 : 0.8);
   const applyLevel = () => { if (master) master.gain.value = level(); };
   const ready = () => {
     if (!ctx) {
       try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { ctx = false; }
       if (ctx) {
-        master = ctx.createGain(); master.gain.value = level(); master.connect(ctx.destination);
-        // gentle feedback delay for warmth/space
-        const d = ctx.createDelay(); d.delayTime.value = 0.13;
-        const fb = ctx.createGain(); fb.gain.value = 0.24;
-        const wet = ctx.createGain(); wet.gain.value = 0.9;
-        d.connect(fb); fb.connect(d); d.connect(wet); wet.connect(master);
-        echo = d;
+        // 여러 소리가 겹쳐도 찢어지지 않게 살짝 눌러 주는 압축기
+        const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -16; comp.ratio.value = 3;
+        master = ctx.createGain(); master.gain.value = level(); master.connect(comp); comp.connect(ctx.destination);
+        // 리버브: 점점 줄어드는 잡음으로 만든 2초짜리 울림
+        verb = ctx.createConvolver();
+        const n = Math.floor(ctx.sampleRate * 2), b = ctx.createBuffer(2, n, ctx.sampleRate);
+        for (let c = 0; c < 2; c++) { const d = b.getChannelData(c); for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 3); }
+        verb.buffer = b;
+        const vg = ctx.createGain(); vg.gain.value = 0.4; verb.connect(vg); vg.connect(master);
+        noiseBuf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
+        const nd = noiseBuf.getChannelData(0); for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
       }
     }
     if (ctx && ctx.state === 'suspended') ctx.resume();
     return ctx;
   };
-  // one enveloped oscillator voice, optional pitch glide + echo send
-  function voice(freq, dur, o = {}) {
-    const c = ready(); if (!c) return;
-    const { type = 'sine', gain = 0.15, when = 0, attack = 0.008, glide = 0, wet = 0.4, dest = master } = o;
-    const t = c.currentTime + when;
-    const osc = c.createOscillator(), g = c.createGain();
-    osc.type = type; osc.frequency.setValueAtTime(freq, t);
-    if (glide) osc.frequency.exponentialRampToValueAtTime(Math.max(1, glide), t + dur);
+  const send = (node, wet, dest) => { node.connect(dest || master); if (wet) { const s = ctx.createGain(); s.gain.value = wet; node.connect(s); s.connect(verb); } };
+  // 한 음: 짧게 올라갔다 자연스럽게 사라지는 오실레이터(선택적으로 음높이 미끄러짐)
+  function osc(f, t, dur, o = {}) {
+    const x = ctx.createOscillator(), g = ctx.createGain();
+    x.type = o.type || 'sine'; x.frequency.setValueAtTime(f, t);
+    if (o.glide) x.frequency.exponentialRampToValueAtTime(o.glide, t + dur);
+    if (o.detune) x.detune.value = o.detune;
     g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(gain, t + attack);
+    g.gain.exponentialRampToValueAtTime(o.gain || 0.1, t + (o.a || 0.004));
     g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    osc.connect(g); g.connect(dest);
-    if (echo && wet) { const s = c.createGain(); s.gain.value = gain * wet; g.connect(s); s.connect(echo); }
-    osc.start(t); osc.stop(t + dur + 0.05);
+    x.connect(g); send(g, o.wet, o.dest); x.start(t); x.stop(t + dur + 0.05);
   }
-  const on = () => progress.settings && progress.settings.sound !== false;
-  /* 배경 음악: 음원 없이 즉석 합성(용량 0). 잔잔한 화음(C–Am–F–G) + 가끔 마림바 멜로디.
-   * master를 거치므로 광고 중·사이트 음소거가 그대로 적용된다. 탭을 벗어나면 오디오 전체를 멈춘다. */
-  const BEAT = 60 / 76;
-  const CHORDS = [[261.63, 329.63, 392.0], [220.0, 261.63, 329.63], [174.61, 220.0, 261.63], [196.0, 246.94, 293.66]];
-  const MEL = [[523.25, 659.25, 783.99, 1046.5], [440.0, 523.25, 659.25, 880.0], [349.23, 440.0, 523.25, 698.46], [392.0, 493.88, 587.33, 783.99]];
-  let music = null;
-  const musicOn = () => progress.settings && progress.settings.music !== false;
-  const rnd = n => { let x = Math.imul(n ^ 0x5bd1e995, 2654435761) >>> 0; x = (x ^ (x >>> 15)) >>> 0; return (x % 1000) / 1000; }; // 같은 박자엔 같은 음
-  function beat(step, at) {
-    const c = ctx, w = Math.max(0, at - c.currentTime), bar = Math.floor(step / 4) % 4, d = music.g;
-    if (step % 4 === 0) {
-      CHORDS[bar].forEach(f => voice(f, BEAT * 4.2, { type: 'sine', gain: 0.018, attack: 0.9, when: w, wet: 0.5, dest: d }));
-      voice(CHORDS[bar][0] / 2, BEAT * 3.5, { type: 'triangle', gain: 0.026, attack: 0.05, when: w, wet: 0.2, dest: d });
-    }
-    if (rnd(step) < 0.55) {
-      const f = MEL[bar][Math.floor(rnd(step + 977) * 4)];
-      voice(f, 0.55, { type: 'sine', gain: 0.03, attack: 0.004, when: w, wet: 0.7, dest: d });
-      voice(f * 2, 0.2, { type: 'sine', gain: 0.007, attack: 0.004, when: w, wet: 0.4, dest: d });
-    }
-    if (step % 8 === 6 && rnd(step + 31) < 0.6) { // 반 박자 뒤 꾸밈음
-      voice(MEL[bar][2], 0.4, { type: 'sine', gain: 0.02, attack: 0.004, when: w + BEAT / 2, wet: 0.7, dest: d });
-    }
+  // 걸러낸 잡음: 바람(휙)·나무 두드림·찰랑임
+  function noise(t, dur, o = {}) {
+    const s = ctx.createBufferSource(); s.buffer = noiseBuf;
+    const f = ctx.createBiquadFilter(); f.type = o.type || 'bandpass'; f.frequency.setValueAtTime(o.f || 1500, t);
+    if (o.f2) f.frequency.exponentialRampToValueAtTime(o.f2, t + dur);
+    f.Q.value = o.q || 1;
+    const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(o.gain || 0.05, t + (o.a || 0.003));
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    s.connect(f); f.connect(g); send(g, o.wet, o.dest); s.start(t, Math.random() * 0.15); s.stop(t + dur + 0.05);
   }
-  function schedule() {
-    if (!music || !ctx) return;
-    while (music.next < ctx.currentTime + 0.5) { beat(music.step, music.next); music.next += BEAT; music.step++; }
+  // 악기 셋: 마림바(나무 건반: 기음 + 4배 배음 + 타격음), 종(어긋난 배음이 길게), 칼림바(줄을 뜯는 소리, Karplus-Strong)
+  function marimba(f, t, o = {}) {
+    const g = o.gain || 0.16, d = o.dest;
+    osc(f, t, o.dur || 0.9, { gain: g, wet: o.wet == null ? 0.25 : o.wet, dest: d });
+    osc(f * 4, t, 0.12, { gain: g * 0.35, wet: 0.1, dest: d });
+    osc(f * 10, t, 0.03, { gain: g * 0.12, dest: d });
+    noise(t, 0.02, { f: Math.min(f * 6, 12000), q: 3, gain: g * 0.25, dest: d });
   }
+  const BELL = [[1, 1, 1.6], [2.76, 0.45, 0.9], [5.4, 0.25, 0.5], [8.93, 0.12, 0.3]];
+  function bell(f, t, o = {}) {
+    const g = o.gain || 0.1;
+    BELL.forEach(p => osc(f * p[0] * (1 + (Math.random() - 0.5) * 0.002), t, (o.dur || 1.6) * p[2],
+      { gain: g * p[1], a: 0.002, wet: o.wet == null ? 0.55 : o.wet, dest: o.dest }));
+  }
+  const plucks = {};
+  function pluckBuf(f) {
+    const k = Math.round(f); if (plucks[k]) return plucks[k];
+    const sr = ctx.sampleRate, len = Math.floor(sr * 1.4), b = ctx.createBuffer(1, len, sr), d = b.getChannelData(0);
+    const N = Math.max(2, Math.round(sr / f)), r = new Float32Array(N);
+    for (let i = 0; i < N; i++) r[i] = Math.random() * 2 - 1;
+    for (let i = 0, p = 0; i < len; i++) { const nx = (p + 1) % N; d[i] = r[p]; r[p] = (r[p] + r[nx]) * 0.4985; p = nx; }
+    return (plucks[k] = b);
+  }
+  function pluck(f, t, o = {}) {
+    const s = ctx.createBufferSource(); s.buffer = pluckBuf(f);
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = o.lp || 3200;
+    const g = ctx.createGain(); g.gain.value = o.gain || 0.25;
+    s.connect(lp); lp.connect(g); send(g, o.wet == null ? 0.3 : o.wet, o.dest); s.start(t);
+    osc(f, t, 0.5, { gain: (o.gain || 0.25) * 0.25, dest: o.dest });
+  }
+
   const SEL = [523.25, 587.33, 659.25, 783.99];               // C5 D5 E5 G5 by piece
   const LOCK = [523.25, 659.25, 783.99, 987.77, 1174.66];      // rising as pieces land
-  return {
-    // 마림바처럼 둥근 소리: 사인 기음 + 옅은 2배음, 짧게 감쇠 (거친 톱니/사각파는 쓰지 않는다)
-    selectAt(i) { if (on()) { const f = SEL[i % SEL.length]; voice(f, 0.16, { type: 'sine', gain: 0.13, attack: 0.003, wet: 0.3 }); voice(f * 2, 0.08, { type: 'sine', gain: 0.035, attack: 0.003, wet: 0.2 }); } },
-    select() { this.selectAt(0); },
-    swap() { if (on()) { voice(587.33, 0.09, { type: 'sine', gain: 0.08, glide: 784, wet: 0.35 }); voice(784, 0.1, { type: 'sine', gain: 0.07, when: 0.05, glide: 587.33, wet: 0.35 }); } },
-    move() { if (on()) { voice(392, 0.16, { type: 'sine', gain: 0.12, glide: 523.25, wet: 0.45 }); voice(784, 0.09, { type: 'triangle', gain: 0.03, when: 0.03, wet: 0.3 }); } },
-    // 막힘: 나무 블록을 '톡' 두드린 소리 — 틀렸다는 경고음이 아니라 부딪힘 느낌
-    // 방향/회전 칸: 짧게 '휙' 올라가는 소리
-    tile() { if (on()) { voice(660, 0.12, { type: 'sine', gain: 0.09, glide: 990, wet: 0.5 }); voice(1320, 0.07, { type: 'sine', gain: 0.025, when: 0.04, wet: 0.4 }); } },
-    blocked() { if (on()) { voice(240, 0.09, { type: 'sine', gain: 0.12, attack: 0.002, glide: 170, wet: 0.15 }); voice(480, 0.04, { type: 'triangle', gain: 0.03, attack: 0.002, wet: 0.05 }); } },
-    lock(step) { if (on()) { const f = LOCK[Math.min(step, LOCK.length - 1)]; voice(f, 0.55, { type: 'sine', gain: 0.18, attack: 0.003, wet: 0.9 }); voice(f * 2, 0.35, { type: 'triangle', gain: 0.05, when: 0.004, wet: 0.6 }); } },
-    win() { if (on()) [523.25, 659.25, 783.99, 1046.5, 1318.5].forEach((f, i) => voice(f, 0.5, { type: 'triangle', gain: 0.16, when: i * 0.085, wet: 0.8 })); },
-    sticker() { if (on()) [784, 988, 1319, 1568].forEach((f, i) => voice(f, 0.4, { type: 'sine', gain: 0.14, when: i * 0.07, wet: 0.9 })); },
-    unlock() { ready(); this.startMusic(); }, // call on first user gesture
-    startMusic() {
-      if (music || !musicOn()) return;
-      const c = ready(); if (!c) return;
-      const g = c.createGain(); g.gain.setValueAtTime(0.0001, c.currentTime);
-      g.gain.exponentialRampToValueAtTime(1, c.currentTime + 2.5); // 서서히 들어오게
-      g.connect(master);
-      music = { g, next: c.currentTime + 0.15, step: 0, timer: setInterval(schedule, 150) };
-      schedule();
+  const STAR = [783.99, 987.77, 1318.5];                       // 결과 창 별 3개
+  const ARP = [523.25, 659.25, 783.99, 1046.5];
+  // 효과음 스타일. 막힘은 경고음이 아니라 나무를 '톡' 친 느낌, 이동은 바람이 '휙'
+  const STYLES = {
+    marimba: {
+      select: (t, i) => marimba(SEL[i % 4], t, { gain: 0.17, dur: 0.5 }),
+      swap: t => { marimba(587.33, t, { gain: 0.06, dur: 0.2 }); marimba(783.99, t + 0.05, { gain: 0.06, dur: 0.2 }); },
+      move: t => { noise(t, 0.22, { f: 500, f2: 2400, q: 0.8, gain: 0.05, wet: 0.2 }); marimba(392, t + 0.05, { gain: 0.1, dur: 0.4 }); },
+      tile: t => { noise(t, 0.18, { f: 900, f2: 4000, q: 1.2, gain: 0.04, wet: 0.3 }); marimba(880, t + 0.04, { gain: 0.08, dur: 0.35 }); },
+      blocked: t => { noise(t, 0.05, { f: 1800, q: 4, gain: 0.14 }); osc(150, t, 0.12, { gain: 0.16, a: 0.002, glide: 90 }); },
+      lock: (t, k) => { const f = LOCK[Math.min(k, 4)]; marimba(f, t, { gain: 0.2, dur: 1.1, wet: 0.4 }); bell(f * 2, t + 0.02, { gain: 0.03, dur: 0.8 }); },
+      win: t => {
+        ARP.forEach((f, i) => marimba(f, t + i * 0.09, { gain: 0.18, dur: 1, wet: 0.4 }));
+        ARP.forEach(f => marimba(f, t + 0.42, { gain: 0.09, dur: 1.6, wet: 0.6 }));
+        [2093, 2637, 3136].forEach((f, i) => bell(f, t + 0.45 + i * 0.06, { gain: 0.025 }));
+      },
+      sticker: t => { noise(t, 0.5, { f: 3000, f2: 9000, q: 0.7, gain: 0.02, wet: 0.6 }); [1046.5, 1318.5, 1568, 2093, 2637].forEach((f, i) => bell(f, t + i * 0.06, { gain: 0.05, dur: 1.2 })); },
+      star: (t, k) => { marimba(STAR[k], t, { gain: 0.14, dur: 0.8, wet: 0.45 }); bell(STAR[k] * 2, t, { gain: 0.025, dur: 0.6 }); },
+      click: t => marimba(1046.5, t, { gain: 0.05, dur: 0.12, wet: 0.05 }),
     },
-    stopMusic() {
-      if (!music) return;
-      const m = music; music = null; clearInterval(m.timer);
-      try { m.g.gain.cancelScheduledValues(ctx.currentTime); m.g.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.15); } catch (e) {}
-      setTimeout(() => { try { m.g.disconnect(); } catch (e) {} }, 900);
+    bell: {
+      select: (t, i) => bell(SEL[i % 4] * 2, t, { gain: 0.07, dur: 0.6, wet: 0.4 }),
+      swap: t => { bell(1174.66, t, { gain: 0.03, dur: 0.3 }); bell(1568, t + 0.05, { gain: 0.03, dur: 0.3 }); },
+      move: t => { noise(t, 0.25, { f: 1200, f2: 5000, q: 1.2, gain: 0.035, wet: 0.4 }); bell(784, t + 0.06, { gain: 0.04, dur: 0.5 }); },
+      tile: t => { noise(t, 0.2, { f: 2000, f2: 7000, q: 1.5, gain: 0.03, wet: 0.5 }); bell(1318.5, t + 0.04, { gain: 0.04, dur: 0.5 }); },
+      blocked: t => { osc(330, t, 0.08, { type: 'triangle', gain: 0.09, a: 0.002, glide: 260 }); noise(t, 0.03, { f: 2500, q: 5, gain: 0.06 }); },
+      lock: (t, k) => bell(LOCK[Math.min(k, 4)] * 2, t, { gain: 0.11, dur: 1.8 }),
+      win: t => { [1046.5, 1318.5, 1568, 2093].forEach((f, i) => bell(f, t + i * 0.08, { gain: 0.1, dur: 2 })); noise(t + 0.3, 0.8, { f: 4000, f2: 10000, q: 0.6, gain: 0.02, wet: 0.8 }); },
+      sticker: t => [1568, 2093, 2637, 3136, 4186].forEach((f, i) => bell(f, t + i * 0.05, { gain: 0.06, dur: 1.4 })),
+      star: (t, k) => bell(STAR[k] * 2, t, { gain: 0.08, dur: 1.2 }),
+      click: t => bell(2093, t, { gain: 0.018, dur: 0.15, wet: 0.1 }),
+    },
+    kalimba: {
+      select: (t, i) => pluck(SEL[i % 4], t, { gain: 0.3 }),
+      swap: t => { pluck(587.33, t, { gain: 0.1 }); pluck(783.99, t + 0.05, { gain: 0.1 }); },
+      move: t => { noise(t, 0.2, { f: 600, f2: 2000, q: 0.9, gain: 0.04, wet: 0.2 }); pluck(392, t + 0.05, { gain: 0.18, lp: 2200 }); },
+      tile: t => { noise(t, 0.16, { f: 1000, f2: 3500, q: 1.1, gain: 0.035, wet: 0.3 }); pluck(880, t + 0.04, { gain: 0.16 }); },
+      blocked: t => { noise(t, 0.04, { f: 1400, q: 5, gain: 0.12 }); osc(160, t, 0.1, { gain: 0.14, a: 0.002, glide: 100 }); },
+      lock: (t, k) => { const f = LOCK[Math.min(k, 4)]; pluck(f, t, { gain: 0.32, wet: 0.45 }); pluck(f * 2, t + 0.01, { gain: 0.08 }); },
+      win: t => { [523.25, 659.25, 783.99, 1046.5, 1318.5].forEach((f, i) => pluck(f, t + i * 0.07, { gain: 0.3, wet: 0.45 })); [523.25, 783.99, 1046.5].forEach(f => pluck(f, t + 0.45, { gain: 0.18, wet: 0.6 })); },
+      sticker: t => { [1046.5, 1318.5, 1568, 2093].forEach((f, i) => pluck(f, t + i * 0.06, { gain: 0.22, wet: 0.6 })); bell(2637, t + 0.3, { gain: 0.03 }); },
+      star: (t, k) => pluck(STAR[k], t, { gain: 0.28, wet: 0.45 }),
+      click: t => pluck(1318.5, t, { gain: 0.07, lp: 2500, wet: 0.05 }),
+    },
+  };
+  const STYLE_NAMES = ['marimba', 'bell', 'kalimba'];
+  const on = () => progress.settings && progress.settings.sound !== false;
+  const style = () => STYLES[progress.settings && progress.settings.sfx] || STYLES.marimba;
+  // 효과음 하나 내기: 소리가 켜져 있을 때만, 지금 시각 바로 다음에
+  const fx = (name, arg) => { if (!on() || !ready()) return; try { style()[name](ctx.currentTime + 0.01, arg); } catch (e) {} };
+
+  /* ---------- 배경 음악 ----------
+   * 두 곡을 박자 단위로 즉석 연주. 같은 박자엔 같은 음(rnd)이라 반복돼도 '곡'처럼 들린다. */
+  const rnd = n => { let x = Math.imul(n ^ 0x5bd1e995, 2654435761) >>> 0; x = (x ^ (x >>> 15)) >>> 0; return (x % 1000) / 1000; };
+  const TRACKS = [
+    { // 0: 잔잔한 로파이 — 부드러운 7화음 + 낮은 베이스 + 가끔 마림바, 뒷박에 옅은 셰이커
+      bpm: 72, beat(s, t, b, d) {
+        const CH = [[174.61, 220, 261.63, 329.63], [164.81, 196, 246.94, 293.66], [146.83, 174.61, 220, 261.63], [130.81, 164.81, 196, 246.94]];
+        const PEN = [523.25, 587.33, 659.25, 783.99, 880, 1046.5], bar = Math.floor(s / 8) % 4;
+        if (s % 8 === 0) {
+          CH[bar].forEach(f => [-4, 4].forEach(dt => {
+            const x = ctx.createOscillator(), g = ctx.createGain(), lp = ctx.createBiquadFilter();
+            x.type = 'triangle'; x.frequency.value = f; x.detune.value = dt; lp.type = 'lowpass'; lp.frequency.value = 900;
+            g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.012, t + 1.2); g.gain.exponentialRampToValueAtTime(0.0001, t + b * 4.3);
+            x.connect(lp); lp.connect(g); send(g, 0.5, d); x.start(t); x.stop(t + b * 4.5);
+          }));
+          osc(CH[bar][0] / 2, t, b * 1.8, { gain: 0.06, a: 0.02, dest: d });
+          osc(CH[bar][0] / 2, t + b * 2, b * 1.8, { gain: 0.045, a: 0.02, dest: d });
+        }
+        if (s % 2 === 1) noise(t, 0.05, { type: 'highpass', f: 7000, gain: 0.012, dest: d });
+        if (rnd(s + 3) < 0.42) marimba(PEN[Math.floor(rnd(s + 71) * PEN.length)], t, { gain: 0.07, dur: 0.7, wet: 0.45, dest: d });
+      },
+    },
+    { // 1: 경쾌한 여행 — 뜯는 기타 화음(엇박) + 부드러운 킥 + 셰이커 + 종 멜로디
+      bpm: 96, beat(s, t, b, d) {
+        const CH = [[196, 246.94, 293.66, 392], [293.66, 369.99, 440, 587.33], [164.81, 246.94, 329.63, 392], [261.63, 329.63, 392, 523.25]];
+        const MEL = [[587.33, 659.25, 783.99, 987.77], [587.33, 739.99, 880, 1174.66], [493.88, 659.25, 783.99, 987.77], [523.25, 659.25, 783.99, 1046.5]];
+        const bar = Math.floor(s / 8) % 4, q = s % 8;
+        if (q === 0 || q === 3 || q === 6) CH[bar].forEach((f, i) => pluck(f, t + i * 0.012, { gain: 0.09, lp: 2600, wet: 0.25, dest: d }));
+        if (q === 0 || q === 4) osc(110, t, 0.25, { gain: 0.18, a: 0.002, glide: 45, dest: d });
+        if (q === 0) osc(CH[bar][0] / 2, t, b * 1.9, { gain: 0.05, dest: d });
+        noise(t, 0.04, { type: 'highpass', f: 6500, gain: q % 2 ? 0.008 : 0.014, dest: d });
+        if (q === 2 || q === 5 || (q === 7 && rnd(s) < 0.5)) bell(MEL[bar][Math.floor(rnd(s + 11) * 4)], t, { gain: 0.025, dur: 0.9, wet: 0.4, dest: d });
+      },
+    },
+  ];
+  let music = null, track = 0;
+  const musicOn = () => progress.settings && progress.settings.music !== false;
+  function schedule() {
+    if (!music || !ctx) return;
+    const tr = TRACKS[music.track], b = 60 / tr.bpm, step = b / 2; // 8분음표 단위
+    while (music.next < ctx.currentTime + 0.4) { try { tr.beat(music.s, music.next, b, music.g); } catch (e) {} music.next += step; music.s++; }
+  }
+  function startTrack(fadeIn) {
+    const c = ready(); if (!c) return;
+    const g = c.createGain(); g.gain.setValueAtTime(0.0001, c.currentTime);
+    g.gain.exponentialRampToValueAtTime(1, c.currentTime + fadeIn); // 서서히 들어오게
+    g.connect(master);
+    music = { g, track, next: c.currentTime + 0.15, s: 0, timer: setInterval(schedule, 120) };
+    schedule();
+  }
+  function fadeOut(m) {
+    clearInterval(m.timer);
+    try { m.g.gain.cancelScheduledValues(ctx.currentTime); m.g.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.25); } catch (e) {}
+    setTimeout(() => { try { m.g.disconnect(); } catch (e) {} }, 1600);
+  }
+
+  return {
+    styles: STYLE_NAMES,
+    selectAt(i) { fx('select', i); },
+    select() { fx('select', 0); },
+    swap() { fx('swap'); },
+    move() { fx('move'); },
+    tile() { fx('tile'); },
+    blocked() { fx('blocked'); },
+    lock(step) { fx('lock', step); },
+    win() { fx('win'); },
+    sticker() { fx('sticker'); },
+    star(k) { fx('star', k); },   // 결과 창 별이 하나씩 켜질 때(0,1,2)
+    click() { fx('click'); },     // 버튼 누를 때 작게
+    // 스타일을 바꾸면 바로 들려준다
+    preview() { fx('select', 0); setTimeout(() => fx('lock', 2), 220); },
+    unlock() { ready(); this.startMusic(); }, // call on first user gesture
+    startMusic() { if (music || !musicOn()) return; startTrack(2.5); },
+    stopMusic() { if (!music) return; const m = music; music = null; fadeOut(m); },
+    // 월드에 맞는 곡(번갈아). 연주 중이면 부드럽게 바꾼다
+    setTrack(n) {
+      n = ((n % TRACKS.length) + TRACKS.length) % TRACKS.length;
+      if (n === track) return;
+      track = n;
+      if (music) { const m = music; music = null; fadeOut(m); startTrack(2); }
     },
     // 탭/앱을 벗어나면 소리 전체 정지, 돌아오면 재개(광고·사이트 음소거 상태는 그대로)
     setHidden(h) {
@@ -561,23 +692,32 @@ function confettiBurst() {
   if (!cv) return;
   const ctx = cv.getContext('2d');
   const W = cv.width = cv.clientWidth, H = cv.height = cv.clientHeight;
-  const colors = ['#e8743b', '#2f8f83', '#7b6cd9', '#c0497b', '#e8a45c'];
-  const parts = Array.from({ length: 90 }, () => ({
-    x: W / 2 + (Math.random() - 0.5) * 60, y: H * 0.35,
-    vx: (Math.random() - 0.5) * 9, vy: -6 - Math.random() * 8,
-    s: 5 + Math.random() * 7, c: colors[(Math.random() * colors.length) | 0],
-    a: Math.random() * Math.PI, va: (Math.random() - 0.5) * 0.4, life: 0,
-  }));
+  const colors = ['#e8743b', '#2f8f83', '#7b6cd9', '#c0497b', '#e8a45c', '#f5c518'];
+  // 양옆 아래에서 위로 쏘아 올려 가운데로 쏟아지게 + 종이처럼 뒤집히며(flip) 떨어진다. 모양: 띠·동그라미·별
+  const parts = Array.from({ length: 110 }, (_, k) => {
+    const left = k % 2 === 0;
+    return {
+      x: left ? W * 0.12 : W * 0.88, y: H * 0.72,
+      vx: (left ? 1 : -1) * (3 + Math.random() * 6), vy: -11 - Math.random() * 9,
+      s: 6 + Math.random() * 7, c: colors[(Math.random() * colors.length) | 0], shape: k % 7 === 0 ? 2 : k % 3 === 0 ? 1 : 0,
+      a: Math.random() * Math.PI, va: (Math.random() - 0.5) * 0.3, flip: Math.random() * 6, vf: 0.12 + Math.random() * 0.2, life: 0,
+    };
+  });
+  const star = (r) => { ctx.beginPath(); for (let i = 0; i < 10; i++) { const rr = i % 2 ? r * 0.45 : r, an = i * Math.PI / 5 - Math.PI / 2; ctx.lineTo(Math.cos(an) * rr, Math.sin(an) * rr); } ctx.closePath(); ctx.fill(); };
   cv.style.opacity = '1';
   let raf;
   function frame() {
     ctx.clearRect(0, 0, W, H);
     let alive = false;
     for (const p of parts) {
-      p.life++; p.vy += 0.28; p.x += p.vx; p.y += p.vy; p.a += p.va;
+      p.life++; p.vy = Math.min(p.vy + 0.32, 4.2); p.vx *= 0.985; p.x += p.vx + Math.sin(p.life / 9 + p.flip) * 0.6; p.y += p.vy; p.a += p.va; p.flip += p.vf;
       if (p.y < H + 20) alive = true;
-      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.a);
-      ctx.fillStyle = p.c; ctx.fillRect(-p.s / 2, -p.s / 2, p.s, p.s * 0.6);
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.a); ctx.scale(1, Math.cos(p.flip)); // 뒤집히는 종이
+      ctx.globalAlpha = Math.max(0, Math.min(1, (H + 20 - p.y) / 120));
+      ctx.fillStyle = p.c;
+      if (p.shape === 1) { ctx.beginPath(); ctx.arc(0, 0, p.s * 0.38, 0, Math.PI * 2); ctx.fill(); }
+      else if (p.shape === 2) star(p.s * 0.6);
+      else ctx.fillRect(-p.s / 2, -p.s * 0.22, p.s, p.s * 0.44);
       ctx.restore();
     }
     if (alive) raf = requestAnimationFrame(frame);
@@ -959,7 +1099,9 @@ function commitMove() {
   }, 200);
 
   blocked.forEach(i => bumpPiece(i, next[i][2]));
+  squashPieces(G.history[G.history.length - 1], next);
   if (blocked.length) {
+    shakeBoard();
     Sound.blocked(); haptic([12, 30, 12]);
     // 처음 막혀 봤을 때만 규칙을 한 줄로 알려준다(경험하는 순간에 설명)
     if (!progress.tipBlocked) { progress.tipBlocked = true; saveProgress(progress); G.tipMsg = t('tip_blocked'); }
@@ -982,6 +1124,21 @@ function commitMove() {
   }, 360);
 }
 
+// 움직인 조각: 가는 방향으로 살짝 늘어났다 제자리(가로로 가면 가로로, 세로로 가면 세로로)
+function squashPieces(prev, next) {
+  const els = pieceEls();
+  next.forEach((p, i) => {
+    const dx = p[0] - prev[i][0], dy = p[1] - prev[i][1], el = els[i];
+    if (!el || (!dx && !dy)) return;
+    el.style.setProperty('--sx', dx ? 1.12 : 0.9); el.style.setProperty('--sy', dx ? 0.9 : 1.12);
+    el.classList.remove('step'); void el.offsetWidth; el.classList.add('step');
+    setTimeout(() => el.classList.remove('step'), 420);
+  });
+}
+function shakeBoard() {
+  boardEl.classList.remove('shake'); void boardEl.offsetWidth; boardEl.classList.add('shake');
+  setTimeout(() => boardEl.classList.remove('shake'), 300);
+}
 // 막힌 조각: 화살표 방향으로 툭 부딪혔다가 제자리
 function bumpPiece(i, dir) {
   const el = pieceEls()[i]; if (!el) return;
@@ -1016,15 +1173,21 @@ function clearClearFx() {
 function sparkle(i) {
   if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   const { cell, center } = geom(), t = G.stage.targets[i];
-  for (let k = 0; k < 10; k++) {
-    const a = (k / 10) * Math.PI * 2 + Math.random() * 0.4, r = cell * (0.45 + Math.random() * 0.25);
+  const ring = document.createElement('div');
+  ring.className = 'land-ring';
+  ring.style.left = center(t[0]) + 'px'; ring.style.top = center(t[1]) + 'px';
+  ring.style.width = ring.style.height = cell + 'px';
+  ring.style.setProperty('--c', PIECE_COLORS[i]);
+  layerEl.appendChild(ring); setTimeout(() => ring.remove(), 600);
+  for (let k = 0; k < 12; k++) {
+    const a = (k / 12) * Math.PI * 2 + Math.random() * 0.4, r = cell * (0.45 + Math.random() * 0.3);
     const s = document.createElement('div');
-    s.className = 'spark';
+    s.className = 'spark' + (k % 3 === 0 ? ' star' : '');
     s.style.left = center(t[0]) + 'px'; s.style.top = center(t[1]) + 'px';
     s.style.setProperty('--c', k % 3 === 0 ? '#f5c518' : PIECE_COLORS[i]);
     s.style.setProperty('--tx', Math.cos(a) * r + 'px'); s.style.setProperty('--ty', Math.sin(a) * r + 'px');
     layerEl.appendChild(s);
-    setTimeout(() => s.remove(), 650);
+    setTimeout(() => s.remove(), 750);
   }
 }
 
@@ -1560,7 +1723,7 @@ function onQuickWin() {
   saveProgress(progress);
   logEvent('quick_win', { streak: G.quickStreak });
   const badgeEl = overlay.querySelector('.badge');
-  badgeEl.innerHTML = [1, 2, 3].map(k => `<span class="st${k <= tier ? ' on' : ''}">★</span>`).join('');
+  badgeEl.innerHTML = '<span class="st">★</span>'.repeat(3); badgeEl.dataset.tier = tier;
   badgeEl.className = 'badge stars';
   overlay.querySelector('.result-title').textContent = t('quick_win', { n: G.quickStreak });
   overlay.querySelector('.result-sub').innerHTML = t('result_moves', { moves, min: st.min }) + ' · '
@@ -1575,7 +1738,7 @@ function onQuickWin() {
   }
   G.animating = true;
   clearTimeout(G.winTimer);
-  G.winTimer = setTimeout(() => { G.animating = false; overlay.classList.add('show'); syncGameplay(); }, WIN_REVEAL_MS);
+  G.winTimer = setTimeout(() => { G.animating = false; overlay.classList.add('show'); syncGameplay(); revealStars(); }, WIN_REVEAL_MS);
   // 다음 퍼즐은 결과 창이 뜬 뒤(연출이 끝난 뒤) 미리 만든다 — '다음 퍼즐'을 누르면 바로 시작
   const s = G.quickStreak;
   setTimeout(() => { if (G.quickMode && G.quickStreak === s) G.quickNext = { s, st: genQuickPuzzle(s) }; }, WIN_REVEAL_MS + 80);
@@ -1812,7 +1975,7 @@ function onWin() {
   const tier = starTier(moves, st.min);
   levelStatWin(moves, tier); // 일반 레벨일 때만 기록됨(levelStatStart가 정함)
   const badgeEl = overlay.querySelector('.badge');
-  badgeEl.innerHTML = [1, 2, 3].map(n => `<span class="st${n <= tier ? ' on' : ''}">★</span>`).join('');
+  badgeEl.innerHTML = '<span class="st">★</span>'.repeat(3); badgeEl.dataset.tier = tier;
   badgeEl.className = 'badge stars';
   overlay.querySelector('.result-title').textContent = t(optimal ? 'win_title_optimal' : 'win_title');
   overlay.querySelector('.result-sub').innerHTML =
@@ -1858,7 +2021,7 @@ function onWin() {
   // 포털 신호(gameplayStop)는 창이 뜰 때 syncGameplay가 보낸다. happytime은 월드 완주·골드 스티커에서만.
   G.animating = true;
   clearTimeout(G.winTimer);
-  G.winTimer = setTimeout(() => { G.animating = false; overlay.classList.add('show'); syncGameplay(); }, WIN_REVEAL_MS);
+  G.winTimer = setTimeout(() => { G.animating = false; overlay.classList.add('show'); syncGameplay(); revealStars(); }, WIN_REVEAL_MS);
   // 중간 광고는 클리어 순간이 아니라 '다음 문제'를 누를 때(레벨 전환) 띄운다 — 3판마다.
   // 처음 온 플레이어는 AD_GRACE_CLEARS판을 깰 때까지 광고 없이 게임에 빠져들게 둔다.
   if (!daily && Object.keys(progress.completed).length > AD_GRACE_CLEARS) {
@@ -2002,6 +2165,8 @@ function loadStage(index, dailySlot = null, custom = null) {
   applyWorldTint(G.index);
   overlay.classList.remove('show');
   buildBoard();
+  if (progress.tutorialSeen || G.index !== 0) { boardEl.classList.remove('enter'); void boardEl.offsetWidth; boardEl.classList.add('enter'); setTimeout(() => boardEl.classList.remove('enter'), 360); }
+  if (dailySlot === null && !custom) Sound.setTrack(worldOf(G.index)); // 월드마다 잔잔한 곡·경쾌한 곡 번갈아
   coachOn = false;
   introduceTiles();
   updateHud();
@@ -2313,6 +2478,7 @@ function applySoundIcon() {
   const sOn = progress.settings.stats !== false, sb = $('#btnStats');
   if (sb) { sb.hidden = !(window.Analytics && Analytics.configured); sb.textContent = sOn ? t('stats_on') : t('stats_off'); sb.classList.toggle('off', !sOn); }
   const ap = $('#btnAdPrivacy'); if (ap) { ap.hidden = !(window.AdsManager && AdsManager.privacyOptions); ap.textContent = '🛡️ ' + t('privacy_choices'); }
+  const sf = $('#btnSfxStyle'); if (sf) { const st = Sound.styles.includes(progress.settings.sfx) ? progress.settings.sfx : 'marimba'; sf.textContent = '🎼 ' + t('sfx_style', { name: t('sfx_' + st) }); sf.classList.toggle('off', progress.settings.sound === false); }
   const vOn = progress.settings.vibe !== false, vb = $('#btnVibe');
   if (vb) { vb.hidden = !navigator.vibrate; vb.textContent = vOn ? t('vibe_on') : t('vibe_off'); vb.classList.toggle('off', !vOn); }
 }
@@ -2321,6 +2487,13 @@ function toggleStats() {
   progress.settings.stats = progress.settings.stats === false;
   if (window.Analytics) Analytics.setConsent(progress.settings.stats);
   saveProgress(progress); applySoundIcon();
+}
+// 효과음 스타일 바꾸기(마림바 → 유리 종 → 칼림바): 바꾸자마자 들려준다
+function cycleSfxStyle() {
+  const L = Sound.styles, cur = Math.max(0, L.indexOf(progress.settings.sfx)); // 처음(설정 없음)은 마림바
+  progress.settings.sfx = L[(cur + 1) % L.length];
+  if (progress.settings.sound === false) progress.settings.sound = true; // 들어 보려고 누른 것이니 효과음을 켠다
+  saveProgress(progress); applySoundIcon(); Sound.preview();
 }
 function toggleVibe() {
   progress.settings.vibe = progress.settings.vibe === false;
@@ -2451,6 +2624,7 @@ $('#tutorialStart').addEventListener('click', closeTutorial);
 $('#btnSound').addEventListener('click', toggleSound);
 $('#btnMusic').addEventListener('click', toggleMusic);
 $('#btnVibe').addEventListener('click', toggleVibe);
+$('#btnSfxStyle').addEventListener('click', cycleSfxStyle);
 $('#btnStats').addEventListener('click', toggleStats);
 $('#btnAdPrivacy').addEventListener('click', () => AdsManager.showPrivacyOptions());
 document.addEventListener('visibilitychange', () => Sound.setHidden(document.hidden));
@@ -2569,6 +2743,11 @@ if (window.ResizeObserver) new ResizeObserver(relayoutBoard).observe(layerEl);
 
 // unlock audio on the first user gesture (autoplay policies)
 document.addEventListener('pointerdown', () => Sound.unlock(), { once: true });
+document.addEventListener('click', e => {
+  const b = e.target.closest && e.target.closest('button, .stage-chip, .tm-node');
+  if (!b || b.closest('#board') || b.id === 'btnSfxStyle' || b.id === 'btnSound' || b.disabled) return;
+  Sound.click();
+}, true);
 
 // init — bring up the platform + storage backend first (SDK loads on portals),
 // then load progress from the correct backend, then render the UI.
