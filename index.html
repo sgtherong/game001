@@ -710,6 +710,26 @@
   .ch-incoming b { font-size: 15px; color: var(--ink); }
   .ch-code { font-size: 16px; letter-spacing: .5px; } /* 16px 미만이면 iOS가 확대 */
   .bk-divider { height: 1px; background: var(--line); margin: 4px 0 14px; }
+  /* 친구 랭킹 */
+  .fr-me { display: flex; align-items: center; gap: 8px; justify-content: center; margin: -4px 0 10px; }
+  .fr-me .bk-label { margin: 0; }
+  .fr-pick { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin: 0 0 12px; }
+  .fr-pick .bk-label { width: 100%; text-align: center; }
+  .fr-an { width: 40px; height: 40px; font-size: 22px; border-radius: 10px; border: 1px solid var(--line); background: var(--cell); cursor: pointer; }
+  .fr-an.sel { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 40%, transparent); }
+  .fr-sorts { display: flex; gap: 6px; margin-bottom: 10px; }
+  .fr-sort { flex: 1; min-width: 0; padding: 7px 4px; border-radius: 10px; border: 1px solid var(--line); background: var(--cell); color: var(--ink); font-size: 12px; font-weight: 700; cursor: pointer; }
+  .fr-sort.sel { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, var(--card)); }
+  .fr-list { display: flex; flex-direction: column; gap: 6px; max-height: 46vh; overflow-y: auto; text-align: left; }
+  .fr-row { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 12px; background: var(--cell); border: 1px solid var(--line); }
+  .fr-row.me { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--card)); }
+  .fr-rank { width: 26px; text-align: center; font-weight: 800; font-size: 15px; flex: none; }
+  .fr-name { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .fr-name b { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .fr-name em { font-style: normal; font-size: 11px; color: #fff; background: var(--accent); border-radius: 6px; padding: 1px 6px; margin-left: 4px; }
+  .fr-name small { font-size: 11px; color: var(--muted); font-weight: 600; }
+  .fr-val { font-weight: 800; font-size: 15px; font-variant-numeric: tabular-nums; flex: none; }
+  .fr-x { border: 0; background: none; color: var(--muted); font-size: 13px; cursor: pointer; padding: 4px; flex: none; }
 
   /* store */
   .store-sheet { text-align: left; }
@@ -1058,7 +1078,24 @@
     <input id="chCode" class="bk-area ch-code" autocomplete="off" autocapitalize="off" spellcheck="false">
     <button class="btn" id="chAccept" data-i18n="ch_accept" style="width:100%;">Accept</button>
     <div class="bk-status" id="chMsg"></div>
+    <button class="quick-entry" id="chFriends" style="margin-top:12px"><span class="qe-tx"><b data-i18n="fr_title">🏅 Friend ranking</b><small data-i18n="fr_entry_sub"></small></span><span class="qe-go">▶</span></button>
     <button class="btn ghost" id="chClose" data-i18n="album_close" style="width:100%;margin-top:8px;">Close</button>
+  </div>
+</div>
+
+<!-- 친구 랭킹: 도전장을 주고받은 친구들과 나(서버 없음, 이 기기에만) -->
+<div class="modal" id="friends">
+  <div class="backdrop" id="frBackdrop"></div>
+  <div class="sheet">
+    <h3 data-i18n="fr_title">🏅 Friend ranking</h3>
+    <div class="fr-me"><span class="bk-label" data-i18n="fr_name_label">Your name</span><b id="frMe"></b><button class="link-btn" id="frChange">✏️</button></div>
+    <div class="fr-pick" id="frPick" hidden></div>
+    <div class="fr-sorts" id="frSorts"></div>
+    <div class="fr-list" id="frList"></div>
+    <div class="album-status" id="frEmpty" data-i18n="fr_empty" hidden></div>
+    <div class="bk-status" id="frMsg"></div>
+    <div class="album-status" data-i18n="fr_note" style="margin:6px 0 12px"></div>
+    <button class="btn" id="frClose" data-i18n="album_close" style="width:100%;">Close</button>
   </div>
 </div>
 
